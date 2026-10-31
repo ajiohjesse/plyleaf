@@ -43,6 +43,8 @@ Cloudflare Pages. Package manager: pnpm.
 - `pnpm check`: lint + format check + typecheck + unit tests (run before calling anything done)
 - `pnpm build && pnpm exec wrangler dev`: serve `dist/` in Cloudflare's local runtime (checks `_headers`, 404 handling).
   Deploys happen through Workers Builds on push (D-014); don't run `wrangler deploy` by hand.
+- `BASE_URL=<url> pnpm e2e`: run the E2E suite against a deployed site (production: https://plyleaf.ajiohjesse.workers.dev,
+  or a PR's Preview URL) instead of a local build.
 
 ## Layout
 - `src/styles/global.css`: design tokens (CSS variables) mapped to Tailwind names in `@theme`; contrast is tested
