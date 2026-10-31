@@ -1,0 +1,51 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { OrganizeWorkspace } from "~/components/organize/OrganizeWorkspace";
+---
+
+<ToolPage
+  slug="duplicate-pages"
+  title="Duplicate PDF pages free, no sign-up"
+  description="Copy pages within a PDF, in your browser. Free with no limits, no watermark and no account, and your file is never uploaded."
+  heading="Duplicate pages"
+  intro="Copy any page, or several at once; each copy goes right after its page. Free, no sign-up, no watermark, and your file never leaves this device."
+  steps={[
+    { title: "Add your PDF", text: "Choose it, drop it anywhere on the page, or paste it." },
+    {
+      title: "Copy pages",
+      text: "Press the copy button under a page, or select pages and duplicate them all. Press again for more copies.",
+    },
+    {
+      title: "Duplicate and download",
+      text: "Plyleaf builds the new PDF on your device, in seconds.",
+    },
+  ]}
+  faqs={[
+    {
+      question: "Is it really free?",
+      answer:
+        "Yes. There is no paid plan, no daily limit and no watermark. Plyleaf can be free because your own browser does the work, so there are no servers to pay for.",
+    },
+    {
+      question: "Is my file uploaded?",
+      answer:
+        "No. Your PDF is read right here in your browser, and the new file is made here too. It never goes over the internet.",
+    },
+    {
+      question: "Do copies make the file much bigger?",
+      answer:
+        "Barely. A copy reuses the original page's fonts and images, so it only adds the page itself, not another set of pictures.",
+    },
+    {
+      question: "Can I put a copy somewhere else?",
+      answer: "Copies go right after their page. To move them, download the result and open it in Reorder pages.",
+    },
+    {
+      question: "Will the pages look the same?",
+      answer:
+        "Yes. Each page is copied as it is, with its text, fonts and images, so nothing is re-compressed or lowered in quality. Bookmarks and fillable form fields aren't carried over yet.",
+    },
+  ]}
+>
+  <OrganizeWorkspace tool="duplicate" client:load />
+</ToolPage>

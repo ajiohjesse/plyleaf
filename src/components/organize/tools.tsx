@@ -1,6 +1,7 @@
 // What each page-level Organize tool does on the shared board (D-023): its labels, status, output, and any toolbar or
 // per-page buttons. OrganizeWorkspace runs whichever one a tool page names.
 import {
+  duplicatePages,
   insertBlanks,
   isReordered,
   moveToEdge,
@@ -14,7 +15,7 @@ import {
 import { CloseIcon } from "~/components/intake/IntakePanel";
 import { IconButton, plural } from "~/components/workspace/parts";
 
-export type OrganizeTool = "extract" | "delete" | "rotate" | "reorder" | "insert";
+export type OrganizeTool = "extract" | "delete" | "rotate" | "reorder" | "insert" | "duplicate";
 
 /** What a tool's own toolbar and per-page buttons get to work with. */
 export interface ToolContext {
@@ -183,6 +184,91 @@ const insert: ToolSpec = {
     ),
 };
 
+/** Keys of the pages that repeat a page shown earlier on the board. */
+function copyKeys(board: Board): Set<string> {
+  const seen = new Set<number>();
+  const copies = new Set<string>();
+  for (const page of board) {
+    if (page.source === null) continue;
+    if (seen.has(page.source)) copies.add(page.key);
+    seen.add(page.source);
+  }
+  return copies;
+}
+
+const duplicate: ToolSpec = {
+  action: () => "Duplicate pages",
+  making: "Duplicating…",
+  suffix: "duplicated",
+  status: (_selected, _total, board) => {
+    const copies = copyKeys(board).size;
+    return copies === 0
+      ? "Copy a page with the button under it, or select pages and copy them all."
+      : `${plural(copies, "copy", "copies")} added · ${plural(board.length, "page")}`;
+  },
+  tone: "keep",
+  build: (board) => (copyKeys(board).size > 0 ? board : null),
+  toolbar: (context) => {
+    const count = context.selected.size;
+    return (
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          className={smallButton}
+          disabled={count === 0}
+          onClick={() =>
+            context.change(
+              (board, selected) => duplicatePages(board, selected).board,
+              `Copied ${plural(count, "selected page")}. Each copy is right after its page.`,
+            )
+          }
+        >
+          Duplicate selected
+        </button>
+        <button
+          type="button"
+          className={smallButton}
+          disabled={copyKeys(context.board).size === 0}
+          onClick={() => context.change((board) => removePages(board, copyKeys(board)), "Removed every copy.")}
+        >
+          Remove all copies
+        </button>
+      </div>
+    );
+  },
+  controls: (page, index, context) => {
+    const isCopy = copyKeys(context.board).has(page.key);
+    return (
+      <>
+        <IconButton
+          label={`Duplicate page ${index + 1}`}
+          onClick={() =>
+            context.change(
+              (board) => duplicatePages(board, new Set([page.key])).board,
+              `Copied page ${index + 1}. The copy is page ${index + 2}.`,
+            )
+          }
+        >
+          <CopyIcon />
+        </IconButton>
+        {isCopy && (
+          <IconButton
+            label={`Remove page ${index + 1}, a copy`}
+            onClick={() =>
+              context.change(
+                (board) => removePages(board, new Set([page.key])),
+                `Removed the copy at page ${index + 1}.`,
+              )
+            }
+          >
+            <CloseIcon />
+          </IconButton>
+        )}
+      </>
+    );
+  },
+};
+
 export const TOOLS: Record<OrganizeTool, ToolSpec> = {
   extract: {
     action: (n) => (n > 0 ? `Extract ${plural(n, "page")}` : "Extract pages"),
@@ -268,6 +354,7 @@ export const TOOLS: Record<OrganizeTool, ToolSpec> = {
   },
   reorder,
   insert,
+  duplicate,
 };
 
 function RotateIcon({ clockwise = false }: { clockwise?: boolean }) {
@@ -292,6 +379,23 @@ function PlusIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeWidth={2.5}>
       <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function CopyIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className="size-5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2.25}
+      strokeLinejoin="round"
+    >
+      <rect x="8" y="8" width="12" height="12" rx="2" />
+      <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
     </svg>
   );
 }
