@@ -49,6 +49,8 @@ Cloudflare Pages. Package manager: pnpm.
 ## Layout
 - `src/styles/global.css`: design tokens (CSS variables) mapped to Tailwind names in `@theme`; contrast is tested
   in `tests/unit/tokens.test.ts`, so add new text/background pairs there.
+- `src/layouts/ToolPage.astro`: every tool's landing page (hero + workspace slot, how it works, FAQ, related; D-021).
+  `src/pages/merge-pdf.astro` + `src/components/merge/MergeWorkspace.tsx` is the first tool and the pattern to follow.
 - `src/data/tools.ts`: the tool catalogue. Set `available: true` when a tool's page ships; the home grid and footer
   link it automatically.
 - `src/components/`: Astro components (static) and React islands (`.tsx`). `src/components/home/`: home page sections.

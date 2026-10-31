@@ -3,10 +3,10 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M2: Organize suite (M0 and M1 done 2026-10-31)
-- **Next action:** M2, starting with Merge: a static `/merge-pdf` landing page, a workspace island built on
-  intake + thumbnails (reorder files, then pages) + `engine.assemble` + the download panel, its catalogue entry set
-  `available: true`, and an E2E test with a fixture PDF that also runs `watchEgress` (D-020). The shared Organize
-  workspace likely grows out of Merge's.
+- **Next action:** M2, Split next: `/split-pdf` on `ToolPage.astro` (D-021), split by range and every N pages first
+  (by size and by bookmark can follow), several outputs in one download (a zip, likely fflate, MIT), an E2E test with
+  `watchEgress`. Then the page-level tools (extract, delete, rotate, reorder, insert blank, duplicate), which share a
+  page-grid Organize workspace built on `ThumbnailGrid` + dnd-kit.
 - **Live:** https://plyleaf.ajiohjesse.workers.dev (Workers Builds deploys `main`; other branches get Preview URLs).
 - **Blocked on owner:**
   - Later, at the owner's pace: register `plyleaf.com` (and optionally the `plyleaf` GitHub org). Not blocking (D-013).
@@ -38,7 +38,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] Network egress test (no file bytes leave the browser)
 
 ### [ ] M2: Organize suite
-- [ ] Merge · [ ] Split · [ ] Extract · [ ] Delete · [ ] Rotate · [ ] Reorder · [ ] Insert blank · [ ] Duplicate · [ ] Crop
+- [x] Merge · [ ] Split · [ ] Extract · [ ] Delete · [ ] Rotate · [ ] Reorder · [ ] Insert blank · [ ] Duplicate · [ ] Crop
 - [ ] Shared Organize workspace
 - [ ] Per-tool landing pages + E2E tests
 
@@ -73,6 +73,35 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-10-31: Merge PDF (M2)
+- First tool page. `/merge-pdf` uses a new `src/layouts/ToolPage.astro` (DESIGN "Tool page"): compact hero in the
+  category's colour (a 30% wash of the sticky; only ink text on it), the workspace island under the h1, then how it
+  works, an FAQ (`<details>`) and the category's other tools ("Soon" ones unlinked). The intro hides once the
+  workspace has files (`:has([data-files])`). Design in D-021.
+- `MergeWorkspace` (`src/components/merge/`): intake → a file list in merge order, each row with its first page
+  (`PageCanvas`, now its own module), a drag handle, move up/down and remove → a sticky bar with the totals and
+  "Merge PDFs" (needs two ready files; says so) → `engine.assemble` of every page in list order → `DownloadPanel`
+  (`<first file>-merged.pdf`). "Back to your files" keeps everything open and returns focus to the Merge button.
+- Reordering: `intake.move(key, index)` (unit-tested, works while files are still opening). Dragging uses dnd-kit
+  (`@dnd-kit/core` 6.3.1 + `sortable` 10, MIT): pointer, touch (handle has `touch-action: none`) and keyboard (space,
+  arrows, space) with our own screen-reader announcements by file name and position. Move buttons are `aria-disabled`
+  at the ends so they keep focus, and say what happened in a polite live region.
+- `DownloadPanel` now focuses its heading when it appears, so the done screen scrolls into view below the sticky header
+  (it was half hidden after merging from the bottom of a long list) and screen readers land on it.
+- Merge takes PDFs only for now; the catalogue description no longer mentions images (they come with M3's Images to
+  PDF). Shared `stickyBg`/`stickyWash` in `src/components/sticky.ts`; a unit test checks every available tool has a
+  page and every page's tool is available.
+- Checked: grafting pages with link annotations doesn't drag other pages along (one linked page out of six: 6 objects).
+- Verified: new E2E `merge.spec.ts` (merge three files picked and dropped, reorder by keyboard with focus kept,
+  download `cover-merged.pdf` and check page sizes in order with MuPDF, back, remove, merge again, `watchEgress` clean;
+  keyboard drag with announcements and pointer drag; one file → hint and disabled button; not-a-PDF message; no WASM
+  or worker request before a file; linked from the home grid). Full suite 120/120 in Chromium, Firefox, WebKit and
+  Pixel 7. Checked in the dev server at 375 px and desktop (pointer drag, move buttons, done screen, FAQ, related
+  tools, no horizontal scroll, no console errors). `pnpm check` passes (99 unit tests).
+- Open: merge outputs lose bookmarks and AcroForm fields (the FAQ says so); carrying outlines over is a possible later
+  improvement. The done screen's "continue with another tool" chips still wait for more tools.
+- Next: Split.
 
 ### 2026-10-31: Network egress test, M1 done
 - Added `tests/helpers/egress.ts` (`watchEgress`, D-020): watches every request of a browser context and lists each

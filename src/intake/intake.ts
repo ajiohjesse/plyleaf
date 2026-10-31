@@ -53,6 +53,8 @@ export interface Intake {
   add(files: readonly File[]): Promise<void>;
   /** Removes a document and closes it in the engine (once it has opened, if it's still opening). */
   remove(key: string): Promise<void>;
+  /** Moves a document to `index` in the list (clamped to the list), e.g. to set the order files are merged in. */
+  move(key: string, index: number): void;
   dismiss(noticeId: number): void;
 }
 
@@ -181,6 +183,14 @@ export function createIntake(engine: IntakeEngine, options: IntakeOptions = {}):
       return queue;
     },
     remove: removeDocument,
+    move(key, index) {
+      const from = state.documents.findIndex((doc) => doc.key === key);
+      const to = Math.max(0, Math.min(state.documents.length - 1, Math.trunc(index)));
+      if (from === -1 || from === to) return;
+      const documents = [...state.documents];
+      documents.splice(to, 0, ...documents.splice(from, 1));
+      update({ documents });
+    },
     dismiss(noticeId) {
       update({ notices: state.notices.filter((n) => n.id !== noticeId) });
     },

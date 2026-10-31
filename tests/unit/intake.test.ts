@@ -149,6 +149,40 @@ test("removing a document closes it, even if it was still opening", async () => 
   expect(intake.getState().notices).toEqual([]);
 });
 
+test("moves documents within the list, even while one is still opening", async () => {
+  const fake = fakeEngine();
+  const intake = createIntake(fake.engine);
+  const done = intake.add([pdf("a.pdf"), pdf("b.pdf"), pdf("c.pdf")]);
+  await fake.finishNext();
+  const names = () => intake.getState().documents.map((doc) => doc.name);
+  const key = (name: string) => intake.getState().documents.find((doc) => doc.name === name)!.key;
+
+  intake.move(key("a.pdf"), 2);
+  expect(names()).toEqual(["b.pdf", "c.pdf", "a.pdf"]);
+  intake.move(key("c.pdf"), -5);
+  expect(names()).toEqual(["c.pdf", "b.pdf", "a.pdf"]);
+  intake.move(key("b.pdf"), 99);
+  expect(names()).toEqual(["c.pdf", "a.pdf", "b.pdf"]);
+
+  // A no-op tells nobody.
+  let changes = 0;
+  const stop = intake.subscribe(() => changes++);
+  intake.move(key("c.pdf"), 0);
+  intake.move("missing", 1);
+  expect(changes).toBe(0);
+  stop();
+
+  // b and c finish opening where they now are.
+  await fake.finishNext();
+  await fake.finishNext();
+  await done;
+  expect(intake.getState().documents.map((doc) => [doc.name, doc.status])).toEqual([
+    ["c.pdf", "ready"],
+    ["a.pdf", "ready"],
+    ["b.pdf", "ready"],
+  ]);
+});
+
 test("a single-file intake swaps in the new file and closes the old one", async () => {
   const fake = fakeEngine();
   const intake = createIntake(fake.engine, { multiple: false });
