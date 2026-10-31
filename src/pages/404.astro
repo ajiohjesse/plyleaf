@@ -1,0 +1,18 @@
+---
+import Base from "~/layouts/Base.astro";
+---
+
+<Base title="Page not found">
+  <section class="mx-auto max-w-2xl px-4 py-24 text-center sm:px-6 md:py-32">
+    <p class="font-display text-8xl font-extrabold text-sticky-coral" aria-hidden="true">
+      404
+    </p>
+    <h1 class="mt-4 text-4xl sm:text-5xl">This page isn't here</h1>
+    <p class="mt-4 text-lg text-ink-muted">
+      It may be a tool we haven't built yet, or a link that moved. Every tool we have is on the home page.
+    </p>
+    <a href="/#tools" class="btn-pill mt-8 min-h-13 bg-primary px-7 text-lg text-on-primary hover:bg-primary-hover">
+      See all tools <span aria-hidden="true">→</span>
+    </a>
+  </section>
+</Base>

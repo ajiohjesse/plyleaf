@@ -11,3 +11,4 @@ playwright/.cache/
 .env.*
 .DS_Store
 Thumbs.db
+.wrangler/

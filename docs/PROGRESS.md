@@ -3,10 +3,12 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M0: Foundation
-- **Next action:** Merge [PR #1](https://github.com/ajiohjesse/plyleaf/pull/1) (CI green); then connect
-  Cloudflare Pages for a preview deploy. After that, M0 is done and M1 starts with the engine spike (D-006).
+- **Next action:** Owner connects the repo in Cloudflare (Workers Builds, steps in the 2026-10-31 deploy log entry). Then
+  verify the production `workers.dev` URL and a PR Preview URL, tick the last M0 item, and start M1 with the engine
+  spike (D-006).
 - **Blocked on owner:**
-  - A Cloudflare account/project for Pages (preview deploys). Build command `pnpm build`, output `dist/`, Node 24.
+  - Connect `ajiohjesse/plyleaf` to a Worker named `plyleaf` in the Cloudflare dashboard. The connector available to
+    agents can read the account but can't create a Worker or a Git connection.
   - Later, at the owner's pace: register `plyleaf.com` (and optionally the `plyleaf` GitHub org). Not blocking (D-013).
 - **Repo:** https://github.com/ajiohjesse/plyleaf (public). `gh`'s active account on this machine is `angosam`, so run
   `gh`/`git push` as ajiohjesse (e.g. `GH_TOKEN=$(gh auth token --user ajiohjesse)`) or switch with `gh auth switch`.
@@ -23,7 +25,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] GitHub Actions CI runs all checks on PRs
 - [x] Design tokens and fonts from DESIGN.md implemented
 - [x] Landing page: hero, promise strip, tool grid, comparison table, CTA, footer (responsive)
-- [ ] Cloudflare Pages preview deploy live
+- [ ] Cloudflare preview deploy live (Workers static assets, D-014; config ready, waiting on the dashboard connection)
 
 ### [ ] M1: Engine and core architecture
 - [ ] Engine spike done; D-006 resolved with numbers
@@ -69,6 +71,20 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-10-31: Cloudflare deploy setup (M0)
+- PR #1 merged after green CI. Owner added a Cloudflare connector; it can list Workers and search docs but has no tool to
+  create a Worker or connect a repo, so the one-time connection stays a dashboard step for the owner.
+- Chose Workers static assets + Workers Builds over Pages (D-014). Added `wrangler.jsonc` (assets from `dist/`,
+  `404-page` handling, preview URLs on), Wrangler as a dev dependency (pnpm `allowBuilds` for esbuild/workerd),
+  `public/_headers` (nosniff, no-referrer, no FLoC/Topics, no framing; immutable caching for `/_astro/*`) and a 404 page.
+- Verified: `wrangler deploy --dry-run` reads 13 assets with no warnings; `wrangler dev` serves `/` with the headers,
+  returns a real 404 with our page for unknown paths, and caches `/_astro/*` for a year. `pnpm check` and E2E (now 5
+  tests × 4 browser projects) pass. Compatibility date is 2026-10-30, the newest the local workerd supports.
+- Owner steps: dashboard → Workers & Pages → Create → Import a repository → GitHub `ajiohjesse/plyleaf`. Project name
+  `plyleaf`, build command `pnpm build`, deploy command `npx wrangler deploy`, root `/`. Then Settings → Build → Branch
+  control → enable Preview builds. Node 24 comes from `.nvmrc`; pnpm from `packageManager`.
+- CSP is not set yet: Astro's island loader is an inline script, so a strict CSP needs hashes. Add it in M9.
 
 ### 2026-10-31: M0 scaffold, tooling, tokens, landing page
 - `git init` (local only, no remote yet): planning docs + AGPL-3.0 LICENSE on `main`, all M0 work on branch `m0/scaffold`.
