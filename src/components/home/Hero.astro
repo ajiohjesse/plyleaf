@@ -1,0 +1,97 @@
+---
+import Cursor from "../Cursor.astro";
+import SelectionFrame from "../SelectionFrame.astro";
+---
+
+<section class="overflow-hidden">
+  <div class="mx-auto grid max-w-6xl items-center gap-12 px-4 pt-10 pb-16 sm:px-6 md:grid-cols-[1.1fr_1fr] md:pt-16 md:pb-24">
+    <div>
+      <h1 class="text-hero">Every PDF tool. Actually&nbsp;free.</h1>
+      <p class="mt-6 max-w-md text-lg text-ink-muted sm:text-xl">
+        No sign-up. No watermark. No limits. Your files never leave your device, because everything runs right here in
+        your browser.
+      </p>
+      <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
+        <a href="#tools" class="btn-pill min-h-13 bg-primary px-7 text-lg text-on-primary hover:bg-primary-hover">
+          Pick a tool <span aria-hidden="true">→</span>
+        </a>
+        <a href="#how-it-works" class="group inline-flex items-center gap-2 font-semibold">
+          <span
+            class="grid size-9 place-items-center rounded-full border-2 border-ink transition-colors group-hover:bg-ink group-hover:text-surface"
+            aria-hidden="true"
+          >
+            ?
+          </span>
+          How it works
+        </a>
+      </div>
+    </div>
+
+    <!-- Illustration: a PDF page as a sticky note, selected on a board -->
+    <div class="relative mx-auto aspect-square w-full max-w-[26rem]" aria-hidden="true">
+      <div class="hero-stripes absolute inset-y-[12%] right-[-18%] left-[38%] -skew-x-12"></div>
+      <div class="absolute top-[6%] left-[8%] size-0 rotate-12 border-x-[10px] border-b-[16px] border-x-transparent border-b-sticky-coral"></div>
+      <div class="absolute right-[4%] bottom-[10%] size-5 rounded-full bg-sticky-yellow"></div>
+
+      <div class="absolute inset-[14%] rotate-[-4deg]">
+        <div class="hero-page relative h-full rounded-[10px] bg-sticky-yellow p-[9%] shadow-sticky">
+          <div class="h-3 w-2/3 rounded-full bg-ink/80"></div>
+          <div class="mt-5 space-y-2.5">
+            <div class="h-2 rounded-full bg-ink/25"></div>
+            <div class="h-2 rounded-full bg-ink/25"></div>
+            <div class="h-2 w-5/6 rounded-full bg-ink/25"></div>
+          </div>
+          <div class="mt-6 grid grid-cols-[2fr_3fr] gap-3">
+            <div class="aspect-square rounded-md bg-sticky-pink"></div>
+            <div class="space-y-2.5 pt-1">
+              <div class="h-2 rounded-full bg-ink/25"></div>
+              <div class="h-2 rounded-full bg-ink/25"></div>
+              <div class="h-2 w-2/3 rounded-full bg-ink/25"></div>
+            </div>
+          </div>
+          <div class="absolute right-[9%] bottom-[9%] font-display text-xs font-extrabold tracking-widest text-ink/70">
+            PDF
+          </div>
+        </div>
+        <SelectionFrame class="-inset-3" />
+      </div>
+
+      <div class="absolute top-[4%] right-[10%] flex rotate-3 items-center gap-1 rounded-lg border border-line bg-surface px-2 py-1.5 shadow-sticky">
+        {["M6 9l6 6 6-6", "M4 12h16M12 4v16", "M5 19l14-14"].map((d) => (
+          <svg
+            viewBox="0 0 24 24"
+            class="size-5 text-ink-muted"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          >
+            <path d={d} />
+          </svg>
+        ))}
+      </div>
+      <Cursor class="bottom-[16%] left-[22%]" color="var(--primary)" />
+      <div class="absolute bottom-[8%] left-[28%] rounded-pill bg-primary px-2.5 py-0.5 text-xs font-semibold text-on-primary">
+        you
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero-stripes {
+    background: repeating-linear-gradient(90deg, var(--sticky-pink) 0 22px, transparent 22px 44px);
+    opacity: 0.7;
+  }
+
+  .hero-page {
+    animation: settle 700ms cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+  }
+
+  @keyframes settle {
+    from {
+      transform: rotate(6deg) translateY(-12px);
+      opacity: 0;
+    }
+  }
+</style>

@@ -1,0 +1,46 @@
+---
+import Logo from "./Logo.astro";
+import { site } from "~/data/site";
+import { categories, tools } from "~/data/tools";
+
+const columns = categories.map((category) => ({
+  category,
+  items: tools.filter((t) => t.category === category.id).slice(0, 6),
+}));
+---
+
+<footer class="bg-footer-bg text-footer-ink">
+  <div class="mx-auto max-w-6xl px-4 py-14 sm:px-6">
+    <div class="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-5">
+      {columns.map(({ category, items }) => (
+        <div>
+          <h2 class="font-sans text-sm font-semibold tracking-wide text-white">{category.name}</h2>
+          <ul class="mt-4 space-y-2 text-sm">
+            {items.map((tool) => (
+              <li>
+                {tool.available ? (
+                  <a href={`/${tool.slug}`} class="hover:text-white hover:underline">
+                    {tool.name}
+                  </a>
+                ) : (
+                  <span>{tool.name}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+
+    <div class="mt-14 flex flex-col gap-6 border-t border-white/15 pt-8 text-sm sm:flex-row sm:items-center sm:justify-between">
+      <Logo tone="light" />
+      <p class="max-w-md">
+        Free and open source under{" "}
+        <a href={`${site.repoUrl}/blob/main/LICENSE`} class="underline hover:text-white">
+          AGPL-3.0
+        </a>
+        . Your files are processed on your device and never uploaded.
+      </p>
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,14 @@
+---
+/** The whiteboard-style blue selection outline with square corner handles (DESIGN.md motif 5). Decorative. */
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+const corners = ["-top-1.5 -left-1.5", "-top-1.5 -right-1.5", "-bottom-1.5 -left-1.5", "-bottom-1.5 -right-1.5"];
+---
+
+<div class:list={["pointer-events-none absolute border-2 border-primary", className]} aria-hidden="true">
+  {corners.map((pos) => (
+    <span class:list={["absolute size-3 rounded-[3px] border-2 border-primary bg-surface", pos]} />
+  ))}
+</div>

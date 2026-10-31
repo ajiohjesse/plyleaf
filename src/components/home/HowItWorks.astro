@@ -1,0 +1,68 @@
+---
+const steps = [
+  {
+    title: "Your file opens in this tab",
+    body: "You pick a file. Your browser reads it straight from your disk. Nothing is sent anywhere.",
+    sticky: "bg-sticky-yellow",
+  },
+  {
+    title: "The engine runs on your device",
+    body: "A PDF engine compiled to WebAssembly does the work inside your browser, in a background thread.",
+    sticky: "bg-sticky-lavender",
+  },
+  {
+    title: "You save the result",
+    body: "The finished PDF is handed back to you as a download. No queue, no account, no watermark.",
+    sticky: "bg-sticky-mint",
+  },
+];
+---
+
+<section id="how-it-works" class="scroll-mt-20 px-4 py-16 sm:px-6 md:py-24">
+  <div class="mx-auto max-w-6xl">
+    <div class="max-w-2xl">
+      <h2 class="text-4xl sm:text-5xl">How it works without uploading</h2>
+      <p class="mt-4 text-lg text-ink-muted">
+        Other sites send your document to a server and back. Plyleaf brings the software to your document instead.
+        That's why it's private, and why it can stay free.
+      </p>
+    </div>
+
+    <ol class="mt-12 grid gap-6 md:grid-cols-3">
+      {steps.map(({ title, body, sticky }, i) => (
+        <li class="relative rounded-card border border-line bg-surface p-6">
+          <span
+            class:list={[
+              "grid size-12 -rotate-6 place-items-center rounded-lg font-display text-2xl font-extrabold shadow-sticky",
+              sticky,
+            ]}
+            aria-hidden="true"
+          >
+            {i + 1}
+          </span>
+          <h3 class="mt-5 text-2xl">{title}</h3>
+          <p class="mt-2 text-ink-muted">{body}</p>
+        </li>
+      ))}
+    </ol>
+
+    <div class="mt-8 flex items-center gap-4 rounded-card border-2 border-dashed border-line p-5 text-ink-muted">
+      <svg
+        viewBox="0 0 24 24"
+        class="size-8 shrink-0"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M7 18a4.5 4.5 0 0 1-.6-9A6 6 0 0 1 18 8a4 4 0 0 1 0 8M3 3l18 18" />
+      </svg>
+      <p>
+        <strong class="text-ink">No server in between.</strong> The code is open source, so anyone can check that your
+        files never leave your device.
+      </p>
+    </div>
+  </div>
+</section>

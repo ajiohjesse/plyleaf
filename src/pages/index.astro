@@ -1,0 +1,33 @@
+---
+import Base from "~/layouts/Base.astro";
+import { ToolGrid } from "~/components/ToolGrid";
+import Comparison from "~/components/home/Comparison.astro";
+import CtaBand from "~/components/home/CtaBand.astro";
+import Hero from "~/components/home/Hero.astro";
+import HowItWorks from "~/components/home/HowItWorks.astro";
+import ProductFrame from "~/components/home/ProductFrame.astro";
+import PromiseStrip from "~/components/home/PromiseStrip.astro";
+---
+
+<Base>
+  <Hero />
+  <PromiseStrip />
+  <ProductFrame />
+
+  <section id="tools" class="scroll-mt-20 bg-surface-band px-4 py-16 sm:px-6 md:py-24">
+    <div class="mx-auto max-w-6xl">
+      <div class="mx-auto mb-10 max-w-2xl text-center">
+        <h2 class="text-4xl sm:text-5xl">Every tool, free</h2>
+        <p class="mt-4 text-lg text-ink-muted">
+          Plyleaf is brand new. Tools marked “soon” are being built right now, and every one will be free.
+        </p>
+      </div>
+      <ToolGrid client:visible />
+    </div>
+  </section>
+
+  <HowItWorks />
+  <Comparison />
+  <div class="h-16 md:h-24"></div>
+  <CtaBand />
+</Base>
