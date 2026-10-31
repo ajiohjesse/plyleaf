@@ -1,0 +1,50 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { OrganizeWorkspace } from "~/components/organize/OrganizeWorkspace";
+---
+
+<ToolPage
+  slug="delete-pages"
+  title="Delete pages from a PDF free, no sign-up"
+  description="Remove pages you don't want from a PDF, in your browser. Free with no limits, no watermark and no account, and your file is never uploaded."
+  heading="Delete pages"
+  intro="Remove the pages you don't want and download the rest. Free, no sign-up, no watermark, and your file never leaves this device."
+  steps={[
+    { title: "Add your PDF", text: "Choose it, drop it anywhere on the page, or paste it." },
+    {
+      title: "Mark pages to delete",
+      text: "Tap the pages to remove, or type them, like 2, 5-7. Shift-click marks a run.",
+    },
+    {
+      title: "Delete and download",
+      text: "Plyleaf makes a new PDF without those pages, on your device, in seconds.",
+    },
+  ]}
+  faqs={[
+    {
+      question: "Is it really free?",
+      answer:
+        "Yes. There is no paid plan, no daily limit and no watermark. Plyleaf can be free because your own browser does the work, so there are no servers to pay for.",
+    },
+    {
+      question: "Is my file uploaded?",
+      answer:
+        "No. Your PDF is read right here in your browser, and the new file is made here too. It never goes over the internet.",
+    },
+    {
+      question: "Does the original file change?",
+      answer: "No. Plyleaf makes a new PDF without the pages you marked; the file on your device stays as it is.",
+    },
+    {
+      question: "Are deleted pages really gone from the new file?",
+      answer: "Yes. The new PDF is built only from the pages you keep, so the deleted pages aren't hidden inside it.",
+    },
+    {
+      question: "Will the other pages look the same?",
+      answer:
+        "Yes. Each page is copied as it is, with its text, fonts and images, so nothing is re-compressed or lowered in quality. Bookmarks and fillable form fields aren't carried over yet.",
+    },
+  ]}
+>
+  <OrganizeWorkspace tool="delete" client:load />
+</ToolPage>

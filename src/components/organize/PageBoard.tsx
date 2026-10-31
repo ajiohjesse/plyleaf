@@ -20,6 +20,8 @@ interface Props {
   /** Names the list for screen readers. */
   label: string;
   selected: ReadonlySet<string>;
+  /** "keep": selected pages are framed and ticked. "remove": they're faded and crossed out, for deleting. */
+  tone?: "keep" | "remove";
   /** A page was clicked; `span` when shift was held, to select everything from the last page clicked. */
   onToggle: (key: string, span: boolean) => void;
   /** Per-page buttons under the thumbnail (rotate, remove…), for tools that have them. */
@@ -30,7 +32,7 @@ interface Props {
  * The "board": every page of the document as a thumbnail that can be selected, in board order, with any added
  * rotation shown. Like ThumbnailGrid, every page is in the list but only those near the viewport render.
  */
-export function PageBoard({ board, docId, label, selected, onToggle, controls }: Props) {
+export function PageBoard({ board, docId, label, selected, tone = "keep", onToggle, controls }: Props) {
   const ref = useRef<HTMLOListElement>(null);
   const { columns, cellWidth } = useColumns(ref);
   const observeNear = useViewportObserver(NEAR);
@@ -54,6 +56,7 @@ export function PageBoard({ board, docId, label, selected, onToggle, controls }:
             docId={docId}
             cellWidth={cellWidth}
             selected={selected.has(page.key)}
+            tone={tone}
             onToggle={onToggle}
             controls={controls?.(page, index)}
             observeNear={observeNear}
@@ -71,6 +74,7 @@ interface CardProps {
   docId: DocId;
   cellWidth: number;
   selected: boolean;
+  tone: "keep" | "remove";
   onToggle: (key: string, span: boolean) => void;
   controls: React.ReactNode;
   observeNear: Observe;
@@ -83,6 +87,7 @@ const BoardCard = memo(function BoardCard({
   docId,
   cellWidth,
   selected,
+  tone,
   onToggle,
   controls,
   observeNear,
@@ -96,6 +101,7 @@ const BoardCard = memo(function BoardCard({
   // The box takes the page's shape as it will come out; the canvas inside is drawn upright and turned with CSS.
   const box = fit(shownSize(page), cellWidth - 8);
   const upright = page.rotate % 180 === 0 ? box : { width: box.height, height: box.width };
+  const removing = selected && tone === "remove";
   const name = page.source === null ? `Page ${index + 1}, blank` : `Page ${index + 1}`;
 
   return (
@@ -107,14 +113,14 @@ const BoardCard = memo(function BoardCard({
         onClick={(event) => onToggle(page.key, event.shiftKey)}
         className={[
           "relative grid w-full place-items-center rounded-lg transition-colors",
-          selected ? "bg-sticky-lavender/50" : "hover:bg-ink/5",
+          selected ? (removing ? "bg-sticky-pink/40" : "bg-sticky-lavender/50") : "hover:bg-ink/5",
         ].join(" ")}
         style={{ height: Math.round(cellWidth * BOX_RATIO) }}
       >
         <span
           className={[
             "relative block rounded-sm bg-surface shadow-sticky",
-            selected ? "ring-3 ring-primary" : "ring-1 ring-line",
+            selected ? (removing ? "ring-3 ring-sticky-coral" : "ring-3 ring-primary") : "ring-1 ring-line",
           ].join(" ")}
           style={{ width: box.width, height: box.height }}
         >
@@ -132,15 +138,24 @@ const BoardCard = memo(function BoardCard({
               {near && <PageCanvas docId={docId} index={page.source} width={upright.width} onScreen={onScreen} />}
             </span>
           )}
-          {selected && <Handles />}
+          {selected && !removing && <Handles />}
+          {/* Faded, so pages that will go read as going. */}
+          {removing && <span aria-hidden="true" className="absolute inset-0 bg-surface/60" />}
         </span>
         {selected && (
           <span
             aria-hidden="true"
-            className="absolute top-1.5 right-1.5 grid size-6 place-items-center rounded-full bg-primary text-on-primary"
+            className={[
+              "absolute top-1.5 right-1.5 grid size-6 place-items-center rounded-full",
+              removing ? "bg-sticky-coral text-ink" : "bg-primary text-on-primary",
+            ].join(" ")}
           >
             <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth={3}>
-              <path d="M5 12.5l4.5 4.5L19 7.5" strokeLinecap="round" strokeLinejoin="round" />
+              <path
+                d={removing ? "M7 7l10 10M17 7 7 17" : "M5 12.5l4.5 4.5L19 7.5"}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </span>
         )}

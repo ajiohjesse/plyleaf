@@ -63,6 +63,7 @@ export const tools: Tool[] = [
     description: "Remove pages you don't want.",
     category: "organize",
     keywords: ["remove"],
+    available: true,
   },
   {
     slug: "rotate-pdf",

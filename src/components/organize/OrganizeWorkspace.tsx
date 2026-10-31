@@ -3,7 +3,7 @@ import { engine } from "~/engine/client";
 import { outputName } from "~/download/download";
 import { operationFailureMessage } from "~/intake/files";
 import type { ReadyDocument } from "~/intake/intake";
-import { boardFrom, keysBetween, keysInRanges, toSpecs, type Board } from "~/organize/board";
+import { boardFrom, keysBetween, keysInRanges, removePages, toSpecs, type Board } from "~/organize/board";
 import { parseRanges } from "~/organize/ranges";
 import { DownloadPanel } from "~/components/download/DownloadPanel";
 import { FileDrop } from "~/components/intake/FileDrop";
@@ -12,7 +12,7 @@ import { useIntake } from "~/components/intake/useIntake";
 import { ActionBar, FailureAlert, FileCard, plural, primaryButton, type Result } from "~/components/workspace/parts";
 import { PageBoard } from "./PageBoard";
 
-export type OrganizeTool = "extract";
+export type OrganizeTool = "extract" | "delete";
 
 interface ToolSpec {
   /** The primary button, given how many pages are selected. */
@@ -20,10 +20,10 @@ interface ToolSpec {
   making: string;
   /** Added to the file name: "report-extracted.pdf". */
   suffix: string;
-  /** What the action bar says while it can't go ahead yet. */
-  waiting: string;
-  /** Status once it can, given how many pages are selected of how many. */
+  /** What the action bar says, given how many pages are selected of how many. */
   status: (selected: number, total: number) => string;
+  /** What selecting a page means, which sets how selected pages look. */
+  tone: "keep" | "remove";
   /** Builds the output's pages from the board and selection; null while there's nothing to make. */
   build: (board: Board, selected: ReadonlySet<string>) => Board | null;
 }
@@ -33,9 +33,23 @@ const TOOLS: Record<OrganizeTool, ToolSpec> = {
     action: (n) => (n > 0 ? `Extract ${plural(n, "page")}` : "Extract pages"),
     making: "Extracting…",
     suffix: "extracted",
-    waiting: "Select the pages to keep.",
-    status: (n, total) => `${n} of ${plural(total, "page")} selected`,
+    status: (n, total) => (n === 0 ? "Select the pages to keep." : `${n} of ${plural(total, "page")} selected`),
+    tone: "keep",
     build: (board, selected) => (selected.size > 0 ? board.filter((page) => selected.has(page.key)) : null),
+  },
+  delete: {
+    action: (n) => (n > 0 ? `Delete ${plural(n, "page")}` : "Delete pages"),
+    making: "Deleting…",
+    suffix: "edited",
+    status: (n, total) =>
+      n === 0
+        ? "Select the pages to delete."
+        : n === total
+          ? "Keep at least one page."
+          : `${plural(n, "page")} to delete · ${plural(total - n, "page")} left`,
+    tone: "remove",
+    build: (board, selected) =>
+      selected.size > 0 && selected.size < board.length ? removePages(board, selected) : null,
   },
 };
 
@@ -139,13 +153,10 @@ export function OrganizeWorkspace({ tool }: { tool: OrganizeTool }) {
             docId={ready.info.id}
             label={`Pages of ${ready.name}`}
             selected={current.selected}
+            tone={spec.tone}
             onToggle={toggle}
           />
-          <ActionBar
-            status={
-              making ? spec.making : output ? spec.status(current.selected.size, current.board.length) : spec.waiting
-            }
-          >
+          <ActionBar status={making ? spec.making : spec.status(current.selected.size, current.board.length)}>
             <button
               type="button"
               ref={actionRef}
