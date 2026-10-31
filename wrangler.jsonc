@@ -1,0 +1,14 @@
+// Cloudflare Workers static-assets deploy (D-014). No Worker script: Cloudflare serves dist/ directly.
+// Workers Builds runs `pnpm build`, then `npx wrangler deploy` on main and `npx wrangler preview` on other branches.
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "plyleaf",
+  "compatibility_date": "2026-10-30",
+  "workers_dev": true,
+  "preview_urls": true,
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page",
+    "html_handling": "auto-trailing-slash",
+  },
+}

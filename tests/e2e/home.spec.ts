@@ -47,3 +47,10 @@ test.describe("home page", () => {
     expect(overflow).toBeLessThanOrEqual(0);
   });
 });
+
+test("unknown pages get a helpful 404", async ({ page }) => {
+  const response = await page.goto("/not-a-real-tool");
+  expect(response?.status()).toBe(404);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("This page isn't here");
+  await expect(page.getByRole("link", { name: /See all tools/ })).toHaveAttribute("href", "/#tools");
+});

@@ -41,6 +41,8 @@ Cloudflare Pages. Package manager: pnpm.
 - `pnpm test`: Vitest unit tests in `tests/unit/` · `pnpm e2e`: Playwright against the production build
   (first run: `pnpm exec playwright install chromium firefox webkit`)
 - `pnpm check`: lint + format check + typecheck + unit tests (run before calling anything done)
+- `pnpm build && pnpm exec wrangler dev`: serve `dist/` in Cloudflare's local runtime (checks `_headers`, 404 handling).
+  Deploys happen through Workers Builds on push (D-014); don't run `wrangler deploy` by hand.
 
 ## Layout
 - `src/styles/global.css`: design tokens (CSS variables) mapped to Tailwind names in `@theme`; contrast is tested
