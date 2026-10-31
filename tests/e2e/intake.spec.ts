@@ -1,21 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
 import "../helpers/harness";
+import { asPayload, dropFiles, pasteFiles, pdfFile, type FileSpec } from "../helpers/files";
 import { A4, LETTER, makePdf } from "../helpers/pdf";
 
 // The harness page is only built for local E2E runs, not deployed.
 test.skip(!!process.env["BASE_URL"], "needs the test-harness build");
 
-interface FileSpec {
-  name: string;
-  mimeType: string;
-  bytes: number[];
-}
-
-const pdfFile = (name: string, pages = [A4]): FileSpec => ({
-  name,
-  mimeType: "application/pdf",
-  bytes: Array.from(makePdf(pages)),
-});
 const textFile = (name: string): FileSpec => ({
   name,
   mimeType: "text/plain",
@@ -30,35 +20,6 @@ async function openIntake(page: Page, name = "intake") {
 
 const fileList = (page: Page) => page.getByRole("list", { name: "Your files" }).getByRole("listitem");
 const notices = (page: Page) => page.getByRole("list", { name: "File messages" }).getByRole("listitem");
-
-/** Fires a drag-and-drop of `files` onto `selector`, the way a browser does when files come from the desktop. */
-async function dropFiles(page: Page, selector: string, files: FileSpec[]) {
-  await page.evaluate(
-    ({ target: where, specs }) => {
-      const data = new DataTransfer();
-      for (const f of specs) data.items.add(new File([new Uint8Array(f.bytes)], f.name, { type: f.mimeType }));
-      const target = document.querySelector(where)!;
-      for (const type of ["dragenter", "dragover", "drop"]) {
-        const event = new Event(type, { bubbles: true, cancelable: true });
-        Object.defineProperty(event, "dataTransfer", { value: data });
-        target.dispatchEvent(event);
-      }
-    },
-    { target: selector, specs: files },
-  );
-}
-
-async function pasteFiles(page: Page, files: FileSpec[]) {
-  await page.evaluate((specs) => {
-    const data = new DataTransfer();
-    for (const f of specs) data.items.add(new File([new Uint8Array(f.bytes)], f.name, { type: f.mimeType }));
-    const event = new Event("paste", { bubbles: true, cancelable: true });
-    Object.defineProperty(event, "clipboardData", { value: data });
-    document.body.dispatchEvent(event);
-  }, files);
-}
-
-const asPayload = (f: FileSpec) => ({ name: f.name, mimeType: f.mimeType, buffer: Buffer.from(f.bytes) });
 
 test("opens picked PDFs in order and explains the files it can't take", async ({ page }) => {
   await openIntake(page);
