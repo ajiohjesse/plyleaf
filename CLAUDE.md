@@ -61,7 +61,9 @@ Cloudflare Pages. Package manager: pnpm.
 - `src/download/`: output names, `downloadFile` and `saveAs`; `src/components/download/DownloadPanel` is the "done"
   screen. Show engine failures with `openFailureMessage` / `operationFailureMessage` from `src/intake/files.ts` (D-019).
 - `src/pages/test-harness/`: pages for E2E tests to drive internals, built only when `PLYLEAF_TEST_HARNESS=1`.
-- `tests/helpers/pdf.ts`: builds test PDFs with MuPDF (works in Vitest and Playwright).
+- `tests/helpers/pdf.ts`: builds test PDFs with MuPDF (works in Vitest and Playwright). `tests/helpers/files.ts`: drop
+  and paste files in E2E. `tests/helpers/egress.ts`: `watchEgress`; every tool's E2E test asserts no request could
+  carry the file (D-020).
 
 ## Conventions
 - Each tool = a static landing page under `src/pages/<tool-slug>.astro` + a React workspace island + an engine

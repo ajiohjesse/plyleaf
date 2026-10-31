@@ -2,10 +2,11 @@
 
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
-- **Current milestone:** M1: Engine and core architecture (M0 done 2026-10-31)
-- **Next action:** Network egress test, the last M1 item: an E2E test that drives intake, thumbnails and the
-  combine/download harness with a fixture PDF and asserts no request (any method, any host, including our own origin)
-  carries the file's bytes, and that nothing goes to another origin. Then tick M1 and start M2 (Merge first).
+- **Current milestone:** M2: Organize suite (M0 and M1 done 2026-10-31)
+- **Next action:** M2, starting with Merge: a static `/merge-pdf` landing page, a workspace island built on
+  intake + thumbnails (reorder files, then pages) + `engine.assemble` + the download panel, its catalogue entry set
+  `available: true`, and an E2E test with a fixture PDF that also runs `watchEgress` (D-020). The shared Organize
+  workspace likely grows out of Merge's.
 - **Live:** https://plyleaf.ajiohjesse.workers.dev (Workers Builds deploys `main`; other branches get Preview URLs).
 - **Blocked on owner:**
   - Later, at the owner's pace: register `plyleaf.com` (and optionally the `plyleaf` GitHub org). Not blocking (D-013).
@@ -28,13 +29,13 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] Landing page: hero, promise strip, tool grid, comparison table, CTA, footer (responsive)
 - [x] Cloudflare preview deploy live (Workers static assets, D-014): https://plyleaf.ajiohjesse.workers.dev
 
-### [ ] M1: Engine and core architecture
+### [x] M1: Engine and core architecture
 - [x] Engine spike done; D-006 resolved with numbers (D-015, [report](research/engine-spike.md))
 - [x] Worker + Comlink typed engine API (D-016)
 - [x] File intake (drop, picker, paste, multi-file) + validation and errors
 - [x] Virtualised page thumbnails
 - [x] Download pipeline + memory-limit UX
-- [ ] Network egress test (no file bytes leave the browser)
+- [x] Network egress test (no file bytes leave the browser)
 
 ### [ ] M2: Organize suite
 - [ ] Merge · [ ] Split · [ ] Extract · [ ] Delete · [ ] Rotate · [ ] Reorder · [ ] Insert blank · [ ] Duplicate · [ ] Crop
@@ -72,6 +73,26 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-10-31: Network egress test, M1 done
+- Added `tests/helpers/egress.ts` (`watchEgress`, D-020): watches every request of a browser context and lists each
+  one that could carry user data: another origin, a method other than GET/HEAD, a body, a WebSocket/EventSource/beacon,
+  or a test secret (the file's name) in the URL or headers. `blob:`/`data:` URLs are local and ignored.
+- Probed first: Playwright sees requests from URL-loaded workers (classic and module) in Chromium, Firefox and WebKit,
+  but nothing from a `blob:` worker in any of them. So the watch also wraps `Worker`/`SharedWorker` and
+  `serviceWorker.register` in an init script and flags `blob:`/`data:` workers and service workers as unwatched.
+- New E2E `egress.spec.ts`: (1) open PDFs by picker, drop and paste plus a damaged one, render every thumbnail, then
+  combine, download and Save as (stubbed picker), with no problems, and the watch saw the worker script and the WASM
+  the worker fetches; (2) a control that the watch catches a POST, a secret in a query string, another origin, a beacon,
+  a PUT from a URL-loaded worker, a `blob:` worker and a service worker registration.
+- Moved the drop/paste helpers from `intake.spec.ts` to `tests/helpers/files.ts` for reuse.
+- Verified: full E2E 104/104 in Chromium, Firefox, WebKit and Pixel 7; egress + intake specs ×3 stable. `pnpm check`
+  passes. No UI changed.
+- Ticked the last M1 item and M1.
+- Open: PR #8 (download pipeline) still needs merging; this branch is stacked on it. Workers started by a worker
+  aren't checked (we start none). M9's service worker will need Chromium's service-worker network events
+  (`PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS`) before the watch can allow it.
+- Next: M2, Merge first.
 
 ### 2026-10-31: Download pipeline + memory-limit UX (M1)
 - Owner chose to finish M1 before M2. Also made `main` require both CI jobs (owner asked, after PR #7 merged with E2E
