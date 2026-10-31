@@ -1,13 +1,15 @@
 ---
 // Pages that let E2E tests drive internals in a real browser. They're built only when PLYLEAF_TEST_HARNESS=1, which
 // the Playwright web server sets, so they never ship. Every page exposes the engine and the thumbnail cache as
-// `window.harness`; the intake pages also mount file intake, and the thumbnails page adds each document's pages.
+// `window.harness`; the intake pages also mount file intake, the thumbnails page adds each document's pages, and the
+// download page combines the open files into one PDF to download (warning about large input above 20 KB).
 import "~/styles/global.css";
 import { IntakePanel } from "~/components/intake/IntakePanel";
 import { PagesPanel } from "~/components/thumbnails/PagesPanel";
+import { CombinePanel } from "~/components/download/CombinePanel";
 
 export function getStaticPaths() {
-  const names = ["engine", "intake", "intake-single", "thumbnails"];
+  const names = ["engine", "intake", "intake-single", "thumbnails", "download"];
   return process.env["PLYLEAF_TEST_HARNESS"] === "1" ? names.map((name) => ({ params: { name } })) : [];
 }
 
@@ -29,6 +31,11 @@ const { name } = Astro.params;
     {name.startsWith("intake") && (
       <main class="mx-auto max-w-2xl px-4 py-10">
         <IntakePanel client:load multiple={name !== "intake-single"} />
+      </main>
+    )}
+    {name === "download" && (
+      <main class="mx-auto max-w-2xl px-4 py-10">
+        <CombinePanel client:load largeInputBytes={20_000} />
       </main>
     )}
     {name === "thumbnails" && (

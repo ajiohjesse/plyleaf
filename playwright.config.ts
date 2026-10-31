@@ -10,6 +10,9 @@ export default defineConfig({
   forbidOnly: !!process.env["CI"],
   retries: process.env["CI"] ? 2 : 0,
   reporter: process.env["CI"] ? [["github"], ["html", { open: "never" }]] : "list",
+  // The first file a test opens also loads and compiles the 10 MB engine WASM; with four browsers running at once
+  // that alone has taken Firefox over 5 s.
+  expect: { timeout: 10_000 },
   use: {
     baseURL: remote ?? `http://localhost:${port}`,
     trace: "on-first-retry",
