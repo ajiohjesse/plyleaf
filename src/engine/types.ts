@@ -22,9 +22,27 @@ export interface DocInfo {
   repaired: boolean;
 }
 
+/**
+ * Part of a page to keep, as fractions (0 to 1) of the page as it's shown with its own rotation, measured from the
+ * top-left corner.
+ */
+export interface Crop {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 /** One page of an assembled document: a page of an open document, or a new blank page. */
 export type PageSpec =
-  | { doc: DocId; page: number; /** Added to the page's own rotation. */ rotate?: Rotation }
+  | {
+      doc: DocId;
+      page: number;
+      /** Added to the page's own rotation (after cropping). */
+      rotate?: Rotation;
+      /** Sets the page's crop box, so only this part shows. */
+      crop?: Crop;
+    }
   | { blank: { width: number; height: number } };
 
 /** An RGBA bitmap, 4 bytes per pixel, not premultiplied. */

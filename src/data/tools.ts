@@ -103,6 +103,7 @@ export const tools: Tool[] = [
     description: "Trim margins or cut pages to size.",
     category: "organize",
     keywords: ["trim", "margins"],
+    available: true,
   },
 
   // Convert

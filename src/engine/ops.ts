@@ -2,14 +2,14 @@
 // the worker. They hold no state: the worker owns the open documents and passes them in.
 import * as mupdf from "mupdf";
 import { EngineError } from "./errors";
-import type { Bitmap, PageInfo, Rotation } from "./types";
+import type { Bitmap, Crop, PageInfo, Rotation } from "./types";
 
 /** Largest bitmap side we render, in pixels. Bigger requests would need hundreds of MB of WASM memory. */
 export const MAX_RENDER_SIDE = 8192;
 /** Largest page side in PDF points (200 in), the limit in the PDF spec. */
 export const MAX_PAGE_SIDE = 14_400;
 
-export type Source = { doc: mupdf.PDFDocument; page: number; rotate?: Rotation };
+export type Source = { doc: mupdf.PDFDocument; page: number; rotate?: Rotation; crop?: Crop };
 export type AssembleSpec = Source | { blank: { width: number; height: number } };
 
 /** Opens PDF bytes. MuPDF copies them, so the caller can drop its copy. */
@@ -99,10 +99,10 @@ export function assemble(specs: readonly AssembleSpec[]): Uint8Array<ArrayBuffer
       let map = maps.get(spec.doc);
       if (!map) maps.set(spec.doc, (map = out.newGraftMap()));
       map.graftPage(-1, spec.doc, spec.page);
-      if (spec.rotate) {
-        const page = out.findPage(out.countPages() - 1);
-        page.put("Rotate", (pageRotation(page) + spec.rotate) % 360);
-      }
+      const page = out.findPage(out.countPages() - 1);
+      // Crop first: the crop is measured on the page as its own rotation shows it.
+      if (spec.crop) cropPage(page, spec.crop, spec.page);
+      if (spec.rotate) page.put("Rotate", (pageRotation(page) + spec.rotate) % 360);
     }
     const buffer = out.saveToBuffer("garbage,compress");
     try {
@@ -115,6 +115,55 @@ export function assemble(specs: readonly AssembleSpec[]): Uint8Array<ArrayBuffer
     for (const map of maps.values()) map.destroy();
     out.destroy();
   }
+}
+
+/** Sets a page's /CropBox to the part `crop` describes, in the page's own (unrotated) coordinates. */
+function cropPage(page: mupdf.PDFObject, crop: Crop, index: number) {
+  const { x, y, width, height } = crop;
+  const valid = [x, y, width, height].every(Number.isFinite) && x >= 0 && y >= 0 && width > 0 && height > 0;
+  if (!valid || x + width > 1 + 1e-9 || y + height > 1 + 1e-9) {
+    throw new EngineError("invalid-argument", `Page ${index + 1} can't be cropped to that area`);
+  }
+  // What shows now: the crop box (if any) inside the media box.
+  const media = boxOf(page, "MediaBox") ?? [0, 0, 612, 792];
+  const current = boxOf(page, "CropBox") ?? media;
+  const llx = Math.max(media[0], current[0]);
+  const lly = Math.max(media[1], current[1]);
+  const urx = Math.min(media[2], current[2]);
+  const ury = Math.min(media[3], current[3]);
+  const w = urx - llx;
+  const h = ury - lly;
+  // Where a point (u right, v down, as fractions of the shown page) is in the page's own coordinates.
+  const at = (u: number, v: number): [number, number] => {
+    switch (pageRotation(page)) {
+      case 90:
+        return [llx + v * w, lly + u * h];
+      case 180:
+        return [urx - u * w, lly + v * h];
+      case 270:
+        return [urx - v * w, ury - u * h];
+      default:
+        return [llx + u * w, ury - v * h];
+    }
+  };
+  const [ax, ay] = at(x, y);
+  const [bx, by] = at(x + width, y + height);
+  const box = [Math.min(ax, bx), Math.min(ay, by), Math.max(ax, bx), Math.max(ay, by)] as const;
+  if (box[2] - box[0] < 1 || box[3] - box[1] < 1) {
+    throw new EngineError("invalid-argument", `Page ${index + 1} would be cropped to less than a point`);
+  }
+  page.put(
+    "CropBox",
+    box.map((n) => Math.round(n * 1000) / 1000),
+  );
+}
+
+/** A page's box (inherited if need be), normalised so the first corner is the lower left. */
+function boxOf(page: mupdf.PDFObject, key: "MediaBox" | "CropBox"): [number, number, number, number] | null {
+  const value = page.getInheritable(key);
+  if (!value.isArray() || value.length < 4) return null;
+  const [a, b, c, d] = [0, 1, 2, 3].map((i) => value.get(i).asNumber());
+  return [Math.min(a!, c!), Math.min(b!, d!), Math.max(a!, c!), Math.max(b!, d!)];
 }
 
 function checkPageIndex(pdf: mupdf.PDFDocument, index: number) {

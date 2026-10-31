@@ -156,6 +156,42 @@ describe("assemble", () => {
     expect(colourAt(renderPage(open(out), 0, 100), 0.25, 0.25)).toBe("white");
   });
 
+  test("crops pages to a part of how they're shown, whatever their own rotation", () => {
+    // The red quadrant is the page's own top-left, so it shows top-left, top-right, bottom-right, bottom-left.
+    const shown = { 0: [0, 0], 90: [0.5, 0], 180: [0.5, 0.5], 270: [0, 0.5] } as const;
+    for (const rotate of [0, 90, 180, 270] as const) {
+      const doc = open(makePdf([{ ...A4, rotate }]));
+      const [x, y] = shown[rotate];
+      const out = open(assemble([{ doc, page: 0, crop: { x, y, width: 0.5, height: 0.5 } }]));
+      const [page] = describeDoc(out).pages;
+      const full = rotate % 180 === 0 ? A4 : { width: A4.height, height: A4.width };
+      expect(page!.width).toBeCloseTo(full.width / 2, 1);
+      expect(page!.height).toBeCloseTo(full.height / 2, 1);
+      const bitmap = renderPage(out, 0, 100);
+      for (const [fx, fy] of [
+        [0.1, 0.1],
+        [0.9, 0.1],
+        [0.5, 0.5],
+        [0.1, 0.9],
+        [0.9, 0.9],
+      ] as const) {
+        expect(colourAt(bitmap, fx, fy), `rotate ${rotate} at ${fx},${fy}`).toBe("red");
+      }
+    }
+  });
+
+  test("crops inside an existing crop, then adds rotation", () => {
+    const doc = open(makePdf([A4]));
+    const top = open(assemble([{ doc, page: 0, crop: { x: 0, y: 0, width: 1, height: 0.5 } }]));
+    // Left half of the top half: the red quadrant, then turned a quarter.
+    const out = open(assemble([{ doc: top, page: 0, crop: { x: 0, y: 0, width: 0.5, height: 1 }, rotate: 90 }]));
+    const [page] = describeDoc(out).pages;
+    expect(page!.width).toBeCloseTo(A4.height / 2, 1);
+    expect(page!.height).toBeCloseTo(A4.width / 2, 1);
+    expect(page!.rotation).toBe(90);
+    expect(colourAt(renderPage(out, 0, 100), 0.5, 0.5)).toBe("red");
+  });
+
   test("copies each source's shared resources once", () => {
     const doc = open(makePdf([A4]));
     const once = assemble([{ doc, page: 0 }]);
@@ -170,6 +206,12 @@ describe("assemble", () => {
 
   test("rejects bad input", () => {
     const doc = open(makePdf([A4]));
+    expect(errorCode(() => assemble([{ doc, page: 0, crop: { x: 0.5, y: 0, width: 0.6, height: 1 } }]))).toBe(
+      "invalid-argument",
+    );
+    expect(errorCode(() => assemble([{ doc, page: 0, crop: { x: 0, y: 0, width: 0, height: 1 } }]))).toBe(
+      "invalid-argument",
+    );
     expect(errorCode(() => assemble([]))).toBe("invalid-argument");
     expect(errorCode(() => assemble([{ doc, page: 1 }]))).toBe("invalid-argument");
     expect(errorCode(() => assemble([{ blank: { width: 0, height: 100 } }]))).toBe("invalid-argument");

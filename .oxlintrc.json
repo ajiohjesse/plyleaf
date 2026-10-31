@@ -7,6 +7,7 @@
   },
   "rules": {
     "react/react-in-jsx-scope": "off",
+    "vitest/expect-expect": ["error", { "assertFunctionNames": ["expect", "expect*"] }],
     "import/no-unassigned-import": [
       "warn",
       {

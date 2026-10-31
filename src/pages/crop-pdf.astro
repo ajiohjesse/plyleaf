@@ -1,0 +1,51 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { CropWorkspace } from "~/components/crop/CropWorkspace";
+---
+
+<ToolPage
+  slug="crop-pdf"
+  title="Crop PDF pages free, no sign-up"
+  description="Trim the margins of PDF pages or cut them to size, in your browser. Free with no limits, no watermark and no account, and your file is never uploaded."
+  heading="Crop PDF"
+  intro="Trim margins or cut pages down to the part you need. Free, no sign-up, no watermark, and your file never leaves this device."
+  steps={[
+    { title: "Add your PDF", text: "Choose it, drop it anywhere on the page, or paste it." },
+    {
+      title: "Draw the crop",
+      text: "Drag the frame and its handles over the part to keep, or type the margins. Check other pages with the arrows.",
+    },
+    {
+      title: "Crop and download",
+      text: "Crop every page or only the ones you type. Plyleaf makes the new PDF on your device.",
+    },
+  ]}
+  faqs={[
+    {
+      question: "Is it really free?",
+      answer:
+        "Yes. There is no paid plan, no daily limit and no watermark. Plyleaf can be free because your own browser does the work, so there are no servers to pay for.",
+    },
+    {
+      question: "Is my file uploaded?",
+      answer:
+        "No. Your PDF is read right here in your browser, and the new file is made here too. It never goes over the internet.",
+    },
+    {
+      question: "Is the cropped-off part deleted?",
+      answer:
+        "No. Like most PDF tools, cropping sets the visible area of each page, so the rest is hidden, not removed. Don't rely on cropping to remove private details; true redaction for that is planned.",
+    },
+    {
+      question: "Does cropping lower the quality?",
+      answer: "No. The text, fonts and images inside the crop stay exactly as they were; nothing is re-compressed.",
+    },
+    {
+      question: "Can I crop pages differently?",
+      answer:
+        "Each crop uses one frame for the pages you choose. To crop parts of the file differently, crop some pages, download, then open the result and crop the others.",
+    },
+  ]}
+>
+  <CropWorkspace client:load />
+</ToolPage>
