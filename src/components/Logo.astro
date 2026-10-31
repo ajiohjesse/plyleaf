@@ -1,0 +1,28 @@
+---
+interface Props {
+  class?: string;
+  /** Wordmark colour; the mark keeps its sticky colours. */
+  tone?: "ink" | "light";
+}
+const { class: className, tone = "ink" } = Astro.props;
+---
+
+<span class:list={["inline-flex items-center gap-2", className]}>
+  <svg width="28" height="32" viewBox="0 0 28 32" aria-hidden="true" class="shrink-0">
+    <!-- A page with its corner folded back: the "plyleaf" -->
+    <path
+      d="M3 3h15l7 7v19H3z"
+      fill="var(--sticky-yellow)"
+      stroke="var(--ink)"
+      stroke-width="2"
+      stroke-linejoin="round"
+    ></path>
+    <path d="M18 3v7h7" fill="var(--sticky-pink)" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"></path>
+    <path d="M8 16h11M8 21h8" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"></path>
+  </svg>
+  <span
+    class:list={["font-display text-2xl font-extrabold tracking-tight", tone === "light" ? "text-white" : "text-ink"]}
+  >
+    plyleaf
+  </span>
+</span>

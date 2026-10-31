@@ -36,7 +36,18 @@ MuPDF.js / pdf-lib (final split per D-006) · Vitest · Playwright (Chromium, Fi
 Cloudflare Pages. Package manager: pnpm.
 
 ## Commands
-_Fill in during M0 once the scaffold exists (dev, build, lint, typecheck, test, e2e)._
+- `pnpm dev`: dev server on http://localhost:4321 · `pnpm build` → `dist/` · `pnpm preview`: serve the build
+- `pnpm lint` (Oxlint, warnings fail) · `pnpm format` / `pnpm format:check` (Prettier) · `pnpm typecheck` (astro check)
+- `pnpm test`: Vitest unit tests in `tests/unit/` · `pnpm e2e`: Playwright against the production build
+  (first run: `pnpm exec playwright install chromium firefox webkit`)
+- `pnpm check`: lint + format check + typecheck + unit tests (run before calling anything done)
+
+## Layout
+- `src/styles/global.css`: design tokens (CSS variables) mapped to Tailwind names in `@theme`; contrast is tested
+  in `tests/unit/tokens.test.ts`, so add new text/background pairs there.
+- `src/data/tools.ts`: the tool catalogue. Set `available: true` when a tool's page ships; the home grid and footer
+  link it automatically.
+- `src/components/`: Astro components (static) and React islands (`.tsx`). `src/components/home/`: home page sections.
 
 ## Conventions
 - Each tool = a static landing page under `src/pages/<tool-slug>.astro` + a React workspace island + an engine

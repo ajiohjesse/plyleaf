@@ -3,9 +3,13 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M0: Foundation
-- **Next action:** Create the GitHub repo (`plyleaf`), scaffold Astro + React + TS + Tailwind, set up CI.
-- **Blocked on owner:** register `plyleaf.com` and the `plyleaf` GitHub org (recommended; the repo can live under the
-  personal account until then).
+- **Next action:** Merge [PR #1](https://github.com/ajiohjesse/plyleaf/pull/1) (CI green); then connect
+  Cloudflare Pages for a preview deploy. After that, M0 is done and M1 starts with the engine spike (D-006).
+- **Blocked on owner:**
+  - A Cloudflare account/project for Pages (preview deploys). Build command `pnpm build`, output `dist/`, Node 24.
+  - Later, at the owner's pace: register `plyleaf.com` (and optionally the `plyleaf` GitHub org). Not blocking (D-013).
+- **Repo:** https://github.com/ajiohjesse/plyleaf (public). `gh`'s active account on this machine is `angosam`, so run
+  `gh`/`git push` as ajiohjesse (e.g. `GH_TOKEN=$(gh auth token --user ajiohjesse)`) or switch with `gh auth switch`.
 
 ## Milestones
 
@@ -13,12 +17,12 @@ Tick an item only when it's verified (tests pass / checked in a browser). Tick t
 Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 
 ### [ ] M0: Foundation
-- [ ] GitHub repo created, AGPL-3.0 LICENSE, README
-- [ ] Astro + React + TypeScript + Tailwind v4 scaffold builds
-- [ ] Oxlint + Prettier + typecheck + Vitest + Playwright configured
-- [ ] GitHub Actions CI runs all checks on PRs
-- [ ] Design tokens and fonts from DESIGN.md implemented
-- [ ] Landing page: hero, promise strip, tool grid, comparison table, CTA, footer (responsive)
+- [x] GitHub repo created, AGPL-3.0 LICENSE, README
+- [x] Astro + React + TypeScript + Tailwind v4 scaffold builds
+- [x] Oxlint + Prettier + typecheck + Vitest + Playwright configured
+- [x] GitHub Actions CI runs all checks on PRs
+- [x] Design tokens and fonts from DESIGN.md implemented
+- [x] Landing page: hero, promise strip, tool grid, comparison table, CTA, footer (responsive)
 - [ ] Cloudflare Pages preview deploy live
 
 ### [ ] M1: Engine and core architecture
@@ -65,6 +69,29 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-10-31: M0 scaffold, tooling, tokens, landing page
+- `git init` (local only, no remote yet): planning docs + AGPL-3.0 LICENSE on `main`, all M0 work on branch `m0/scaffold`.
+- Scaffolded Astro 7 (static) + React 19 islands + TypeScript 6 (strictest) + Tailwind v4. Tooling: Oxlint (warnings
+  fail), Prettier (+ Astro plugin), `astro check`, Vitest, Playwright (Chromium, Firefox, WebKit, Pixel 7). CI workflow
+  runs all of them plus the build on every PR.
+- Design tokens in `src/styles/global.css`, mapped to Tailwind names; dark tokens defined but opt-in (D-010). Outfit and
+  Figtree self-hosted via Fontsource (D-009). A unit test checks every text/background token pair for WCAG AA in both
+  themes; they all pass with the DESIGN.md starting values, so no colour changes were needed.
+- Home page: header, hero with the sticky-note/selection-frame illustration, promise strip, product-frame mock of the
+  workspace, searchable tool grid (React island, `client:idle`, 36 tools from `src/data/tools.ts`, all "Soon"),
+  how-it-works, comparison table, CTA band, navy footer. No hero drop zone yet: that comes with M1 file intake (D-011).
+- Verified: lint, format check, typecheck, 36 unit tests, build; Playwright home tests (sections, search filter,
+  same-origin requests only, no horizontal scroll) pass in Chromium, Firefox, WebKit and the Pixel 7 profile, repeated
+  3×. Checked in a browser at 375 px and desktop widths. Fixed on the way: search text typed before the island hydrated
+  was dropped (the input is now uncontrolled and read on hydration); `client:visible` never hydrated in WebKit when the
+  page scrolled by focusing the input, so the grid hydrates on idle instead; the comparison table overflowed on phones.
+- Home page JS: ~72 KB gzipped (mostly React), loaded after the page is idle, never blocking first paint. Revisit for the M9
+  Lighthouse target if needed (vanilla filter or Preact).
+- Owner chose a public repo under `ajiohjesse` and deferred the domain (D-013). Created
+  https://github.com/ajiohjesse/plyleaf, pushed `main` and `m0/scaffold`, opened PR #1.
+- CI passed on PR #1 on GitHub runners: lint/typecheck/unit/build and E2E in all four browser projects.
+- Next: merge PR #1; Cloudflare Pages preview.
 
 ### 2026-10-31: Planning session
 - Researched competitors and the open-source landscape; wrote GOAL, STRATEGY, DESIGN, DECISIONS, CLAUDE.md.

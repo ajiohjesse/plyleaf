@@ -1,0 +1,141 @@
+@import "tailwindcss";
+@import "@fontsource-variable/outfit/wght.css";
+@import "@fontsource-variable/figtree/wght.css";
+
+/*
+ * Design tokens (docs/DESIGN.md). Components use the Tailwind names from @theme below
+ * (bg-surface, text-ink, bg-primary, ...), which resolve to these variables so a theme can swap them.
+ * tests/unit/tokens.test.ts checks the text/background pairs against WCAG 2.2 AA.
+ */
+:root {
+  /* ink & surfaces */
+  --ink: #0f0d2e;
+  --ink-muted: #5b5a73;
+  --surface: #ffffff;
+  --surface-band: #f4f4f7;
+  --line: #e5e5ec;
+
+  /* brand */
+  --primary: #3d4ef5;
+  --primary-hover: #2c3ce0;
+  --on-primary: #ffffff;
+
+  /* sticky-note accents (decoration + tool-category colours) */
+  --sticky-yellow: #ffd43b;
+  --sticky-pink: #ffb3c1;
+  --sticky-coral: #ff7a85;
+  --sticky-lavender: #b9c1ff;
+  --sticky-mint: #a8e6cf;
+
+  /* footer */
+  --footer-bg: #0e0b3a;
+  --footer-ink: #c9c8e6;
+
+  --radius-card: 14px;
+  --radius-pill: 999px;
+  --shadow-sticky: 0 2px 0 rgb(15 13 46 / 0.06), 0 10px 24px -12px rgb(15 13 46 / 0.25);
+
+  color-scheme: light;
+}
+
+/* Dark theme: defined now, switched on in M9 (it's opt-in via data-theme until then). */
+[data-theme="dark"] {
+  --ink: #f1f0fa;
+  --ink-muted: #a9a8c4;
+  --surface: #0f0d24;
+  --surface-band: #17152f;
+  --line: #2a2846;
+
+  --primary: #7c88ff;
+  --primary-hover: #97a1ff;
+  --on-primary: #0f0d24;
+
+  --footer-bg: #08061e;
+  --footer-ink: #c9c8e6;
+
+  --shadow-sticky: 0 2px 0 rgb(0 0 0 / 0.2), 0 10px 24px -12px rgb(0 0 0 / 0.6);
+
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-surface: var(--surface);
+  --color-surface-band: var(--surface-band);
+  --color-line: var(--line);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-on-primary: var(--on-primary);
+  --color-sticky-yellow: var(--sticky-yellow);
+  --color-sticky-pink: var(--sticky-pink);
+  --color-sticky-coral: var(--sticky-coral);
+  --color-sticky-lavender: var(--sticky-lavender);
+  --color-sticky-mint: var(--sticky-mint);
+  --color-footer-bg: var(--footer-bg);
+  --color-footer-ink: var(--footer-ink);
+
+  --radius-card: var(--radius-card);
+  --radius-pill: var(--radius-pill);
+  --shadow-sticky: var(--shadow-sticky);
+
+  --font-display: "Outfit Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Figtree Variable", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    background-color: var(--surface);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 100%;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    text-wrap: balance;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@utility text-hero {
+  font-size: clamp(2.75rem, 6vw, 5rem);
+  line-height: 1;
+}
+
+@utility btn-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding-inline: 1.5rem;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  transition:
+    background-color 150ms,
+    transform 150ms;
+}

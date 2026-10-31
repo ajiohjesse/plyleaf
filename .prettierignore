@@ -1,0 +1,9 @@
+dist/
+.astro/
+coverage/
+test-results/
+playwright-report/
+pnpm-lock.yaml
+LICENSE
+docs/
+*.md

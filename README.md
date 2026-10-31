@@ -5,7 +5,11 @@
 Plyleaf runs every PDF operation in your browser (WebAssembly), so there are no servers processing your documents
 and nothing to charge you for. It's open source under AGPL-3.0.
 
-> Status: planning complete, building M0 (foundation). See [docs/PROGRESS.md](docs/PROGRESS.md).
+> Status: building M0 (foundation): the landing page and tooling are in place. See [docs/PROGRESS.md](docs/PROGRESS.md).
+
+## Development
+Needs Node 24 and pnpm. `pnpm install`, then `pnpm dev` (http://localhost:4321). `pnpm check` runs lint, format check,
+typecheck and unit tests; `pnpm e2e` runs Playwright against the production build.
 
 ## Project docs
 - [Goal and milestones](docs/GOAL.md): what we're building and what "done" means
