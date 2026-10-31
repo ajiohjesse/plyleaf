@@ -55,6 +55,7 @@ export const tools: Tool[] = [
     name: "Extract pages",
     description: "Pull the pages you need into a new PDF.",
     category: "organize",
+    available: true,
   },
   {
     slug: "delete-pages",

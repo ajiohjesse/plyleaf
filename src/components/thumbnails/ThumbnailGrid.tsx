@@ -5,18 +5,18 @@ import { PageCanvas } from "./PageCanvas";
 
 /** Narrowest a column gets before the grid drops one. */
 const MIN_CELL = 128;
-const GAP = 16;
+export const GAP = 16;
 /** Each page is fitted into a box this many times taller than it is wide (A4 portrait fills it). */
-const BOX_RATIO = Math.SQRT2;
+export const BOX_RATIO = Math.SQRT2;
 /** Pages within this distance of the viewport get a canvas and a render; the rest are empty placeholders. */
-const NEAR = "100% 0px";
+export const NEAR = "100% 0px";
 /** Pages actually on screen, whose renders go first. */
-const ON_SCREEN = "0px";
+export const ON_SCREEN = "0px";
 
-type Observe = (element: Element, onChange: (inside: boolean) => void) => () => void;
+export type Observe = (element: Element, onChange: (inside: boolean) => void) => () => void;
 
 /** One IntersectionObserver for the whole grid, rather than one per page. */
-function useViewportObserver(rootMargin: string): Observe {
+export function useViewportObserver(rootMargin: string): Observe {
   const [observe] = useState((): Observe => {
     const callbacks = new Map<Element, (inside: boolean) => void>();
     let observer: IntersectionObserver | null = null;
@@ -39,7 +39,7 @@ function useViewportObserver(rootMargin: string): Observe {
 }
 
 /** Columns and the width of each, from the grid's own width. */
-function useColumns(ref: React.RefObject<HTMLElement | null>) {
+export function useColumns(ref: React.RefObject<HTMLElement | null>) {
   const [width, setWidth] = useState(0);
   useLayoutEffect(() => {
     const element = ref.current!;
@@ -53,7 +53,7 @@ function useColumns(ref: React.RefObject<HTMLElement | null>) {
 }
 
 /** The page's size in CSS pixels when fitted into a cell's box. */
-function fit(page: PageInfo, cellWidth: number) {
+export function fit(page: Pick<PageInfo, "width" | "height">, cellWidth: number) {
   const scale = Math.min(cellWidth / page.width, (cellWidth * BOX_RATIO) / page.height);
   return { width: Math.max(1, Math.round(page.width * scale)), height: Math.max(1, Math.round(page.height * scale)) };
 }
