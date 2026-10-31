@@ -3,9 +3,9 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M1: Engine and core architecture (M0 done 2026-10-31)
-- **Next action:** Virtualised page thumbnails (500+ pages) for the documents `useIntake` opens: render with
-  `engine.render`, only for pages near the viewport, and cache bitmaps per (doc, page, width). Host it on the intake
-  harness page next to `DocumentList` until the first tool workspace exists.
+- **Next action:** Download pipeline + memory-limit UX: save `engine.assemble` output (download link / File System
+  Access "save as" where available, sensible file names); warn on very large inputs; when the worker dies (OOM), reject
+  in-flight calls, restart it and tell the user plainly instead of hanging.
 - **Live:** https://plyleaf.ajiohjesse.workers.dev (Workers Builds deploys `main`; other branches get Preview URLs).
 - **Blocked on owner:**
   - Later, at the owner's pace: register `plyleaf.com` (and optionally the `plyleaf` GitHub org). Not blocking (D-013).
@@ -32,7 +32,7 @@ Done-when criteria are in [GOAL.md ยง7](GOAL.md#7-milestones).
 - [x] Engine spike done; D-006 resolved with numbers (D-015, [report](research/engine-spike.md))
 - [x] Worker + Comlink typed engine API (D-016)
 - [x] File intake (drop, picker, paste, multi-file) + validation and errors
-- [ ] Virtualised page thumbnails
+- [x] Virtualised page thumbnails
 - [ ] Download pipeline + memory-limit UX
 - [ ] Network egress test (no file bytes leave the browser)
 
@@ -72,6 +72,32 @@ Done-when criteria are in [GOAL.md ยง7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-10-31: Virtualised page thumbnails (M1)
+- Added `src/thumbnails/cache.ts`: `createThumbnailCache` (framework-free). Requests queue in order and go to the
+  engine two at a time; a request cancelled before it starts never reaches the engine; requests for the same image
+  share one render; images are kept per (doc, page, width) under a 64 MB byte budget, least recently used dropped first
+  (and `ImageBitmap.close()`d); `forget(doc)` drops a closed document's images and queued renders and ignores its
+  renders in flight (worker ids can be reissued). `renderWidth` picks device pixels (capped at 2ื) in steps of 32 px so
+  small layout changes reuse cached images. `src/thumbnails/thumbnails.ts` is the page's shared instance. Design in D-018.
+- `src/components/thumbnails/ThumbnailGrid.tsx`: every page is a light `<li>` placeholder of the right shape (fitted in
+  an A4-portrait box), so keyboard, screen readers and find-in-page see all of them; only pages within one viewport of
+  the screen (one shared IntersectionObserver) mount a `<canvas>` and request a render, and the canvas goes when they
+  leave. Columns come from the grid's width (min 128 px, at least 2). Failed renders say "Can't show this page".
+  `PagesPanel` (intake + a grid per open document) is on a new `test-harness/thumbnails` page; the harness now exposes
+  the cache as `window.harness.thumbnails`.
+- Verified: 8 new unit tests (order and concurrency, cancel before/after start, shared renders, LRU budget incl. an
+  oversize image, forget with a reused id, failures not cached, render widths). New E2E `thumbnails.spec.ts` (pages the
+  right way up and shape by pixel colour, incl. a /Rotate 90 page; a 600-page PDF lists 600 items but renders under 100
+  near the top, jumping to the end renders the last page without the middle and removes the top canvases, scrolling back
+  re-renders nothing; removing a document empties the cache and closes it). Full suite 72/72 in Chromium, Firefox, WebKit
+  and Pixel 7, thumbnails spec ื3 stable. In the dev harness: 600 pages listed in ~300 ms, a fast scroll through all of
+  them kept ~36 canvases and 41 MB of cached images; checked at 375 px (2 columns, no horizontal scroll) and 1024 px.
+  `pnpm check` passes; a production build still has no harness pages.
+- Open: the grid observes the window's viewport; an M2 workspace with its own scroll container will need to pass that
+  as the IntersectionObserver root. WebKit is the slowest at a long jump (~1.3 s to the last page after scrolling 600
+  pages). Thumbnails ignore user-applied rotation for now (M2 can rotate the canvas with CSS).
+- Next: download pipeline + memory-limit UX.
 
 ### 2026-10-31: File intake (M1)
 - Added `src/intake/`: `files.ts` (sniffs each file's first 1 KB for a PDF header or an image signature, falls back to

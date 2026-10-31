@@ -1,12 +1,13 @@
 ---
 // Pages that let E2E tests drive internals in a real browser. They're built only when PLYLEAF_TEST_HARNESS=1, which
-// the Playwright web server sets, so they never ship. Every page exposes the engine as `window.harness`; the intake
-// pages also mount file intake.
+// the Playwright web server sets, so they never ship. Every page exposes the engine and the thumbnail cache as
+// `window.harness`; the intake pages also mount file intake, and the thumbnails page adds each document's pages.
 import "~/styles/global.css";
 import { IntakePanel } from "~/components/intake/IntakePanel";
+import { PagesPanel } from "~/components/thumbnails/PagesPanel";
 
 export function getStaticPaths() {
-  const names = ["engine", "intake", "intake-single"];
+  const names = ["engine", "intake", "intake-single", "thumbnails"];
   return process.env["PLYLEAF_TEST_HARNESS"] === "1" ? names.map((name) => ({ params: { name } })) : [];
 }
 
@@ -25,15 +26,21 @@ const { name } = Astro.params;
     <p class="sr-only">
       {name} harness. Tests call <code>window.harness</code>.
     </p>
-    {name !== "engine" && (
+    {name.startsWith("intake") && (
       <main class="mx-auto max-w-2xl px-4 py-10">
         <IntakePanel client:load multiple={name !== "intake-single"} />
       </main>
     )}
+    {name === "thumbnails" && (
+      <main class="mx-auto max-w-5xl px-4 py-10">
+        <PagesPanel client:load />
+      </main>
+    )}
     <script>
       import { engine, EngineError, preloadEngine } from "~/engine/client";
+      import { thumbnails } from "~/thumbnails/thumbnails";
 
-      Object.assign(window, { harness: { engine, EngineError, preloadEngine } });
+      Object.assign(window, { harness: { engine, EngineError, preloadEngine, thumbnails } });
       document.body.dataset["ready"] = "true";
     </script>
   </body>

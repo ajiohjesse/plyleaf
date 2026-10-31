@@ -56,6 +56,8 @@ Cloudflare Pages. Package manager: pnpm.
   unit-tested in Node) and are exposed by `worker.ts`.
 - `src/intake/`: file checks and the open-documents store (`createIntake`); `src/components/intake/`: `useIntake`,
   `FileDrop` (picker, page-wide drop, paste) and the file list/notices that tool workspaces build on (D-017).
+- `src/thumbnails/`: the shared page-thumbnail cache (`thumbnails`, D-018); `src/components/thumbnails/ThumbnailGrid`
+  renders a document's pages and only renders those near the viewport.
 - `src/pages/test-harness/`: pages for E2E tests to drive internals, built only when `PLYLEAF_TEST_HARNESS=1`.
 - `tests/helpers/pdf.ts`: builds test PDFs with MuPDF (works in Vitest and Playwright).
 
