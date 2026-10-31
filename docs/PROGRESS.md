@@ -3,8 +3,8 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M2: Organize suite (M0 and M1 done 2026-10-31)
-- **Next action:** M2, Delete pages next: a `delete` mode in `OrganizeWorkspace` (D-023). Then rotate, reorder,
-  insert blank, duplicate (each a mode on the same board), then Crop.
+- **Next action:** M2, Rotate pages next: a `rotate` mode in `OrganizeWorkspace` (D-023) with per-page and
+  selection rotate buttons. Then reorder, insert blank, duplicate, then Crop.
 - **Live:** https://plyleaf.ajiohjesse.workers.dev (Workers Builds deploys `main`; other branches get Preview URLs).
 - **Blocked on owner:**
   - Later, at the owner's pace: register `plyleaf.com` (and optionally the `plyleaf` GitHub org). Not blocking (D-013).
@@ -36,7 +36,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] Network egress test (no file bytes leave the browser)
 
 ### [ ] M2: Organize suite
-- [x] Merge · [x] Split · [x] Extract · [ ] Delete · [ ] Rotate · [ ] Reorder · [ ] Insert blank · [ ] Duplicate · [ ] Crop
+- [x] Merge · [x] Split · [x] Extract · [x] Delete · [ ] Rotate · [ ] Reorder · [ ] Insert blank · [ ] Duplicate · [ ] Crop
 - [ ] Shared Organize workspace
 - [ ] Per-tool landing pages + E2E tests
 
@@ -71,6 +71,16 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-10-31: Delete pages (M2)
+- `/delete-pages`: a `delete` mode of `OrganizeWorkspace`. Marked pages show faded with a coral frame and a cross
+  (`PageBoard` `tone="remove"`), the bar says "3 pages to delete · 3 pages left", and deleting every page is refused
+  ("Keep at least one page."). Output `<name>-edited.pdf`, built from the kept pages only.
+- Tool specs now give one `status(selected, total)` and a `tone`.
+- Verified: new E2E `delete.spec.ts` (mark by click and shift-click, download and check the pages left by size and that
+  the deleted pages' text isn't in the file; select all refuses; linked from home; `watchEgress` clean). Delete +
+  extract specs 24/24 in all four browser projects. Checked at 375 px and desktop.
+- Next: Rotate pages.
 
 ### 2026-10-31: Extract pages and the shared page board (M2)
 - `src/organize/board.ts`: the page board model for the page-level tools (D-023). A board is an immutable list of
