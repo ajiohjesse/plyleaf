@@ -80,7 +80,9 @@ Newest first. One entry per session: date, milestone, what changed, what was ver
 - `board.ts`: `moveToEdge`, `originalOrder`, `isReordered` (unit-tested). `GripIcon` moved to the shared parts.
 - E2E notes: drag tests centre the board first (the sticky action bar covers handles at the bottom of the viewport),
   and wait for dnd-kit's "Over position" announcement before releasing, because WebKit can process the last pointer
-  move after the button is released.
+  move after the button is released. Keyboard drags use `pressUntilAnnounced` (`tests/helpers/drag.ts`): Chromium can
+  deliver the first arrow key before dnd-kit has measured the drop targets, and it's ignored. Merge's drag test had
+  the same two flakes (it failed 2 of 3 runs locally on `main` in Chromium); it uses the same fixes now.
 - Verified: new E2E `reorder.spec.ts` (keyboard drag with announcements, pointer drag, output order checked with
   MuPDF, move to start/end with the selection following, reverse, reset, linked from home, `watchEgress` clean),
   3 runs each in all four browser projects (one run timed out under 8 parallel workers × 3 repeats; 5/5 alone).

@@ -1,6 +1,7 @@
 // Reorder pages: drag pages on the board (keyboard and pointer), move a selection to either end, reverse, reset.
 // Every test that handles files also checks egress (D-020).
 import { expect, test, type Page } from "@playwright/test";
+import { pressUntilAnnounced } from "../helpers/drag";
 import { watchEgress } from "../helpers/egress";
 import { asPayload, pdfFile } from "../helpers/files";
 import {
@@ -41,8 +42,7 @@ test("drags pages into a new order with the keyboard and the pointer, without se
   await page.getByRole("button", { name: "Drag Page 4" }).focus();
   await page.keyboard.press("Space");
   await announced("Picked up Page 4.");
-  await page.keyboard.press("ArrowLeft");
-  await announced("Over position 3 of 4.");
+  await pressUntilAnnounced(page, "ArrowLeft", "Over position 3 of 4.");
   await page.keyboard.press("Space");
   await announced("Dropped at position 3 of 4.");
   expect(await order(page)).toEqual([1, 2, 4, 3]);
