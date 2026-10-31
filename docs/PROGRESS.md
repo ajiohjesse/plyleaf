@@ -2,9 +2,9 @@
 
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
-- **Current milestone:** M2: Organize suite (M0 and M1 done 2026-10-31)
-- **Next action:** M2, Crop next: set each page's CropBox in the engine (`assemble` gains a crop per page), a crop
-  tool page with a draggable crop frame. Then the shared workspace and per-tool page items can be ticked.
+- **Current milestone:** M3: Images and scanning (M0, M1 and M2 done 2026-10-31)
+- **Next action:** M3, Images → PDF first (JPG/PNG/WebP/GIF/TIFF, then HEIC): images into the engine, then let Merge
+  take images too (D-021).
 - **Live:** https://plyleaf.ajiohjesse.workers.dev (Workers Builds deploys `main`; other branches get Preview URLs).
 - **Blocked on owner:**
   - Later, at the owner's pace: register `plyleaf.com` (and optionally the `plyleaf` GitHub org). Not blocking (D-013).
@@ -35,10 +35,10 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] Download pipeline + memory-limit UX
 - [x] Network egress test (no file bytes leave the browser)
 
-### [ ] M2: Organize suite
-- [x] Merge · [x] Split · [x] Extract · [x] Delete · [x] Rotate · [x] Reorder · [x] Insert blank · [x] Duplicate · [ ] Crop
-- [ ] Shared Organize workspace
-- [ ] Per-tool landing pages + E2E tests
+### [x] M2: Organize suite
+- [x] Merge · [x] Split · [x] Extract · [x] Delete · [x] Rotate · [x] Reorder · [x] Insert blank · [x] Duplicate · [x] Crop
+- [x] Shared Organize workspace
+- [x] Per-tool landing pages + E2E tests
 
 ### [ ] M3: Images and scanning
 - [ ] Images → PDF (incl. HEIC) · [ ] PDF → images · [ ] Extract images · [ ] Camera scan-to-PDF
@@ -71,6 +71,25 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-10-31: Crop PDF, M2 done
+- Engine: `PageSpec` takes `crop` (fractions of the page as its own rotation shows it, from the top-left); `assemble`
+  sets the page's /CropBox inside its current crop and media boxes, mapping through /Rotate 0/90/180/270, before any
+  added rotation (D-024). Unit-tested for every rotation by rendering (the kept quadrant is all red), nested crops,
+  crop then rotate, and bad areas.
+- `/crop-pdf` (`CropWorkspace`, single file): a page preview with a selection frame (outside dimmed, eight handles,
+  drag to move; pointer capture, `touch-none`), page arrows to check other pages, four margin fields in % (with
+  inline errors) for keyboards and exact values, Reset, and "All pages" or "Some pages" (typed ranges). Output
+  `<name>-cropped.pdf`. The FAQ says cropped-off content is hidden, not removed (redaction is M7).
+- `src/organize/crop.ts` (`dragCrop`, `marginsOf`, `cropFromMargins`, `isFull`), unit-tested. Oxlint's
+  `vitest/expect-expect` now also accepts `expect*` helpers.
+- Fixed before shipping: the preview measured its wrapper including padding and overflowed on phones.
+- Verified: 7 new unit tests (engine crop) + 5 (crop frame). New E2E `crop.spec.ts` (typed margins → every page's size
+  checked with MuPDF; drag the top-left handle → margins follow; crop only page 2; margin errors; reset; page arrows;
+  linked from home; `watchEgress` clean): 16/16 in all four browser projects, twice. Checked at 375 px and desktop.
+- All nine Organize tools have their own page and E2E tests, six of them on the shared page board, so M2 is done.
+- Open: no auto-detect of white margins yet; one crop frame per run (different crops per page need two runs).
+- Next: M3, Images → PDF.
 
 ### 2026-10-31: Duplicate pages (M2)
 - `/duplicate-pages`: a `duplicate` mode. A copy button under each page puts a copy right after it; the toolbar copies
