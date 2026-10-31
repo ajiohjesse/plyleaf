@@ -3,14 +3,13 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M0: Foundation
-- **Next action:** Push the local repo to GitHub and open the `m0/scaffold` PR so CI runs for the first time; then
-  connect Cloudflare Pages for a preview deploy. After that, M0 is done and M1 starts with the engine spike (D-006).
+- **Next action:** Get CI green on [PR #1](https://github.com/ajiohjesse/plyleaf/pull/1) and merge it; then connect
+  Cloudflare Pages for a preview deploy. After that, M0 is done and M1 starts with the engine spike (D-006).
 - **Blocked on owner:**
-  - Approve creating the GitHub repo and where it lives (`plyleaf` org, or the personal account for now) and public vs
-    private. The local repo is ready with history on `main` and work on `m0/scaffold`.
-  - A Cloudflare account/project for Pages (preview deploys). Build command `pnpm build`, output `dist/`.
-  - Register `plyleaf.com` and the `plyleaf` GitHub org (recommended). `site.repoUrl` in `src/data/site.ts` assumes
-    `github.com/plyleaf/plyleaf`; change it if the repo lands elsewhere.
+  - A Cloudflare account/project for Pages (preview deploys). Build command `pnpm build`, output `dist/`, Node 24.
+  - Later, at the owner's pace: register `plyleaf.com` (and optionally the `plyleaf` GitHub org). Not blocking (D-013).
+- **Repo:** https://github.com/ajiohjesse/plyleaf (public). `gh`'s active account on this machine is `angosam`, so run
+  `gh`/`git push` as ajiohjesse (e.g. `GH_TOKEN=$(gh auth token --user ajiohjesse)`) or switch with `gh auth switch`.
 
 ## Milestones
 
@@ -18,10 +17,10 @@ Tick an item only when it's verified (tests pass / checked in a browser). Tick t
 Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 
 ### [ ] M0: Foundation
-- [ ] GitHub repo created, AGPL-3.0 LICENSE, README (LICENSE + README done locally; repo not created yet, owner gate)
+- [x] GitHub repo created, AGPL-3.0 LICENSE, README
 - [x] Astro + React + TypeScript + Tailwind v4 scaffold builds
 - [x] Oxlint + Prettier + typecheck + Vitest + Playwright configured
-- [ ] GitHub Actions CI runs all checks on PRs (`.github/workflows/ci.yml` written; not run until the repo exists)
+- [ ] GitHub Actions CI runs all checks on PRs (first run on PR #1; tick once green)
 - [x] Design tokens and fonts from DESIGN.md implemented
 - [x] Landing page: hero, promise strip, tool grid, comparison table, CTA, footer (responsive)
 - [ ] Cloudflare Pages preview deploy live
@@ -89,7 +88,9 @@ Newest first. One entry per session: date, milestone, what changed, what was ver
   page scrolled by focusing the input, so the grid hydrates on idle instead; the comparison table overflowed on phones.
 - Home page JS: ~72 KB gzipped (mostly React), loaded after the page is idle, never blocking first paint. Revisit for the M9
   Lighthouse target if needed (vanilla filter or Preact).
-- Next: owner approves the GitHub repo → push, open the PR, confirm CI is green; Cloudflare Pages preview.
+- Owner chose a public repo under `ajiohjesse` and deferred the domain (D-013). Created
+  https://github.com/ajiohjesse/plyleaf, pushed `main` and `m0/scaffold`, opened PR #1.
+- Next: CI green on PR #1 → merge; Cloudflare Pages preview.
 
 ### 2026-10-31: Planning session
 - Researched competitors and the open-source landscape; wrote GOAL, STRATEGY, DESIGN, DECISIONS, CLAUDE.md.
