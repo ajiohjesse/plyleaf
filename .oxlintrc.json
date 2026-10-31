@@ -14,5 +14,5 @@
       }
     ]
   },
-  "ignorePatterns": ["dist/**", ".astro/**", "playwright-report/**", "test-results/**"]
+  "ignorePatterns": ["dist/**", ".astro/**", "playwright-report/**", "test-results/**", "bench/engine/dist/**"]
 }

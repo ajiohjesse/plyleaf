@@ -8,3 +8,6 @@ LICENSE
 docs/
 *.md
 wrangler.jsonc
+bench/engine/dist/
+bench/engine/results/
+bench/engine/public/

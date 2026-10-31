@@ -15,6 +15,7 @@ typecheck and unit tests; `pnpm e2e` runs Playwright against the production buil
 - [Goal and milestones](docs/GOAL.md): what we're building and what "done" means
 - [Progress](docs/PROGRESS.md): current milestone, checklist and session log
 - [Strategy and research](docs/STRATEGY.md): competitors, the sign-in decision, architecture, costs
+- [Engine spike](docs/research/engine-spike.md): MuPDF.js vs PDFium vs pdf.js vs pdf-lib, with numbers (D-015)
 - [Design direction](docs/DESIGN.md): UI style, tokens, page blueprints
 - [Decisions](docs/DECISIONS.md): an append-only log
 

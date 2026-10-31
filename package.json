@@ -20,7 +20,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test",
-    "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test"
+    "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test",
+    "bench:fixtures": "node bench/engine/make-fixtures.ts",
+    "bench:engine": "node bench/engine/run.ts"
   },
   "dependencies": {
     "@astrojs/react": "^7.1.2",
@@ -34,14 +36,19 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",
+    "@cantoo/pdf-lib": "2.11.1",
+    "@embedpdf/pdfium": "2.15.1",
     "@playwright/test": "^1.64.1",
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "mupdf": "1.28.1",
     "oxlint": "^1.90.0",
+    "pdfjs-dist": "6.4.299",
     "prettier": "^3.9.10",
     "prettier-plugin-astro": "^1.1.2",
     "typescript": "^6.0.3",
+    "vite": "8.3.5",
     "vitest": "^5.0.5",
     "wrangler": "^4.156.0"
   }
