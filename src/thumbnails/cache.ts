@@ -30,6 +30,11 @@ export interface ThumbnailCache<T> {
     onReady: (image: T) => void,
     onError?: (error: unknown) => void,
   ): () => void;
+  /**
+   * Moves a queued render ahead of the others that haven't been prioritised (pages on screen before pages just off
+   * it). Prioritised renders keep the order they were prioritised in.
+   */
+  prioritise(doc: DocId, page: number, width: number): void;
   /** Drops everything for a document: its images and its queued renders. Call it when the document closes. */
   forget(doc: DocId): void;
   stats(): { images: number; bytes: number; queued: number; rendering: number; rendered: number };
@@ -49,6 +54,7 @@ interface Job<T> {
   page: number;
   width: number;
   waiters: Set<Waiter<T>>;
+  urgent: boolean;
 }
 
 interface Waiter<T> {
@@ -138,7 +144,7 @@ export function createThumbnailCache<T>(options: ThumbnailOptions<T>): Thumbnail
       const waiter: Waiter<T> = { onReady, onError };
       let job = running.get(key) ?? queue.find((j) => j.key === key);
       if (!job) {
-        job = { key, doc, page, width, waiters: new Set() };
+        job = { key, doc, page, width, waiters: new Set(), urgent: false };
         queue.push(job);
       }
       job.waiters.add(waiter);
@@ -152,6 +158,15 @@ export function createThumbnailCache<T>(options: ThumbnailOptions<T>): Thumbnail
           if (index >= 0) queue.splice(index, 1);
         }
       };
+    },
+
+    prioritise(doc, page, width) {
+      const index = queue.findIndex((job) => job.key === keyOf(doc, page, width));
+      if (index < 0 || queue[index]!.urgent) return;
+      const [job] = queue.splice(index, 1);
+      job!.urgent = true;
+      const firstPlain = queue.findIndex((j) => !j.urgent);
+      queue.splice(firstPlain < 0 ? queue.length : firstPlain, 0, job!);
     },
 
     forget(doc) {

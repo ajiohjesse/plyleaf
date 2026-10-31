@@ -9,20 +9,22 @@ const GAP = 16;
 const BOX_RATIO = Math.SQRT2;
 /** Pages within this distance of the viewport get a canvas and a render; the rest are empty placeholders. */
 const NEAR = "100% 0px";
+/** Pages actually on screen, whose renders go first. */
+const ON_SCREEN = "0px";
 
-type Observe = (element: Element, onChange: (near: boolean) => void) => () => void;
+type Observe = (element: Element, onChange: (inside: boolean) => void) => () => void;
 
 /** One IntersectionObserver for the whole grid, rather than one per page. */
-function useNearViewport(): Observe {
+function useViewportObserver(rootMargin: string): Observe {
   const [observe] = useState((): Observe => {
-    const callbacks = new Map<Element, (near: boolean) => void>();
+    const callbacks = new Map<Element, (inside: boolean) => void>();
     let observer: IntersectionObserver | null = null;
     return (element, onChange) => {
       observer ??= new IntersectionObserver(
         (entries) => {
           for (const entry of entries) callbacks.get(entry.target)?.(entry.isIntersecting);
         },
-        { rootMargin: NEAR },
+        { rootMargin },
       );
       callbacks.set(element, onChange);
       observer.observe(element);
@@ -68,7 +70,8 @@ interface Props {
 export function ThumbnailGrid({ doc, label }: Props) {
   const ref = useRef<HTMLOListElement>(null);
   const { columns, cellWidth } = useColumns(ref);
-  const observe = useNearViewport();
+  const observeNear = useViewportObserver(NEAR);
+  const observeOnScreen = useViewportObserver(ON_SCREEN);
 
   // Its pages' images are no use once the document is closed (and its id may be reissued).
   useEffect(() => () => thumbnails.forget(doc.id), [doc.id]);
@@ -81,7 +84,15 @@ export function ThumbnailGrid({ doc, label }: Props) {
       style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, gap: GAP }}
     >
       {doc.pages.map((page, index) => (
-        <Thumbnail key={index} docId={doc.id} index={index} page={page} cellWidth={cellWidth} observe={observe} />
+        <Thumbnail
+          key={index}
+          docId={doc.id}
+          index={index}
+          page={page}
+          cellWidth={cellWidth}
+          observeNear={observeNear}
+          observeOnScreen={observeOnScreen}
+        />
       ))}
     </ol>
   );
@@ -92,13 +103,23 @@ interface ThumbnailProps {
   index: number;
   page: PageInfo;
   cellWidth: number;
-  observe: Observe;
+  observeNear: Observe;
+  observeOnScreen: Observe;
 }
 
-const Thumbnail = memo(function Thumbnail({ docId, index, page, cellWidth, observe }: ThumbnailProps) {
+const Thumbnail = memo(function Thumbnail({
+  docId,
+  index,
+  page,
+  cellWidth,
+  observeNear,
+  observeOnScreen,
+}: ThumbnailProps) {
   const ref = useRef<HTMLLIElement>(null);
   const [near, setNear] = useState(false);
-  useEffect(() => observe(ref.current!, setNear), [observe]);
+  const [onScreen, setOnScreen] = useState(false);
+  useEffect(() => observeNear(ref.current!, setNear), [observeNear]);
+  useEffect(() => observeOnScreen(ref.current!, setOnScreen), [observeOnScreen]);
   const size = fit(page, cellWidth);
 
   return (
@@ -108,7 +129,7 @@ const Thumbnail = memo(function Thumbnail({ docId, index, page, cellWidth, obser
           className="relative overflow-hidden rounded-sm bg-surface shadow-sticky ring-1 ring-line"
           style={{ width: size.width, height: size.height }}
         >
-          {near && <PageCanvas docId={docId} index={index} width={size.width} />}
+          {near && <PageCanvas docId={docId} index={index} width={size.width} onScreen={onScreen} />}
         </div>
       </div>
       <span className="text-sm font-medium text-ink-muted">
@@ -119,7 +140,14 @@ const Thumbnail = memo(function Thumbnail({ docId, index, page, cellWidth, obser
   );
 });
 
-function PageCanvas({ docId, index, width }: { docId: string; index: number; width: number }) {
+interface PageCanvasProps {
+  docId: string;
+  index: number;
+  width: number;
+  onScreen: boolean;
+}
+
+function PageCanvas({ docId, index, width, onScreen }: PageCanvasProps) {
   const ref = useRef<HTMLCanvasElement>(null);
   const pixels = renderWidth(width, window.devicePixelRatio);
   // Which render the outcome is for, so a new size reads as "rendering" again without resetting state in the effect.
@@ -144,6 +172,11 @@ function PageCanvas({ docId, index, width }: { docId: string; index: number; wid
       () => setOutcome({ key, state: "error" }),
     );
   }, [docId, index, pixels, key]);
+
+  // After the request above (layout effects run first), so there's a queued render to move up.
+  useEffect(() => {
+    if (onScreen) thumbnails.prioritise(docId, index, pixels);
+  }, [docId, index, pixels, onScreen]);
 
   return (
     <>
