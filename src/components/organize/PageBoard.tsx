@@ -128,7 +128,7 @@ const BoardCard = memo(function BoardCard({
             <span className="absolute inset-0 grid place-items-center text-xs text-ink-muted">Blank</span>
           ) : (
             <span
-              className="absolute top-1/2 left-1/2 block overflow-hidden transition-transform"
+              className="absolute top-1/2 left-1/2 block overflow-hidden"
               style={{
                 width: upright.width,
                 height: upright.height,

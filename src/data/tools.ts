@@ -71,6 +71,7 @@ export const tools: Tool[] = [
     description: "Turn pages the right way up.",
     category: "organize",
     keywords: ["turn"],
+    available: true,
   },
   {
     slug: "reorder-pages",
