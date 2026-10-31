@@ -44,9 +44,11 @@ export const tools: Tool[] = [
   {
     slug: "split-pdf",
     name: "Split PDF",
-    description: "Split by range, every N pages, size or bookmark.",
+    // Splitting by file size and by bookmark can follow; say so here once they work.
+    description: "Split into files by page ranges or every N pages.",
     category: "organize",
     keywords: ["separate", "divide"],
+    available: true,
   },
   {
     slug: "extract-pages",

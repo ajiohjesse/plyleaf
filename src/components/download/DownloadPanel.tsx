@@ -5,6 +5,8 @@ import { formatSize } from "~/intake/files";
 interface Props {
   file: Blob;
   name: string;
+  /** A line about what's in the file, e.g. "3 PDFs in one zip". */
+  detail?: string;
   /** Goes back to the workspace, e.g. to change something and make the file again. */
   onStartOver?: () => void;
   startOverLabel?: string;
@@ -14,7 +16,7 @@ interface Props {
  * The "done" screen: the result, a Download button that's always there and never asks for anything, and "Save as…"
  * where the browser can ask where to save.
  */
-export function DownloadPanel({ file, name, onStartOver, startOverLabel = "Start over" }: Props) {
+export function DownloadPanel({ file, name, detail, onStartOver, startOverLabel = "Start over" }: Props) {
   const headingId = useId();
   // Only rendered after the user has done something, so this runs in the browser.
   const [saveAsSupported] = useState(canSaveAs);
@@ -48,6 +50,7 @@ export function DownloadPanel({ file, name, onStartOver, startOverLabel = "Start
       <p className="text-ink-muted">
         <span className="font-semibold break-all text-ink">{name}</span> · {formatSize(file.size)}
       </p>
+      {detail && <p className="-mt-2 text-ink-muted">{detail}</p>}
       <div className="flex flex-wrap items-center justify-center gap-3">
         <button
           type="button"

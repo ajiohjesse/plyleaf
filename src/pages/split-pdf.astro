@@ -1,0 +1,56 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { SplitWorkspace } from "~/components/split/SplitWorkspace";
+---
+
+<ToolPage
+  slug="split-pdf"
+  title="Split PDF files free, no sign-up"
+  description="Split a PDF into several files by page ranges or every N pages, in your browser. Free with no limits, no watermark and no account, and your file is never uploaded."
+  heading="Split PDF"
+  intro="Cut a PDF into several files, by the page ranges you choose or every few pages. Free, no sign-up, no watermark, and your file never leaves this device."
+  steps={[
+    { title: "Add your PDF", text: "Choose it, drop it anywhere on the page, or paste it." },
+    {
+      title: "Choose where to cut",
+      text: "Type page ranges, like 1-3, 4-8, or split it every few pages. You'll see the files you'll get.",
+    },
+    {
+      title: "Split and download",
+      text: "Plyleaf splits it on your device. One part downloads as a PDF; several come together in a zip.",
+    },
+  ]}
+  faqs={[
+    {
+      question: "Is it really free?",
+      answer:
+        "Yes. There is no paid plan, no daily limit and no watermark. Plyleaf can be free because your own browser does the work, so there are no servers to pay for.",
+    },
+    {
+      question: "Is my file uploaded?",
+      answer:
+        "No. Your PDF is read and split right here in your browser. It never goes over the internet, and Plyleaf has no server that could receive it.",
+    },
+    {
+      question: "How do I type page ranges?",
+      answer:
+        "Separate the files with commas. “1-3, 4-8, 9-” makes three files: pages 1 to 3, pages 4 to 8, and page 9 to the end. A single number is one page, and ranges may overlap.",
+    },
+    {
+      question: "Why do I get a zip file?",
+      answer:
+        "When the split makes more than one PDF, they come in one zip so your browser downloads them in one go. Open it to find each part, named after its pages, like report-pages-1-3.pdf.",
+    },
+    {
+      question: "Will the pages look the same?",
+      answer:
+        "Yes. Each page is copied as it is, with its text, fonts and images, so nothing is re-compressed or lowered in quality. Bookmarks and fillable form fields aren't carried over yet.",
+    },
+    {
+      question: "Can I split by file size or by bookmarks?",
+      answer: "Not yet. Both are planned and will be free like everything else.",
+    },
+  ]}
+>
+  <SplitWorkspace client:load />
+</ToolPage>

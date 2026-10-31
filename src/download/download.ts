@@ -75,7 +75,12 @@ export async function saveAs(file: Blob, name: string): Promise<boolean> {
   try {
     handle = await picker({
       suggestedName: name,
-      types: [{ description: "PDF document", accept: { [file.type || "application/pdf"]: [extension] } }],
+      types: [
+        {
+          description: extension.toLowerCase() === ".zip" ? "ZIP archive" : "PDF document",
+          accept: { [file.type || "application/pdf"]: [extension] },
+        },
+      ],
     });
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") return false;
