@@ -2,13 +2,11 @@
 
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
-- **Current milestone:** M0: Foundation
-- **Next action:** Owner connects the repo in Cloudflare (Workers Builds, steps in the 2026-10-31 deploy log entry). Then
-  verify the production `workers.dev` URL and a PR Preview URL, tick the last M0 item, and start M1 with the engine
-  spike (D-006).
+- **Current milestone:** M1: Engine and core architecture (M0 done 2026-10-31)
+- **Next action:** Start M1 with the engine spike: benchmark MuPDF.js vs MuPDF.js + pdf-lib vs pdf.js/PDFium on the 3
+  reference PDFs and resolve D-006.
+- **Live:** https://plyleaf.ajiohjesse.workers.dev (Workers Builds deploys `main`; other branches get Preview URLs).
 - **Blocked on owner:**
-  - Connect `ajiohjesse/plyleaf` to a Worker named `plyleaf` in the Cloudflare dashboard. The connector available to
-    agents can read the account but can't create a Worker or a Git connection.
   - Later, at the owner's pace: register `plyleaf.com` (and optionally the `plyleaf` GitHub org). Not blocking (D-013).
 - **Repo:** https://github.com/ajiohjesse/plyleaf (public). `gh`'s active account on this machine is `angosam`, so run
   `gh`/`git push` as ajiohjesse (e.g. `GH_TOKEN=$(gh auth token --user ajiohjesse)`) or switch with `gh auth switch`.
@@ -18,14 +16,14 @@ Single source of truth for where Plyleaf is. **Every session updates this file b
 Tick an item only when it's verified (tests pass / checked in a browser). Tick the milestone when all its items are ticked.
 Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 
-### [ ] M0: Foundation
+### [x] M0: Foundation
 - [x] GitHub repo created, AGPL-3.0 LICENSE, README
 - [x] Astro + React + TypeScript + Tailwind v4 scaffold builds
 - [x] Oxlint + Prettier + typecheck + Vitest + Playwright configured
 - [x] GitHub Actions CI runs all checks on PRs
 - [x] Design tokens and fonts from DESIGN.md implemented
 - [x] Landing page: hero, promise strip, tool grid, comparison table, CTA, footer (responsive)
-- [ ] Cloudflare preview deploy live (Workers static assets, D-014; config ready, waiting on the dashboard connection)
+- [x] Cloudflare preview deploy live (Workers static assets, D-014): https://plyleaf.ajiohjesse.workers.dev
 
 ### [ ] M1: Engine and core architecture
 - [ ] Engine spike done; D-006 resolved with numbers
@@ -71,6 +69,20 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-10-31: M0 done, site live
+- Owner connected the repo to a Worker named `plyleaf` with Workers Builds. Found it with the Cloudflare connector
+  (assets-only, no script). The connector doesn't expose the `workers.dev` subdomain; it's `ajiohjesse`.
+- Verified on https://plyleaf.ajiohjesse.workers.dev: 200 with the `_headers` security headers, real 404 page for
+  unknown paths, `/_astro/*` cached immutable, self-hosted fonts. Playwright can now target a deployed site with
+  `BASE_URL`; all 20 E2E runs pass against production, including the same-origin-only check (so Cloudflare injects no
+  third-party scripts).
+- PR Previews: the first Preview build (PR #3) failed. `wrangler preview` needs a `previews` block in `wrangler.jsonc`,
+  even an empty one; after adding it the build passed and Cloudflare posted the Preview URL on the PR
+  (`<branch>-plyleaf.ajiohjesse.workers.dev`, served with `X-Robots-Tag: noindex`). E2E: 20/20 pass against it.
+  Workers Builds logs are only in the dashboard (the connector can't read them, and the GitHub check has no log text).
+- Ticked the last M0 item and M0 itself.
+- Next: M1, starting with the engine spike (D-006).
 
 ### 2026-10-31: Cloudflare deploy setup (M0)
 - PR #1 merged after green CI. Owner added a Cloudflare connector; it can list Workers and search docs but has no tool to

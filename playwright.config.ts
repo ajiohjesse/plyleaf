@@ -1,6 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const port = 4321;
+// Set BASE_URL to test a deployed site (e.g. a Cloudflare preview) instead of a local production build.
+const remote = process.env["BASE_URL"];
 
 export default defineConfig({
   testDir: "tests/e2e",
@@ -9,7 +11,7 @@ export default defineConfig({
   retries: process.env["CI"] ? 2 : 0,
   reporter: process.env["CI"] ? [["github"], ["html", { open: "never" }]] : "list",
   use: {
-    baseURL: `http://localhost:${port}`,
+    baseURL: remote ?? `http://localhost:${port}`,
     trace: "on-first-retry",
   },
   projects: [
@@ -19,10 +21,12 @@ export default defineConfig({
     { name: "mobile-chromium", use: { ...devices["Pixel 7"] } },
   ],
   // E2E runs against the production build, the same static files we deploy.
-  webServer: {
-    command: `pnpm build && pnpm preview --port ${port}`,
-    url: `http://localhost:${port}`,
-    reuseExistingServer: !process.env["CI"],
-    timeout: 180_000,
-  },
+  webServer: remote
+    ? []
+    : {
+        command: `pnpm build && pnpm preview --port ${port}`,
+        url: `http://localhost:${port}`,
+        reuseExistingServer: !process.env["CI"],
+        timeout: 180_000,
+      },
 });
