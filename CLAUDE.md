@@ -54,6 +54,8 @@ Cloudflare Pages. Package manager: pnpm.
 - `src/components/`: Astro components (static) and React islands (`.tsx`). `src/components/home/`: home page sections.
 - `src/engine/`: the PDF engine (D-016). Pages and islands import only `client.ts`; operations go in `ops.ts` (pure,
   unit-tested in Node) and are exposed by `worker.ts`.
+- `src/intake/`: file checks and the open-documents store (`createIntake`); `src/components/intake/`: `useIntake`,
+  `FileDrop` (picker, page-wide drop, paste) and the file list/notices that tool workspaces build on (D-017).
 - `src/pages/test-harness/`: pages for E2E tests to drive internals, built only when `PLYLEAF_TEST_HARNESS=1`.
 - `tests/helpers/pdf.ts`: builds test PDFs with MuPDF (works in Vitest and Playwright).
 
