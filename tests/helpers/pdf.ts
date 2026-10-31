@@ -12,7 +12,10 @@ export interface TestPage {
  * Each page is white with its top-left quadrant filled red and its number written in Helvetica, so a render shows
  * which way up the page is.
  */
-export function makePdf(pages: TestPage[], options: { save?: string; inheritedRotate?: number } = {}): Uint8Array {
+export function makePdf(
+  pages: TestPage[],
+  options: { save?: string; inheritedRotate?: number } = {},
+): Uint8Array<ArrayBuffer> {
   const doc = new mupdf.PDFDocument();
   const font = doc.addSimpleFont(new mupdf.Font("Helvetica"));
   pages.forEach(({ width, height, rotate = 0 }, i) => {
@@ -28,7 +31,7 @@ export function makePdf(pages: TestPage[], options: { save?: string; inheritedRo
     for (let i = 0; i < pages.length; i++) doc.findPage(i).delete("Rotate");
   }
   const buffer = doc.saveToBuffer(options.save ?? "compress");
-  const bytes = buffer.asUint8Array().slice();
+  const bytes = new Uint8Array(buffer.asUint8Array());
   buffer.destroy();
   doc.destroy();
   return bytes;
