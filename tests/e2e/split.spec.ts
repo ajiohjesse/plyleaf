@@ -125,11 +125,20 @@ test("says what's wrong with the pages, and won't split until it's fixed", async
   await expect(page.getByRole("list", { name: "File messages" })).toContainText("notes.txt isn't a PDF.");
 });
 
-test("loads no engine before a file arrives, and is linked from the home page", async ({ page }) => {
+test("loads no engine before a file arrives", async ({ page }) => {
   const engineRequests: string[] = [];
   page.on("request", (request) => {
     if (/\.wasm$|\/worker-[^/]*\.js$/.test(new URL(request.url()).pathname)) engineRequests.push(request.url());
   });
+  // Loaded directly: arriving by a click would leave the pointer over the drop zone, and hovering it preloads the
+  // engine on purpose.
+  await openSplit(page);
+  await expect(page.getByRole("heading", { level: 1, name: "Split PDF" })).toBeVisible();
+  await page.waitForLoadState("networkidle");
+  expect(engineRequests).toEqual([]);
+});
+
+test("is linked from the home page", async ({ page }) => {
   await page.goto("/");
   await page
     .getByRole("link", { name: /Split PDF/ })
@@ -137,7 +146,4 @@ test("loads no engine before a file arrives, and is linked from the home page", 
     .click();
   await expect(page).toHaveURL(/\/split-pdf$/);
   await expect(page).toHaveTitle("Split PDF files free, no sign-up · Plyleaf");
-  await expect(page.getByRole("heading", { level: 1, name: "Split PDF" })).toBeVisible();
-  await page.waitForLoadState("networkidle");
-  expect(engineRequests).toEqual([]);
 });
