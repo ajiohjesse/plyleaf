@@ -95,6 +95,7 @@ export const tools: Tool[] = [
     description: "Copy pages within a document.",
     category: "organize",
     keywords: ["copy"],
+    available: true,
   },
   {
     slug: "crop-pdf",

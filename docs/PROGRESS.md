@@ -3,8 +3,8 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M2: Organize suite (M0 and M1 done 2026-10-31)
-- **Next action:** M2, Duplicate pages next: a `duplicate` mode in `src/components/organize/tools.tsx` using
-  `duplicatePages`. Then Crop.
+- **Next action:** M2, Crop next: set each page's CropBox in the engine (`assemble` gains a crop per page), a crop
+  tool page with a draggable crop frame. Then the shared workspace and per-tool page items can be ticked.
 - **Live:** https://plyleaf.ajiohjesse.workers.dev (Workers Builds deploys `main`; other branches get Preview URLs).
 - **Blocked on owner:**
   - Later, at the owner's pace: register `plyleaf.com` (and optionally the `plyleaf` GitHub org). Not blocking (D-013).
@@ -36,7 +36,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] Network egress test (no file bytes leave the browser)
 
 ### [ ] M2: Organize suite
-- [x] Merge · [x] Split · [x] Extract · [x] Delete · [x] Rotate · [x] Reorder · [x] Insert blank · [ ] Duplicate · [ ] Crop
+- [x] Merge · [x] Split · [x] Extract · [x] Delete · [x] Rotate · [x] Reorder · [x] Insert blank · [x] Duplicate · [ ] Crop
 - [ ] Shared Organize workspace
 - [ ] Per-tool landing pages + E2E tests
 
@@ -71,6 +71,14 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-10-31: Duplicate pages (M2)
+- `/duplicate-pages`: a `duplicate` mode. A copy button under each page puts a copy right after it; the toolbar copies
+  every selected page and removes all copies; copies (a page whose source already appeared earlier) have their own
+  remove button. Copies reuse the source's resources (one `assemble`). Output `<name>-duplicated.pdf`.
+- Verified: new E2E `duplicate.spec.ts` (single and selection copies, output order checked with MuPDF, remove one and
+  all, only copies removable, linked from home, `watchEgress` clean): 12/12 in all four browser projects.
+- Next: Crop.
 
 ### 2026-10-31: Insert blank page (M2)
 - `/insert-blank-page`: an `insert` mode. A + under each page adds a blank after it; the toolbar adds blanks before or
