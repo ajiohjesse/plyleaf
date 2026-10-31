@@ -197,3 +197,17 @@ test("render widths are device pixels, capped at 2×, in steps of 32", () => {
   expect(renderWidth(1)).toBe(32);
   expect(renderWidth(150, 0)).toBe(160);
 });
+
+test("renders pages on screen before pages queued only for being nearby", async () => {
+  const { cache, fake } = setup();
+  for (const page of [0, 1, 2, 3, 4, 5]) cache.request("d1", page, 64, () => {});
+  cache.prioritise("d1", 5, 64);
+  cache.prioritise("d1", 3, 64);
+  // Already prioritised, running, or not queued at all: nothing changes.
+  cache.prioritise("d1", 5, 64);
+  cache.prioritise("d1", 0, 64);
+  cache.prioritise("d9", 0, 64);
+
+  for (let i = 0; i < 6; i++) await fake.finish();
+  expect(fake.started).toEqual(["d1:0:64", "d1:1:64", "d1:5:64", "d1:3:64", "d1:2:64", "d1:4:64"]);
+});

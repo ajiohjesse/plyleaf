@@ -1,7 +1,7 @@
 // The main-thread side of the engine. Nothing here loads MuPDF: the worker (and its 10 MB of WASM) starts on the first
 // call or on preloadEngine(), so pages that import this stay light until the user reaches for a file.
 import { transfer, wrap, type Remote } from "comlink";
-import { carryEngineErrors } from "./errors";
+import { carryEngineErrors, EngineError } from "./errors";
 import type { Bitmap, DocId, DocInfo, PageSpec } from "./types";
 import type { EngineApi } from "./worker";
 
@@ -24,23 +24,69 @@ interface Running {
   bytes: number;
   /** Calls in flight. */
   busy: number;
+  /** A call has succeeded, so the worker and MuPDF loaded. */
+  loaded: boolean;
+  /** Rejects when the worker is torn down, so calls in flight don't wait forever for a dead worker. */
+  died: Promise<never>;
+  kill: (error: EngineError) => void;
 }
 
+/** These leave the worker unusable: it is terminated and the next call starts a fresh one. */
+const FATAL = new Set(["engine-crashed", "engine-unavailable"]);
+
 let current: Running | null = null;
+const resetListeners = new Set<(error: EngineError) => void>();
 
 function start(): Running {
   if (!current) {
     const worker = new Worker(new URL("./worker.ts", import.meta.url), { type: "module", name: "plyleaf-engine" });
-    current = { worker, remote: wrap<EngineApi>(worker), open: new Set(), bytes: 0, busy: 0 };
+    let kill!: (error: EngineError) => void;
+    const died = new Promise<never>((_, reject) => (kill = reject));
+    died.catch(() => {});
+    const running: Running = {
+      worker,
+      remote: wrap<EngineApi>(worker),
+      open: new Set(),
+      bytes: 0,
+      busy: 0,
+      loaded: false,
+      died,
+      kill,
+    };
+    // An uncaught error in the worker, or its script failing to load. Comlink would leave our calls pending.
+    worker.addEventListener("error", (event) => {
+      event.preventDefault();
+      tearDown(
+        running,
+        running.loaded
+          ? new EngineError("engine-crashed", "The engine worker stopped")
+          : new EngineError("engine-unavailable", "The engine worker couldn't start"),
+      );
+    });
+    current = running;
   }
   return current;
+}
+
+/** Terminates a worker that can't go on, fails its calls in flight and tells listeners about lost documents. */
+function tearDown(running: Running, error: EngineError) {
+  if (running !== current) return;
+  current = null;
+  running.worker.terminate();
+  running.kill(error);
+  if (running.open.size > 0) for (const listener of resetListeners) listener(error);
 }
 
 async function call<T>(run: (running: Running) => Promise<T>): Promise<T> {
   const running = start();
   running.busy++;
   try {
-    return await run(running);
+    const result = await Promise.race([run(running), running.died]);
+    running.loaded = true;
+    return result;
+  } catch (error) {
+    if (error instanceof EngineError && FATAL.has(error.code)) tearDown(running, error);
+    throw error;
   } finally {
     running.busy--;
     recycleIfDone(running);
@@ -91,6 +137,15 @@ export const engine = {
       running.open.delete(id);
       await running.remote.close(id);
     });
+  },
+
+  /**
+   * Calls `listener` when the worker had to be restarted (it crashed, or its WASM aborted) while documents were open.
+   * Those documents are gone: their ids no longer work. Returns a function that stops listening.
+   */
+  onReset(listener: (error: EngineError) => void): () => void {
+    resetListeners.add(listener);
+    return () => resetListeners.delete(listener);
   },
 
   /** For tests and diagnostics. */

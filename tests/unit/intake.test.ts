@@ -8,14 +8,19 @@ const pdf = (name: string) => new File([makePdf([A4])], name, { type: "applicati
 
 /**
  * A fake engine whose opens finish only when the test says so, so we can look at the intake in between. Files named
- * "locked…" fail with password-required and "broken…" with invalid-file.
+ * "locked…" fail with password-required, "broken…" with invalid-file and "offline…" with engine-unavailable.
  */
 function fakeEngine() {
   const pending: { name: string; finish: () => void }[] = [];
   const open = new Set<string>();
   const closed: string[] = [];
+  const resetListeners = new Set<(error: EngineError) => void>();
   let nextId = 1;
   const engine: IntakeEngine = {
+    onReset: (listener) => {
+      resetListeners.add(listener);
+      return () => resetListeners.delete(listener);
+    },
     open: (file) =>
       new Promise<DocInfo>((resolve, reject) => {
         const name = (file as File).name;
@@ -24,6 +29,7 @@ function fakeEngine() {
           finish: () => {
             if (name.startsWith("locked")) return reject(new EngineError("password-required", "locked"));
             if (name.startsWith("broken")) return reject(new EngineError("invalid-file", "broken"));
+            if (name.startsWith("offline")) return reject(new EngineError("engine-unavailable", "offline"));
             const id = `d${nextId++}`;
             open.add(id);
             resolve({ id, pageCount: 3, pages: [], repaired: false });
@@ -41,7 +47,12 @@ function fakeEngine() {
     pending.shift()!.finish();
     await new Promise((resolve) => setTimeout(resolve));
   }
-  return { engine, open, closed, finishNext, pending };
+  /** The engine restarts and loses every open document. */
+  function crash() {
+    open.clear();
+    for (const listener of resetListeners) listener(new EngineError("engine-crashed", "crashed"));
+  }
+  return { engine, open, closed, finishNext, pending, crash, resetListeners };
 }
 
 async function until(condition: () => boolean) {
@@ -170,4 +181,108 @@ test("tells subscribers about every change until they unsubscribe", async () => 
   unsubscribe();
   intake.dismiss(intake.getState().notices[0]!.id);
   expect(calls).toBe(seen);
+});
+
+/** A file of exactly `size` bytes with a PDF header (intake only sniffs it; the fake engine opens anything). */
+const sized = (name: string, size: number) => {
+  const bytes = new Uint8Array(size).fill(32);
+  bytes.set(new TextEncoder().encode("%PDF-"));
+  return new File([bytes], name);
+};
+
+test("warns once when the open files get large, and again only after they've dropped below", async () => {
+  const fake = fakeEngine();
+  const intake = createIntake(fake.engine, { largeInputBytes: 1000 });
+  const first = intake.add([sized("a.pdf", 600)]);
+  await fake.finishNext();
+  await first;
+  expect(intake.getState().notices).toEqual([]);
+
+  const second = intake.add([sized("b.pdf", 600)]);
+  await until(() => intake.getState().notices.length > 0);
+  expect(intake.getState().notices).toMatchObject([
+    {
+      tone: "warning",
+      message:
+        "Together your files are 1 KB. That's a lot for a browser to hold in memory, so this may be slow, and if " +
+        "it runs out, try fewer files at a time.",
+    },
+  ]);
+  await fake.finishNext();
+  await second;
+  // Both files were still added.
+  expect(intake.getState().documents.map((d) => d.status)).toEqual(["ready", "ready"]);
+
+  const third = intake.add([sized("c.pdf", 100)]);
+  await fake.finishNext();
+  await third;
+  expect(intake.getState().notices).toEqual([]);
+
+  for (const doc of intake.getState().documents.slice(1)) await intake.remove(doc.key);
+  const fourth = intake.add([sized("d.pdf", 600)]);
+  await fake.finishNext();
+  await fourth;
+  expect(intake.getState().notices).toMatchObject([{ tone: "warning" }]);
+});
+
+test("says once that the engine couldn't load, however many files it was opening", async () => {
+  const fake = fakeEngine();
+  const intake = createIntake(fake.engine);
+  const done = intake.add([pdf("offline-a.pdf"), pdf("offline-b.pdf")]);
+  await fake.finishNext();
+  await fake.finishNext();
+  await done;
+  expect(intake.getState().notices).toMatchObject([
+    {
+      tone: "error",
+      message:
+        "Plyleaf couldn't load its PDF engine. Check your internet connection and try again (it's only needed once).",
+    },
+  ]);
+});
+
+test("drops the documents an engine restart lost, while anything is subscribed", async () => {
+  const fake = fakeEngine();
+  const intake = createIntake(fake.engine);
+  // Not following the engine until something subscribes.
+  expect(fake.resetListeners.size).toBe(0);
+  const unsubscribe = intake.subscribe(() => {});
+  expect(fake.resetListeners.size).toBe(1);
+
+  const done = intake.add([pdf("a.pdf"), pdf("b.pdf"), pdf("c.pdf")]);
+  await fake.finishNext();
+  await fake.finishNext();
+  fake.crash();
+  // The two open documents are gone; the one still opening stays until its open settles.
+  expect(intake.getState()).toMatchObject({
+    documents: [{ name: "c.pdf", status: "opening" }],
+    notices: [
+      {
+        tone: "error",
+        message:
+          "Plyleaf's PDF engine stopped, so your files were closed. Add them again to carry on (fewer at a time if " +
+          "they're large).",
+      },
+    ],
+  });
+  await fake.finishNext();
+  await done;
+  expect(intake.getState().documents.map((d) => d.name)).toEqual(["c.pdf"]);
+
+  unsubscribe();
+  expect(fake.resetListeners.size).toBe(0);
+});
+
+test("takes the large-input warning back when a file that pushed it over doesn't open", async () => {
+  const fake = fakeEngine();
+  const intake = createIntake(fake.engine, { largeInputBytes: 1000 });
+  const done = intake.add([sized("a.pdf", 600), sized("broken.pdf", 600)]);
+  await until(() => intake.getState().notices.length > 0);
+  expect(intake.getState().notices.map((n) => n.tone)).toEqual(["warning"]);
+  await fake.finishNext();
+  await fake.finishNext();
+  await done;
+  expect(intake.getState().notices).toMatchObject([
+    { tone: "error", message: "broken.pdf couldn't be opened. It may be damaged, or not really a PDF." },
+  ]);
 });

@@ -1,6 +1,14 @@
 import { describe, expect, test } from "vitest";
 import { EngineError } from "~/engine/errors";
-import { checkFiles, openFailureMessage, sniffKind } from "~/intake/files";
+import {
+  checkFiles,
+  formatSize,
+  largeInputBytes,
+  openFailureMessage,
+  operationFailureMessage,
+  resetMessage,
+  sniffKind,
+} from "~/intake/files";
 import { A4, makePdf } from "../helpers/pdf";
 
 const bytes = (text: string) => Uint8Array.from(text, (c) => c.charCodeAt(0));
@@ -91,4 +99,41 @@ test("openFailureMessage says what went wrong in plain words", () => {
   const generic = "Something went wrong opening a.pdf. Try again, or try a smaller file.";
   expect(openFailureMessage("a.pdf", new EngineError("engine-failure", "x"))).toBe(generic);
   expect(openFailureMessage("a.pdf", new Error("worker died"))).toBe(generic);
+});
+
+test("memory and engine failures get messages people can act on", () => {
+  const offline =
+    "Plyleaf couldn't load its PDF engine. Check your internet connection and try again (it's only needed once).";
+  expect(openFailureMessage("a.pdf", new EngineError("out-of-memory", "x"))).toBe(
+    "a.pdf is too big for the memory this browser has left. Close other files or tabs and try again.",
+  );
+  expect(openFailureMessage("a.pdf", new EngineError("engine-crashed", "x"))).toBe(
+    "Plyleaf's PDF engine stopped while opening a.pdf. Try again, or try a smaller file.",
+  );
+  expect(openFailureMessage("a.pdf", new EngineError("engine-unavailable", "x"))).toBe(offline);
+
+  expect(operationFailureMessage(new EngineError("out-of-memory", "x"))).toMatch(/^Your browser ran out of memory/);
+  expect(operationFailureMessage(new EngineError("engine-crashed", "x"))).toMatch(/your files were closed/);
+  expect(operationFailureMessage(new EngineError("engine-unavailable", "x"))).toBe(offline);
+  expect(operationFailureMessage(new EngineError("unknown-document", "x"))).toMatch(/^Your files were closed/);
+  expect(operationFailureMessage(new Error("?"))).toBe("Something went wrong making your PDF. Try again.");
+
+  expect(resetMessage(new EngineError("engine-crashed", "x"))).toMatch(/^Plyleaf's PDF engine stopped/);
+  expect(resetMessage(new EngineError("engine-unavailable", "x"))).toBe(offline);
+});
+
+test("warns about large inputs sooner on phones and low-memory devices", () => {
+  const MB = 1024 * 1024;
+  expect(largeInputBytes({})).toBe(300 * MB);
+  expect(largeInputBytes({ deviceMemory: 8 })).toBe(300 * MB);
+  expect(largeInputBytes({ deviceMemory: 4 })).toBe(100 * MB);
+  expect(largeInputBytes({ coarsePointer: true, deviceMemory: 8 })).toBe(100 * MB);
+  // Node has neither navigator.deviceMemory nor matchMedia.
+  expect(largeInputBytes()).toBe(300 * MB);
+});
+
+test("sizes read the way people expect", () => {
+  expect(formatSize(512)).toBe("512 B");
+  expect(formatSize(1536)).toBe("2 KB");
+  expect(formatSize(52 * 1024 * 1024)).toBe("52.0 MB");
 });

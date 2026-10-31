@@ -9,6 +9,32 @@ export interface IntakeOptions {
   accept?: readonly FileKind[];
   /** Whether a tool takes more than one file. Defaults to true. */
   multiple?: boolean;
+  /** Warn once the open files add up to more than this many bytes. Defaults to largeInputBytes() for this device. */
+  largeInputBytes?: number;
+}
+
+const MB = 1024 * 1024;
+
+/**
+ * How much input to take before warning that the browser may run out of memory. The engine's heap is capped at 2 GB
+ * and holds about 4–6× the input while working (D-015), so desktops get 300 MB; phones, tablets and devices that
+ * report 4 GB of RAM or less get 100 MB.
+ */
+export function largeInputBytes(
+  env: { deviceMemory?: number; coarsePointer?: boolean } = {
+    ...(typeof navigator !== "undefined" &&
+      "deviceMemory" in navigator && { deviceMemory: navigator.deviceMemory as number }),
+    coarsePointer: typeof matchMedia !== "undefined" && matchMedia("(pointer: coarse)").matches,
+  },
+): number {
+  const small = env.coarsePointer || (env.deviceMemory !== undefined && env.deviceMemory <= 4);
+  return (small ? 100 : 300) * MB;
+}
+
+export function formatSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < MB) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / MB).toFixed(1)} MB`;
 }
 
 export interface Checked {
@@ -94,6 +120,10 @@ export async function checkFiles(files: readonly File[], options: IntakeOptions 
   return { accepted, rejected };
 }
 
+/** Said whatever the engine was doing when it couldn't load. Not tied to a file, so it's shown once. */
+export const ENGINE_UNAVAILABLE =
+  "Plyleaf couldn't load its PDF engine. Check your internet connection and try again (it's only needed once).";
+
 /** The message for a file the engine couldn't open. */
 export function openFailureMessage(name: string, error: unknown): string {
   const code = error instanceof EngineError ? error.code : "engine-failure";
@@ -102,7 +132,38 @@ export function openFailureMessage(name: string, error: unknown): string {
       return `${name} couldn't be opened. It may be damaged, or not really a PDF.`;
     case "password-required":
       return `${name} is protected with a password. Plyleaf can't open protected PDFs yet.`;
+    case "out-of-memory":
+      return `${name} is too big for the memory this browser has left. Close other files or tabs and try again.`;
+    case "engine-crashed":
+      return `Plyleaf's PDF engine stopped while opening ${name}. Try again, or try a smaller file.`;
+    case "engine-unavailable":
+      return ENGINE_UNAVAILABLE;
     default:
       return `Something went wrong opening ${name}. Try again, or try a smaller file.`;
   }
+}
+
+/** The message for an operation on open files (making the output PDF) that failed. */
+export function operationFailureMessage(error: unknown): string {
+  const code = error instanceof EngineError ? error.code : "engine-failure";
+  switch (code) {
+    case "out-of-memory":
+      return "Your browser ran out of memory making this PDF. Try fewer or smaller files at a time, or close other tabs.";
+    case "engine-crashed":
+      return "Plyleaf's PDF engine stopped while making your PDF, so your files were closed. Add them again and try with fewer at a time.";
+    case "engine-unavailable":
+      return ENGINE_UNAVAILABLE;
+    case "unknown-document":
+      return "Your files were closed before the PDF was made. Add them again and try once more.";
+    default:
+      return "Something went wrong making your PDF. Try again.";
+  }
+}
+
+/** The message when the engine restarted and took the open files with it. */
+export function resetMessage(error: unknown): string {
+  const code = error instanceof EngineError ? error.code : "engine-crashed";
+  return code === "engine-unavailable"
+    ? ENGINE_UNAVAILABLE
+    : "Plyleaf's PDF engine stopped, so your files were closed. Add them again to carry on (fewer at a time if they're large).";
 }

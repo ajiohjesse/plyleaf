@@ -29,7 +29,7 @@ async function openIntake(page: Page, name = "intake") {
 }
 
 const fileList = (page: Page) => page.getByRole("list", { name: "Your files" }).getByRole("listitem");
-const notices = (page: Page) => page.getByRole("list", { name: "Files that couldn't be added" }).getByRole("listitem");
+const notices = (page: Page) => page.getByRole("list", { name: "File messages" }).getByRole("listitem");
 
 /** Fires a drag-and-drop of `files` onto `selector`, the way a browser does when files come from the desktop. */
 async function dropFiles(page: Page, selector: string, files: FileSpec[]) {

@@ -3,9 +3,9 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M1: Engine and core architecture (M0 done 2026-10-31)
-- **Next action:** Download pipeline + memory-limit UX: save `engine.assemble` output (download link / File System
-  Access "save as" where available, sensible file names); warn on very large inputs; when the worker dies (OOM), reject
-  in-flight calls, restart it and tell the user plainly instead of hanging.
+- **Next action:** Network egress test, the last M1 item: an E2E test that drives intake, thumbnails and the
+  combine/download harness with a fixture PDF and asserts no request (any method, any host, including our own origin)
+  carries the file's bytes, and that nothing goes to another origin. Then tick M1 and start M2 (Merge first).
 - **Live:** https://plyleaf.ajiohjesse.workers.dev (Workers Builds deploys `main`; other branches get Preview URLs).
 - **Blocked on owner:**
   - Later, at the owner's pace: register `plyleaf.com` (and optionally the `plyleaf` GitHub org). Not blocking (D-013).
@@ -33,7 +33,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] Worker + Comlink typed engine API (D-016)
 - [x] File intake (drop, picker, paste, multi-file) + validation and errors
 - [x] Virtualised page thumbnails
-- [ ] Download pipeline + memory-limit UX
+- [x] Download pipeline + memory-limit UX
 - [ ] Network egress test (no file bytes leave the browser)
 
 ### [ ] M2: Organize suite
@@ -73,12 +73,49 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
 
+### 2026-10-31: Download pipeline + memory-limit UX (M1)
+- Owner chose to finish M1 before M2. Also made `main` require both CI jobs (owner asked, after PR #7 merged with E2E
+  still running because nothing was required): enforced for admins, no review requirement, not strict.
+- Engine failures (D-019): new codes `out-of-memory` (MuPDF's "malloc (N bytes) failed" or a JS RangeError; the call
+  fails, documents stay open), `engine-crashed` (a `WebAssembly.RuntimeError`, i.e. an abort, or the worker's `error`
+  event after it had loaded) and `engine-unavailable` (the worker script or MuPDF couldn't load, e.g. offline before the
+  WASM was cached). `toEngineError` classifies; the client races every call against the worker dying, so nothing
+  hangs; on a fatal code it terminates the worker (next call starts a fresh one) and `engine.onReset` tells listeners
+  that the open documents are gone. Checked in Node that MuPDF stays usable after a failed allocation (2 GB heap cap).
+- Intake: notices have a `tone` (error/warning) and identical messages show once ("couldn't load the engine" for a
+  whole batch). It follows `engine.onReset` while subscribed and drops the lost documents with a plain message. It
+  warns (without refusing) when the open files total over `largeInputBytes()`: 300 MB, or 100 MB on touch devices or
+  ones reporting ≤ 4 GB RAM; the warning goes away if the total drops back under. Notices list is now "File messages".
+  `formatSize`, `operationFailureMessage` and `resetMessage` live in `src/intake/files.ts`.
+- Download: `src/download/download.ts` (`outputName` makes safe names like `report-merged.pdf` for Windows, macOS and
+  Linux; `downloadFile` via a temporary `<a download>`; `saveAs` with `showSaveFilePicker` where it exists, a closed
+  dialog isn't an error). `DownloadPanel` is the DESIGN "done" screen: "Done — your file is ready", name and size,
+  Download pill, "Save as…" only where supported, optional start-over. `CombinePanel` (intake → assemble every page →
+  download) is on a new `test-harness/download` page that warns above 20 KB.
+- Thumbnails follow-up: on-screen pages now jump the render queue (`thumbnails.prioritise`, a second shared
+  IntersectionObserver), so after a long jump the visible pages render before the off-screen margin. Found because the
+  600-page E2E timed out once in Firefox under full parallel load.
+- Fixed: last session's PROGRESS/DECISIONS edits had cp1252 bytes for × (a Python script without `encoding=`);
+  repaired to UTF-8. Playwright's `expect` timeout is now 10 s: the first open in a test loads the 10 MB WASM, which
+  took Firefox over 5 s with four browsers in parallel.
+- Verified: 16 new unit tests (97 total: error classification, worker death/abort/never-started/OOM with a fake
+  worker, intake warning/withdrawal/dedupe/reset, messages, names incl. reserved and multi-byte, save-as and cancel,
+  render priority). New E2E `download.spec.ts`: combine two PDFs and download `Q3 report-combined.pdf` (reopened with
+  MuPDF: 3 pages); Save as via a stubbed picker; Save as only offered where supported; large-input warning; WASM
+  blocked → one "couldn't load" notice, then works once unblocked; worker script blocked → same, and a fresh worker
+  next time. Full suite 96/96 in Chromium, Firefox, WebKit and Pixel 7, twice in a row. Checked the warning, error and
+  done screens at 375 px and desktop. `pnpm check` passes.
+- Open: split (M2) will need several outputs in one download, probably a zip (fflate, MIT). The done screen's "continue
+  with another tool" chips and the support link wait for tool pages (M2) and the donate page (M9). A real WASM abort
+  or OOM can't be produced in E2E, so those paths are unit-tested only.
+- Next: network egress test.
+
 ### 2026-10-31: Virtualised page thumbnails (M1)
 - Added `src/thumbnails/cache.ts`: `createThumbnailCache` (framework-free). Requests queue in order and go to the
   engine two at a time; a request cancelled before it starts never reaches the engine; requests for the same image
   share one render; images are kept per (doc, page, width) under a 64 MB byte budget, least recently used dropped first
   (and `ImageBitmap.close()`d); `forget(doc)` drops a closed document's images and queued renders and ignores its
-  renders in flight (worker ids can be reissued). `renderWidth` picks device pixels (capped at 2�) in steps of 32 px so
+  renders in flight (worker ids can be reissued). `renderWidth` picks device pixels (capped at 2×) in steps of 32 px so
   small layout changes reuse cached images. `src/thumbnails/thumbnails.ts` is the page's shared instance. Design in D-018.
 - `src/components/thumbnails/ThumbnailGrid.tsx`: every page is a light `<li>` placeholder of the right shape (fitted in
   an A4-portrait box), so keyboard, screen readers and find-in-page see all of them; only pages within one viewport of
@@ -91,7 +128,7 @@ Newest first. One entry per session: date, milestone, what changed, what was ver
   right way up and shape by pixel colour, incl. a /Rotate 90 page; a 600-page PDF lists 600 items but renders under 100
   near the top, jumping to the end renders the last page without the middle and removes the top canvases, scrolling back
   re-renders nothing; removing a document empties the cache and closes it). Full suite 72/72 in Chromium, Firefox, WebKit
-  and Pixel 7, thumbnails spec �3 stable. In the dev harness: 600 pages listed in ~300 ms, a fast scroll through all of
+  and Pixel 7, thumbnails spec ×3 stable. In the dev harness: 600 pages listed in ~300 ms, a fast scroll through all of
   them kept ~36 canvases and 41 MB of cached images; checked at 375 px (2 columns, no horizontal scroll) and 1024 px.
   `pnpm check` passes; a production build still has no harness pages.
 - Open: the grid observes the window's viewport; an M2 workspace with its own scroll container will need to pass that

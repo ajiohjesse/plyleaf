@@ -58,6 +58,8 @@ Cloudflare Pages. Package manager: pnpm.
   `FileDrop` (picker, page-wide drop, paste) and the file list/notices that tool workspaces build on (D-017).
 - `src/thumbnails/`: the shared page-thumbnail cache (`thumbnails`, D-018); `src/components/thumbnails/ThumbnailGrid`
   renders a document's pages and only renders those near the viewport.
+- `src/download/`: output names, `downloadFile` and `saveAs`; `src/components/download/DownloadPanel` is the "done"
+  screen. Show engine failures with `openFailureMessage` / `operationFailureMessage` from `src/intake/files.ts` (D-019).
 - `src/pages/test-harness/`: pages for E2E tests to drive internals, built only when `PLYLEAF_TEST_HARNESS=1`.
 - `tests/helpers/pdf.ts`: builds test PDFs with MuPDF (works in Vitest and Playwright).
 

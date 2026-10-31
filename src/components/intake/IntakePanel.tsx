@@ -1,4 +1,4 @@
-import type { IntakeOptions } from "~/intake/files";
+import { formatSize, type IntakeOptions } from "~/intake/files";
 import type { Intake, IntakeState } from "~/intake/intake";
 import { FileDrop } from "./FileDrop";
 import { useIntake } from "./useIntake";
@@ -11,22 +11,25 @@ function CloseIcon() {
   );
 }
 
-export function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-/** Messages for files that couldn't be added. The live region is always there so screen readers announce them. */
+/**
+ * Messages about the latest files: ones that couldn't be added (or were lost), and warnings about ones that were. The
+ * live region is always there so screen readers announce them.
+ */
 export function IntakeNotices({ state, intake }: { state: IntakeState; intake: Intake }) {
   return (
     <div aria-live="assertive" className="empty:hidden">
       {state.notices.length > 0 && (
-        <ul className="space-y-2" aria-label="Files that couldn't be added">
+        <ul className="space-y-2" aria-label="File messages">
           {state.notices.map((notice) => (
             <li
               key={notice.id}
-              className="flex items-start justify-between gap-3 rounded-card border-2 border-sticky-coral bg-sticky-pink/40 px-4 py-3"
+              data-tone={notice.tone}
+              className={[
+                "flex items-start justify-between gap-3 rounded-card border-2 px-4 py-3",
+                notice.tone === "warning"
+                  ? "border-sticky-yellow bg-sticky-yellow/25"
+                  : "border-sticky-coral bg-sticky-pink/40",
+              ].join(" ")}
             >
               <span>{notice.message}</span>
               <button
