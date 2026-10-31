@@ -3,9 +3,9 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M1: Engine and core architecture (M0 done 2026-10-31)
-- **Next action:** File intake (drop, picker, paste, multi-file) + validation and errors, built on `src/engine/client.ts`
-  (call `preloadEngine()` on picker open / dragenter; map `EngineError` codes to messages). It needs a host page: the
-  first tool workspace, or a shared workspace island that M2 tools mount.
+- **Next action:** Virtualised page thumbnails (500+ pages) for the documents `useIntake` opens: render with
+  `engine.render`, only for pages near the viewport, and cache bitmaps per (doc, page, width). Host it on the intake
+  harness page next to `DocumentList` until the first tool workspace exists.
 - **Live:** https://plyleaf.ajiohjesse.workers.dev (Workers Builds deploys `main`; other branches get Preview URLs).
 - **Blocked on owner:**
   - Later, at the owner's pace: register `plyleaf.com` (and optionally the `plyleaf` GitHub org). Not blocking (D-013).
@@ -31,7 +31,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ### [ ] M1: Engine and core architecture
 - [x] Engine spike done; D-006 resolved with numbers (D-015, [report](research/engine-spike.md))
 - [x] Worker + Comlink typed engine API (D-016)
-- [ ] File intake (drop, picker, paste, multi-file) + validation and errors
+- [x] File intake (drop, picker, paste, multi-file) + validation and errors
 - [ ] Virtualised page thumbnails
 - [ ] Download pipeline + memory-limit UX
 - [ ] Network egress test (no file bytes leave the browser)
@@ -72,6 +72,28 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-10-31: File intake (M1)
+- Added `src/intake/`: `files.ts` (sniffs each file's first 1 KB for a PDF header or an image signature, falls back to
+  the name/type for headerless PDFs so MuPDF can try a repair; `checkFiles` accepts or explains each file;
+  `openFailureMessage` maps `EngineError` codes to plain words) and `intake.ts` (`createIntake(engine)`: a
+  framework-free store of open documents that checks a batch, opens accepted files one at a time in order, keeps one
+  notice per file it couldn't take, closes documents on remove, and swaps the file in single-file tools). Design in D-017.
+- React pieces in `src/components/intake/`: `useIntake` (store + real engine), `FileDrop` (a `<label>` around a
+  visually hidden file input, so it's native and keyboard reachable; drop anywhere on the page; paste; preloads the
+  engine on hover/focus/click/dragenter; a compact "Add more" form once files are listed), `DocumentList`,
+  `IntakeNotices` (always-present live region) and `IntakePanel` composing them.
+- Test harness: `[name].astro` now builds `engine`, `intake` and `intake-single`; the intake pages mount `IntakePanel`.
+  `window.harness` typing moved to `tests/helpers/harness.ts`. `makePdf` returns `Uint8Array<ArrayBuffer>` so it can go
+  straight into a `File`.
+- Verified: 16 new unit tests (sniffing incl. leading junk, misleading names, HEIC; rejections and messages; ordered
+  sequential opening, notices per batch, removal during opening, single-file swap, subscriptions). New E2E
+  `intake.spec.ts` (7 tests: picker, drop, paste, drag highlight, damaged/protected/empty files, remove closes in the
+  engine, single-file swap, keyboard focus preloads the WASM). Full suite 60/60 in Chromium, Firefox, WebKit and
+  Pixel 7. Checked the empty and filled states at 375 px and 1280 px. `pnpm check` passes.
+- Open: no tool page uses intake yet, so the home hero still has no drop zone (D-011). A dropped folder reads as "is
+  empty". Per-file size/memory warnings belong to the memory-limit UX item.
+- Next: virtualised page thumbnails.
 
 ### 2026-10-31: Engine worker API (M1)
 - Added `src/engine/`: `ops.ts` (pure MuPDF operations: `openPdf`, `describe`, `renderPage`, `assemble`), `worker.ts`

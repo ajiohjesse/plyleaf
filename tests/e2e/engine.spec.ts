@@ -1,12 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
-import type { engine as Engine, EngineError } from "~/engine/client";
+import "../helpers/harness";
 import { A4, LETTER, makePdf } from "../helpers/pdf";
-
-declare global {
-  interface Window {
-    harness: { engine: typeof Engine; EngineError: typeof EngineError; preloadEngine: () => void };
-  }
-}
 
 // The harness page is only built for local E2E runs, not deployed.
 test.skip(!!process.env["BASE_URL"], "needs the test-harness build");
