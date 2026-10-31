@@ -3,10 +3,8 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M2: Organize suite (M0 and M1 done 2026-10-31)
-- **Next action:** M2, Split next: `/split-pdf` on `ToolPage.astro` (D-021), split by range and every N pages first
-  (by size and by bookmark can follow), several outputs in one download (a zip, likely fflate, MIT), an E2E test with
-  `watchEgress`. Then the page-level tools (extract, delete, rotate, reorder, insert blank, duplicate), which share a
-  page-grid Organize workspace built on `ThumbnailGrid` + dnd-kit.
+- **Next action:** M2, Extract pages next, with the shared page-grid Organize workspace (`ThumbnailGrid` with
+  selectable pages, D-023) that delete, rotate, reorder, insert blank and duplicate then reuse. Crop after those.
 - **Live:** https://plyleaf.ajiohjesse.workers.dev (Workers Builds deploys `main`; other branches get Preview URLs).
 - **Blocked on owner:**
   - Later, at the owner's pace: register `plyleaf.com` (and optionally the `plyleaf` GitHub org). Not blocking (D-013).
@@ -38,7 +36,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] Network egress test (no file bytes leave the browser)
 
 ### [ ] M2: Organize suite
-- [x] Merge · [ ] Split · [ ] Extract · [ ] Delete · [ ] Rotate · [ ] Reorder · [ ] Insert blank · [ ] Duplicate · [ ] Crop
+- [x] Merge · [x] Split · [ ] Extract · [ ] Delete · [ ] Rotate · [ ] Reorder · [ ] Insert blank · [ ] Duplicate · [ ] Crop
 - [ ] Shared Organize workspace
 - [ ] Per-tool landing pages + E2E tests
 
@@ -73,6 +71,25 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-10-31: Split PDF (M2)
+- `/split-pdf` (`SplitWorkspace`, single file): split by page ranges (typed, like `1-3, 5, 8-`; suggested as halves
+  so the syntax shows by example) or every N pages, with a live preview of the files it makes and inline errors
+  (`aria-invalid`, described by the error). Each part is one `engine.assemble`, one at a time, with "Splitting… 2 of 5".
+  One part downloads as a PDF; several as a zip (D-022). Parts are named after their pages (`report-pages-1-3.pdf`,
+  repeats get `-2`); the zip is `report-split.zip`. A one-page file says there's nothing to split.
+- `src/organize/ranges.ts` (`parseRanges`, `everyN`, `describeRange`) and `src/organize/split.ts` (`partNames`,
+  `zipFiles`), unit-tested. Added `fflate` 0.8.2 (MIT).
+- Shared workspace pieces in `src/components/workspace/parts.tsx` (`ActionBar`, `FailureAlert`, `IconButton`,
+  `Choice` radio cards, `FileCard`, `FirstPage`, `plural`, `Result`); Merge now uses them. `DownloadPanel` takes an
+  optional `detail` line; Save as describes a `.zip` as a ZIP archive.
+- The catalogue says "by page ranges or every N pages" until by size and by bookmark exist (P5).
+- Verified: 7 new unit tests. New E2E `split.spec.ts` (ranges → zip of three PDFs checked page by page with MuPDF,
+  back and split one range → a single PDF, `watchEgress` clean; every N with the last part shorter; range and N
+  errors disable the button; one-page file; swapping files; not-a-PDF; no engine before a file; linked from home).
+  Split + merge specs 32/32 in Chromium, Firefox, WebKit and Pixel 7. Checked at 375 px and desktop, no console errors.
+- Open: split by size and by bookmark; the zip is built in memory (all parts plus the zip at once).
+- Next: Extract pages with the shared Organize workspace.
 
 ### 2026-10-31: Merge PDF (M2)
 - First tool page. `/merge-pdf` uses a new `src/layouts/ToolPage.astro` (DESIGN "Tool page"): compact hero in the

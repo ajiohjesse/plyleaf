@@ -18,20 +18,23 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { engine } from "~/engine/client";
-import type { PageInfo } from "~/engine/types";
 import { outputName } from "~/download/download";
-import { formatSize, operationFailureMessage } from "~/intake/files";
+import { operationFailureMessage } from "~/intake/files";
 import type { Intake, IntakeDocument } from "~/intake/intake";
-import { thumbnails } from "~/thumbnails/thumbnails";
 import { DownloadPanel } from "~/components/download/DownloadPanel";
 import { FileDrop } from "~/components/intake/FileDrop";
 import { CloseIcon, IntakeNotices } from "~/components/intake/IntakePanel";
 import { useIntake } from "~/components/intake/useIntake";
-import { PageCanvas } from "~/components/thumbnails/PageCanvas";
-
-type Result = { file: Blob; name: string } | { error: string };
-
-const plural = (count: number, one: string, many = `${one}s`) => `${count} ${count === 1 ? one : many}`;
+import {
+  ActionBar,
+  docSummary,
+  FailureAlert,
+  FirstPage,
+  IconButton,
+  plural,
+  primaryButton,
+  type Result,
+} from "~/components/workspace/parts";
 
 /**
  * The Merge PDF workspace: add PDFs, put them in order (drag, or the move buttons), merge every page of each into one
@@ -89,30 +92,27 @@ export function MergeWorkspace() {
       {hasFiles && <FileOrder documents={state.documents} intake={intake} />}
       <FileDrop onFiles={(files) => void intake.add(files)} compact={hasFiles} />
       <IntakeNotices state={state} intake={intake} />
-      {result && "error" in result && (
-        <p role="alert" className="rounded-card border-2 border-sticky-coral bg-sticky-pink/40 px-4 py-3">
-          {result.error}
-        </p>
-      )}
+      {result && "error" in result && <FailureAlert message={result.error} />}
       {hasFiles && (
-        <div className="sticky bottom-3 z-10 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-card border border-line bg-surface px-4 py-3 shadow-sticky">
-          <p className="text-sm text-ink-muted">
-            {state.busy
+        <ActionBar
+          status={
+            state.busy
               ? "Opening your files…"
               : ready.length < 2
                 ? "Add at least one more PDF to merge."
-                : `${plural(ready.length, "file")} · ${plural(pageCount, "page")}, in this order`}
-          </p>
+                : `${plural(ready.length, "file")} · ${plural(pageCount, "page")}, in this order`
+          }
+        >
           <button
             type="button"
             ref={mergeRef}
             disabled={!canMerge}
-            className="btn-pill bg-primary text-on-primary hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+            className={primaryButton}
             onClick={() => void merge()}
           >
             {making ? "Merging…" : "Merge PDFs"}
           </button>
-        </div>
+        </ActionBar>
       )}
     </div>
   );
@@ -209,9 +209,6 @@ function FileRow({ doc, index, count, onMove, onRemove }: FileRowProps) {
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
     id: doc.key,
   });
-  const docId = doc.status === "ready" ? doc.info.id : null;
-  // Its first page's image is no use once the file is removed (and the id may be reissued).
-  useEffect(() => (docId ? () => thumbnails.forget(docId) : undefined), [docId]);
 
   return (
     <li
@@ -244,9 +241,7 @@ function FileRow({ doc, index, count, onMove, onRemove }: FileRowProps) {
       </span>
       <span className="min-w-0 flex-1">
         <span className="block truncate font-semibold">{doc.name}</span>
-        <span className="block text-sm text-ink-muted">
-          {doc.status === "opening" ? "Opening…" : `${plural(doc.info.pageCount, "page")} · ${formatSize(doc.size)}`}
-        </span>
+        <span className="block text-sm text-ink-muted">{docSummary(doc)}</span>
       </span>
       <span className="flex shrink-0">
         <IconButton label={`Move ${doc.name} up`} disabled={index === 0} onClick={() => onMove(index - 1)}>
@@ -260,59 +255,6 @@ function FileRow({ doc, index, count, onMove, onRemove }: FileRowProps) {
         </IconButton>
       </span>
     </li>
-  );
-}
-
-/** Thumbnails fit in a box this big, in CSS pixels. */
-const THUMB = { width: 40, height: 52 };
-
-function FirstPage({ doc }: { doc: IntakeDocument }) {
-  if (doc.status !== "ready") {
-    return <span className="block rounded-sm bg-surface-band ring-1 ring-line" style={THUMB} />;
-  }
-  const size = fit(doc.info.pages[0]!);
-  return (
-    <span className="grid place-items-center" style={THUMB}>
-      <span
-        className="relative block overflow-hidden rounded-sm bg-surface ring-1 ring-line"
-        style={{ width: size.width, height: size.height }}
-      >
-        <PageCanvas docId={doc.info.id} index={0} width={size.width} onScreen />
-      </span>
-    </span>
-  );
-}
-
-function fit(page: PageInfo) {
-  const scale = Math.min(THUMB.width / page.width, THUMB.height / page.height);
-  return { width: Math.max(1, Math.round(page.width * scale)), height: Math.max(1, Math.round(page.height * scale)) };
-}
-
-/**
- * A small round icon button. At the ends of the list a move button is aria-disabled rather than disabled, so it keeps
- * keyboard focus after moving a file to the top or bottom.
- */
-function IconButton({
-  label,
-  disabled = false,
-  onClick,
-  children,
-}: {
-  label: string;
-  disabled?: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      aria-disabled={disabled || undefined}
-      onClick={disabled ? undefined : onClick}
-      className="grid size-9 place-items-center rounded-full text-ink-muted hover:bg-ink/10 hover:text-ink aria-disabled:cursor-default aria-disabled:opacity-35 aria-disabled:hover:bg-transparent sm:size-10"
-    >
-      {children}
-    </button>
   );
 }
 
