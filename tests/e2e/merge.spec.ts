@@ -3,6 +3,7 @@
 import { readFile } from "node:fs/promises";
 import { expect, test, type Page } from "@playwright/test";
 import * as mupdf from "mupdf";
+import { pressUntilAnnounced } from "../helpers/drag";
 import { watchEgress } from "../helpers/egress";
 import { asPayload, dropFiles, pdfFile } from "../helpers/files";
 import { A4, LETTER } from "../helpers/pdf";
@@ -97,10 +98,8 @@ test("reorders files by dragging, with the keyboard or the pointer", async ({ pa
   await page.getByRole("button", { name: "Drag three.pdf" }).focus();
   await page.keyboard.press("Space");
   await announced("Picked up three.pdf, file 3 of 3.");
-  await page.keyboard.press("ArrowUp");
-  await announced("three.pdf is over position 2 of 3.");
-  await page.keyboard.press("ArrowUp");
-  await announced("three.pdf is over position 1 of 3.");
+  await pressUntilAnnounced(page, "ArrowUp", "three.pdf is over position 2 of 3.");
+  await pressUntilAnnounced(page, "ArrowUp", "three.pdf is over position 1 of 3.");
   await page.keyboard.press("Space");
   await announced("three.pdf dropped at position 1 of 3.");
   await expect(fileNames(page)).toHaveText(["three.pdf", "one.pdf", "two.pdf"]);
@@ -113,6 +112,8 @@ test("reorders files by dragging, with the keyboard or the pointer", async ({ pa
   await page.mouse.down();
   // Several steps, so the drag starts (it needs a few pixels of movement) and follows the pointer.
   await page.mouse.move(from.x + from.width / 2, to.y + to.height * 0.75, { steps: 12 });
+  // Drop only once the drag has caught up with the pointer (WebKit can lag a move behind).
+  await announced("three.pdf is over position 3 of 3.");
   await page.mouse.up();
   await expect(fileNames(page)).toHaveText(["one.pdf", "two.pdf", "three.pdf"]);
 });

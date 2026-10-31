@@ -1,0 +1,51 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { OrganizeWorkspace } from "~/components/organize/OrganizeWorkspace";
+---
+
+<ToolPage
+  slug="reorder-pages"
+  title="Reorder PDF pages free, no sign-up"
+  description="Drag PDF pages into a new order, in your browser. Free with no limits, no watermark and no account, and your file is never uploaded."
+  heading="Reorder pages"
+  intro="Drag pages into the order you want, then download the new PDF. Free, no sign-up, no watermark, and your file never leaves this device."
+  steps={[
+    { title: "Add your PDF", text: "Choose it, drop it anywhere on the page, or paste it." },
+    {
+      title: "Put pages in order",
+      text: "Drag a page by its handle, or select pages and move them to the start or end. Reverse the whole file in one go.",
+    },
+    {
+      title: "Reorder and download",
+      text: "Plyleaf saves the pages in their new order on your device, in seconds.",
+    },
+  ]}
+  faqs={[
+    {
+      question: "Is it really free?",
+      answer:
+        "Yes. There is no paid plan, no daily limit and no watermark. Plyleaf can be free because your own browser does the work, so there are no servers to pay for.",
+    },
+    {
+      question: "Is my file uploaded?",
+      answer:
+        "No. Your PDF is read right here in your browser, and the new file is made here too. It never goes over the internet.",
+    },
+    {
+      question: "Can I move pages without dragging?",
+      answer:
+        "Yes. Select pages and use Move to start or Move to end. On a keyboard, focus a page's handle, press space, move it with the arrow keys and press space again.",
+    },
+    {
+      question: "Will the pages look the same?",
+      answer:
+        "Yes. Each page is copied as it is, with its text, fonts and images, so nothing is re-compressed or lowered in quality. Bookmarks and fillable form fields aren't carried over yet.",
+    },
+    {
+      question: "Can I reorder pages from several PDFs?",
+      answer: "Use Merge PDF first to join them into one file, then reorder its pages here.",
+    },
+  ]}
+>
+  <OrganizeWorkspace tool="reorder" client:load />
+</ToolPage>

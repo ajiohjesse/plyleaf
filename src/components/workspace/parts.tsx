@@ -143,3 +143,12 @@ export function FileCard({ doc, onRemove }: { doc: IntakeDocument; onRemove: () 
     </div>
   );
 }
+
+/** Six dots: the handle that drags something into place. */
+export function GripIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5" fill="currentColor">
+      {[6, 12, 18].flatMap((y) => [9, 15].map((x) => <circle key={`${x}-${y}`} cx={x} cy={y} r={1.6} />))}
+    </svg>
+  );
+}

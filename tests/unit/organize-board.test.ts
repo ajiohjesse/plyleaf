@@ -7,7 +7,10 @@ import {
   isChanged,
   keysBetween,
   keysInRanges,
+  isReordered,
   movePage,
+  moveToEdge,
+  originalOrder,
   removePages,
   reversePages,
   rotatePages,
@@ -93,6 +96,17 @@ test("moves and reverses pages", () => {
   expect(sources(movePage(board, board[0]!.key, 99))).toEqual([1, 2, 3, 0]);
   expect(movePage(board, "gone", 0)).toBe(board);
   expect(sources(reversePages(board))).toEqual([3, 2, 1, 0]);
+});
+
+test("moves a selection to either end, and back to the original order", () => {
+  const board = boardFrom(FOUR);
+  const toStart = moveToEdge(board, keys(board, 4, 2), "start");
+  expect(sources(toStart)).toEqual([1, 3, 0, 2]);
+  expect(isReordered(toStart)).toBe(true);
+  expect(sources(moveToEdge(board, keys(board, 1, 3), "end"))).toEqual([1, 3, 0, 2]);
+  expect(sources(originalOrder(toStart))).toEqual([0, 1, 2, 3]);
+  expect(isReordered(originalOrder(toStart))).toBe(false);
+  expect(isReordered(board)).toBe(false);
 });
 
 test("duplicates pages next to themselves, keeping their rotation", () => {
