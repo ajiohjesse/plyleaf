@@ -12,3 +12,8 @@ playwright/.cache/
 .DS_Store
 Thumbs.db
 .wrangler/
+
+# Engine spike: generated fixtures (~80 MB), build output, thumbnails
+bench/engine/public/fixtures/
+bench/engine/dist/
+bench/engine/results/thumbs/

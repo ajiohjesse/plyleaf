@@ -1,0 +1,2879 @@
+{
+  "runs": 3,
+  "bundles": {
+    "mupdf": {
+      "files": [
+        "/assets/mupdf-BAuFtpGZ.js",
+        "/assets/engine-CZMPGfV_.js",
+        "/assets/mupdf-BLkpbI_K.js",
+        "/assets/rolldown-runtime-WkwZ5CU-.js",
+        "/assets/mupdf-wasm-Bvf0xebB.wasm"
+      ],
+      "raw": 10502638,
+      "gzip": 4775901,
+      "brotli": 3644166
+    },
+    "pdfium": {
+      "files": [
+        "/assets/pdfium-BJ-AOwh6.js",
+        "/assets/engine-CZMPGfV_.js",
+        "/assets/index.browser-BdkrGalv.js",
+        "/assets/pdfium-BJ2Yip8Q.wasm"
+      ],
+      "raw": 4803367,
+      "gzip": 2186771,
+      "brotli": 1684547
+    },
+    "pdfjs": {
+      "files": [
+        "/assets/pdfjs-69Gfs99Y.js",
+        "/assets/pdf-ULJPBbF3.js",
+        "/assets/pdf.worker.min-CjEcRF4W.mjs"
+      ],
+      "raw": 1695401,
+      "gzip": 503865,
+      "brotli": 414252
+    },
+    "pdflib": {
+      "files": [
+        "/assets/pdflib-CLdg-tkT.js",
+        "/assets/es-DkgDTHgD.js",
+        "/assets/rolldown-runtime-WkwZ5CU-.js"
+      ],
+      "raw": 579140,
+      "gzip": 249586,
+      "brotli": 211190
+    }
+  },
+  "results": {
+    "chromium": {
+      "mupdf": [
+        {
+          "engine": "mupdf",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
+          "init": {
+            "ms": 117.3
+          },
+          "resources": [
+            "/assets/mupdf-BAuFtpGZ.js",
+            "/assets/engine-CZMPGfV_.js",
+            "/assets/mupdf-BLkpbI_K.js",
+            "/assets/rolldown-runtime-WkwZ5CU-.js",
+            "/assets/mupdf-wasm-Bvf0xebB.wasm"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 8.4
+              },
+              "firstThumb": {
+                "ms": 38.3
+              },
+              "firstView": {
+                "ms": 16.6
+              },
+              "allThumbs": {
+                "ms": 46.1
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 18.4
+              },
+              "firstThumb": {
+                "ms": 46
+              },
+              "firstView": {
+                "ms": 54.8
+              },
+              "allThumbs": {
+                "ms": 2247.9
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 23.8
+              },
+              "firstThumb": {
+                "ms": 7.5
+              },
+              "firstView": {
+                "ms": 5.6
+              },
+              "allThumbs": {
+                "ms": 3834.2
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 132.8,
+              "bytes": 84331574,
+              "pagesOk": true
+            },
+            "rotateMixed": {
+              "ms": 51.3,
+              "bytes": 54648579,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": 84915209
+            },
+            "mixedOpen": {
+              "wasm": 237109248,
+              "total": 86108772
+            },
+            "end": {
+              "wasm": 491847680,
+              "total": 225134788
+            }
+          }
+        },
+        {
+          "engine": "mupdf",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
+          "init": {
+            "ms": 71.7
+          },
+          "resources": [
+            "/assets/mupdf-BAuFtpGZ.js",
+            "/assets/engine-CZMPGfV_.js",
+            "/assets/mupdf-BLkpbI_K.js",
+            "/assets/rolldown-runtime-WkwZ5CU-.js",
+            "/assets/mupdf-wasm-Bvf0xebB.wasm"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 4.9
+              },
+              "firstThumb": {
+                "ms": 27.5
+              },
+              "firstView": {
+                "ms": 12.9
+              },
+              "allThumbs": {
+                "ms": 28.7
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 13
+              },
+              "firstThumb": {
+                "ms": 30.6
+              },
+              "firstView": {
+                "ms": 42.2
+              },
+              "allThumbs": {
+                "ms": 2269.3
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 27.1
+              },
+              "firstThumb": {
+                "ms": 8.4
+              },
+              "firstView": {
+                "ms": 7.2
+              },
+              "allThumbs": {
+                "ms": 4025.8
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 133,
+              "bytes": 84331574,
+              "pagesOk": true
+            },
+            "rotateMixed": {
+              "ms": 48.8,
+              "bytes": 54648579,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": 84921071
+            },
+            "mixedOpen": {
+              "wasm": 237109248,
+              "total": 86109532
+            },
+            "end": {
+              "wasm": 491847680,
+              "total": 225131716
+            }
+          }
+        },
+        {
+          "engine": "mupdf",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
+          "init": {
+            "ms": 71.9
+          },
+          "resources": [
+            "/assets/mupdf-BAuFtpGZ.js",
+            "/assets/engine-CZMPGfV_.js",
+            "/assets/mupdf-BLkpbI_K.js",
+            "/assets/rolldown-runtime-WkwZ5CU-.js",
+            "/assets/mupdf-wasm-Bvf0xebB.wasm"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 4.6
+              },
+              "firstThumb": {
+                "ms": 24.4
+              },
+              "firstView": {
+                "ms": 14.9
+              },
+              "allThumbs": {
+                "ms": 28.8
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 13.4
+              },
+              "firstThumb": {
+                "ms": 31.1
+              },
+              "firstView": {
+                "ms": 42.9
+              },
+              "allThumbs": {
+                "ms": 2150.8
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 23.3
+              },
+              "firstThumb": {
+                "ms": 6.7
+              },
+              "firstView": {
+                "ms": 5.4
+              },
+              "allThumbs": {
+                "ms": 3776.1
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 132.2,
+              "bytes": 84331574,
+              "pagesOk": true
+            },
+            "rotateMixed": {
+              "ms": 50.5,
+              "bytes": 54648579,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": 84921855
+            },
+            "mixedOpen": {
+              "wasm": 237109248,
+              "total": 86109392
+            },
+            "end": {
+              "wasm": 491847680,
+              "total": 225135232
+            }
+          }
+        }
+      ],
+      "pdfium": [
+        {
+          "engine": "pdfium",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
+          "init": {
+            "ms": 52.1
+          },
+          "resources": [
+            "/assets/pdfium-BJ-AOwh6.js",
+            "/assets/engine-CZMPGfV_.js",
+            "/assets/index.browser-BdkrGalv.js",
+            "/assets/pdfium-BJ2Yip8Q.wasm"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 4
+              },
+              "firstThumb": {
+                "ms": 9.4
+              },
+              "firstView": {
+                "ms": 15.6
+              },
+              "allThumbs": {
+                "ms": 30.5
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 6
+              },
+              "firstThumb": {
+                "ms": 48.2
+              },
+              "firstView": {
+                "ms": 46.8
+              },
+              "allThumbs": {
+                "ms": 3101.3
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 4.2
+              },
+              "firstThumb": {
+                "ms": 2.2
+              },
+              "firstView": {
+                "ms": 10.5
+              },
+              "allThumbs": {
+                "ms": 5139.3
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 163.5,
+              "bytes": 84366586,
+              "pagesOk": true
+            },
+            "rotateMixed": {
+              "ms": 150.1,
+              "bytes": 54680053,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": 84921939
+            },
+            "mixedOpen": {
+              "wasm": 200409088,
+              "total": 86594155
+            },
+            "end": {
+              "wasm": 526123008,
+              "total": 225675161
+            }
+          }
+        },
+        {
+          "engine": "pdfium",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
+          "init": {
+            "ms": 55.2
+          },
+          "resources": [
+            "/assets/pdfium-BJ-AOwh6.js",
+            "/assets/engine-CZMPGfV_.js",
+            "/assets/index.browser-BdkrGalv.js",
+            "/assets/pdfium-BJ2Yip8Q.wasm"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 4.4
+              },
+              "firstThumb": {
+                "ms": 9.9
+              },
+              "firstView": {
+                "ms": 16.7
+              },
+              "allThumbs": {
+                "ms": 34.3
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 7.8
+              },
+              "firstThumb": {
+                "ms": 53.3
+              },
+              "firstView": {
+                "ms": 53.7
+              },
+              "allThumbs": {
+                "ms": 3545.6
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 5.3
+              },
+              "firstThumb": {
+                "ms": 2.4
+              },
+              "firstView": {
+                "ms": 11.9
+              },
+              "allThumbs": {
+                "ms": 5177.8
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 151.3,
+              "bytes": 84366586,
+              "pagesOk": true
+            },
+            "rotateMixed": {
+              "ms": 135.4,
+              "bytes": 54680053,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": 84922411
+            },
+            "mixedOpen": {
+              "wasm": 200409088,
+              "total": 86593895
+            },
+            "end": {
+              "wasm": 526123008,
+              "total": 225674865
+            }
+          }
+        },
+        {
+          "engine": "pdfium",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
+          "init": {
+            "ms": 50.8
+          },
+          "resources": [
+            "/assets/pdfium-BJ-AOwh6.js",
+            "/assets/engine-CZMPGfV_.js",
+            "/assets/index.browser-BdkrGalv.js",
+            "/assets/pdfium-BJ2Yip8Q.wasm"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 4.1
+              },
+              "firstThumb": {
+                "ms": 13.8
+              },
+              "firstView": {
+                "ms": 15.2
+              },
+              "allThumbs": {
+                "ms": 31.2
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 6.1
+              },
+              "firstThumb": {
+                "ms": 48.6
+              },
+              "firstView": {
+                "ms": 46.5
+              },
+              "allThumbs": {
+                "ms": 3136.5
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 4.4
+              },
+              "firstThumb": {
+                "ms": 2.3
+              },
+              "firstView": {
+                "ms": 10.9
+              },
+              "allThumbs": {
+                "ms": 5460.9
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 154.4,
+              "bytes": 84366586,
+              "pagesOk": true
+            },
+            "rotateMixed": {
+              "ms": 144.1,
+              "bytes": 54680053,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": 84914613
+            },
+            "mixedOpen": {
+              "wasm": 200409088,
+              "total": 86593835
+            },
+            "end": {
+              "wasm": 526123008,
+              "total": 225674837
+            }
+          }
+        }
+      ],
+      "pdfjs": [
+        {
+          "engine": "pdfjs",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
+          "init": {
+            "ms": 142.1
+          },
+          "resources": [
+            "/assets/pdfjs-69Gfs99Y.js",
+            "/assets/pdf-ULJPBbF3.js",
+            "/assets/pdf.worker.min-CjEcRF4W.mjs"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 8.2
+              },
+              "firstThumb": {
+                "ms": 41.3
+              },
+              "firstView": {
+                "ms": 8.5
+              },
+              "allThumbs": {
+                "ms": 199.3
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 12.1
+              },
+              "firstThumb": {
+                "ms": 45
+              },
+              "firstView": {
+                "ms": 31.6
+              },
+              "allThumbs": {
+                "ms": 3894.2
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 33
+              },
+              "firstThumb": {
+                "ms": 19.9
+              },
+              "firstView": {
+                "ms": 15.9
+              },
+              "allThumbs": {
+                "ms": 4358.1
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 738.6,
+              "bytes": 84358145,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": 84914449
+            },
+            "mixedOpen": {
+              "wasm": 0,
+              "total": 149786969
+            },
+            "end": {
+              "wasm": 0,
+              "total": 177973976
+            }
+          }
+        },
+        {
+          "engine": "pdfjs",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
+          "init": {
+            "ms": 151.2
+          },
+          "resources": [
+            "/assets/pdfjs-69Gfs99Y.js",
+            "/assets/pdf-ULJPBbF3.js",
+            "/assets/pdf.worker.min-CjEcRF4W.mjs"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 10.2
+              },
+              "firstThumb": {
+                "ms": 56.1
+              },
+              "firstView": {
+                "ms": 10.5
+              },
+              "allThumbs": {
+                "ms": 198.4
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 13.2
+              },
+              "firstThumb": {
+                "ms": 43.3
+              },
+              "firstView": {
+                "ms": 36
+              },
+              "allThumbs": {
+                "ms": 4336.6
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 32.2
+              },
+              "firstThumb": {
+                "ms": 22.5
+              },
+              "firstView": {
+                "ms": 15.1
+              },
+              "allThumbs": {
+                "ms": 5395.9
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 984,
+              "bytes": 84358145,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": 84919429
+            },
+            "mixedOpen": {
+              "wasm": 0,
+              "total": 149785377
+            },
+            "end": {
+              "wasm": 0,
+              "total": 177945112
+            }
+          }
+        },
+        {
+          "engine": "pdfjs",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
+          "init": {
+            "ms": 130.5
+          },
+          "resources": [
+            "/assets/pdfjs-69Gfs99Y.js",
+            "/assets/pdf-ULJPBbF3.js",
+            "/assets/pdf.worker.min-CjEcRF4W.mjs"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 8.4
+              },
+              "firstThumb": {
+                "ms": 32.5
+              },
+              "firstView": {
+                "ms": 11.5
+              },
+              "allThumbs": {
+                "ms": 199.5
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 11.8
+              },
+              "firstThumb": {
+                "ms": 45.6
+              },
+              "firstView": {
+                "ms": 31.1
+              },
+              "allThumbs": {
+                "ms": 3860.1
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 35.7
+              },
+              "firstThumb": {
+                "ms": 14.3
+              },
+              "firstView": {
+                "ms": 16
+              },
+              "allThumbs": {
+                "ms": 5066.8
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 1087.9,
+              "bytes": 84358145,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": 84914041
+            },
+            "mixedOpen": {
+              "wasm": 0,
+              "total": 149789717
+            },
+            "end": {
+              "wasm": 0,
+              "total": 177925648
+            }
+          }
+        }
+      ],
+      "pdflib": [
+        {
+          "engine": "pdflib",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
+          "init": {
+            "ms": 52.9
+          },
+          "resources": [
+            "/assets/pdflib-CLdg-tkT.js",
+            "/assets/es-DkgDTHgD.js",
+            "/assets/rolldown-runtime-WkwZ5CU-.js"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 8.5
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 25.1
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 46.3
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 294.1,
+              "bytes": 84360067,
+              "pagesOk": true
+            },
+            "rotateMixed": {
+              "ms": 137.8,
+              "bytes": 54675312,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": 84914999
+            },
+            "mixedOpen": {
+              "wasm": 0,
+              "total": 144444952
+            },
+            "end": {
+              "wasm": 0,
+              "total": 283851382
+            }
+          }
+        },
+        {
+          "engine": "pdflib",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
+          "init": {
+            "ms": 45.2
+          },
+          "resources": [
+            "/assets/pdflib-CLdg-tkT.js",
+            "/assets/es-DkgDTHgD.js",
+            "/assets/rolldown-runtime-WkwZ5CU-.js"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 6.8
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 19
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 35.5
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 288.7,
+              "bytes": 84360068,
+              "pagesOk": true
+            },
+            "rotateMixed": {
+              "ms": 128.8,
+              "bytes": 54675313,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": 84915609
+            },
+            "mixedOpen": {
+              "wasm": 0,
+              "total": 144438302
+            },
+            "end": {
+              "wasm": 0,
+              "total": 283848738
+            }
+          }
+        },
+        {
+          "engine": "pdflib",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
+          "init": {
+            "ms": 49.6
+          },
+          "resources": [
+            "/assets/pdflib-CLdg-tkT.js",
+            "/assets/es-DkgDTHgD.js",
+            "/assets/rolldown-runtime-WkwZ5CU-.js"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 8.4
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 21.2
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 41.7
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 278.7,
+              "bytes": 84360067,
+              "pagesOk": true
+            },
+            "rotateMixed": {
+              "ms": 134.8,
+              "bytes": 54675313,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": 84916869
+            },
+            "mixedOpen": {
+              "wasm": 0,
+              "total": 144441376
+            },
+            "end": {
+              "wasm": 0,
+              "total": 283840909
+            }
+          }
+        }
+      ]
+    },
+    "firefox": {
+      "mupdf": [
+        {
+          "engine": "mupdf",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:157.0) Gecko/20100101 Firefox/157.0",
+          "init": {
+            "ms": 204.8
+          },
+          "resources": [
+            "/assets/mupdf-BAuFtpGZ.js",
+            "/assets/engine-CZMPGfV_.js",
+            "/assets/mupdf-BLkpbI_K.js",
+            "/assets/rolldown-runtime-WkwZ5CU-.js",
+            "/assets/mupdf-wasm-Bvf0xebB.wasm"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 0.7
+              },
+              "firstThumb": {
+                "ms": 23.8
+              },
+              "firstView": {
+                "ms": 20.7
+              },
+              "allThumbs": {
+                "ms": 55.5
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 17.6
+              },
+              "firstThumb": {
+                "ms": 38.8
+              },
+              "firstView": {
+                "ms": 60.2
+              },
+              "allThumbs": {
+                "ms": 2479.8
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 28.8
+              },
+              "firstThumb": {
+                "ms": 7.9
+              },
+              "firstView": {
+                "ms": 7.4
+              },
+              "allThumbs": {
+                "ms": 4842.8
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 141.5,
+              "bytes": 84331574,
+              "pagesOk": true
+            },
+            "rotateMixed": {
+              "ms": 72.4,
+              "bytes": 54648579,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": null
+            },
+            "mixedOpen": {
+              "wasm": 237109248,
+              "total": null
+            },
+            "end": {
+              "wasm": 491847680,
+              "total": null
+            }
+          }
+        },
+        {
+          "engine": "mupdf",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:157.0) Gecko/20100101 Firefox/157.0",
+          "init": {
+            "ms": 168.2
+          },
+          "resources": [
+            "/assets/mupdf-BAuFtpGZ.js",
+            "/assets/engine-CZMPGfV_.js",
+            "/assets/mupdf-BLkpbI_K.js",
+            "/assets/rolldown-runtime-WkwZ5CU-.js",
+            "/assets/mupdf-wasm-Bvf0xebB.wasm"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 0.4
+              },
+              "firstThumb": {
+                "ms": 12.9
+              },
+              "firstView": {
+                "ms": 11.4
+              },
+              "allThumbs": {
+                "ms": 48.3
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 14.9
+              },
+              "firstThumb": {
+                "ms": 31.5
+              },
+              "firstView": {
+                "ms": 52.8
+              },
+              "allThumbs": {
+                "ms": 2452.1
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 22.9
+              },
+              "firstThumb": {
+                "ms": 7.6
+              },
+              "firstView": {
+                "ms": 10.1
+              },
+              "allThumbs": {
+                "ms": 4371.8
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 136.7,
+              "bytes": 84331574,
+              "pagesOk": true
+            },
+            "rotateMixed": {
+              "ms": 56,
+              "bytes": 54648579,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": null
+            },
+            "mixedOpen": {
+              "wasm": 237109248,
+              "total": null
+            },
+            "end": {
+              "wasm": 491847680,
+              "total": null
+            }
+          }
+        },
+        {
+          "engine": "mupdf",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:157.0) Gecko/20100101 Firefox/157.0",
+          "init": {
+            "ms": 172.3
+          },
+          "resources": [
+            "/assets/mupdf-BAuFtpGZ.js",
+            "/assets/engine-CZMPGfV_.js",
+            "/assets/mupdf-BLkpbI_K.js",
+            "/assets/rolldown-runtime-WkwZ5CU-.js",
+            "/assets/mupdf-wasm-Bvf0xebB.wasm"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 0.5
+              },
+              "firstThumb": {
+                "ms": 25.3
+              },
+              "firstView": {
+                "ms": 15.6
+              },
+              "allThumbs": {
+                "ms": 64.3
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 16.4
+              },
+              "firstThumb": {
+                "ms": 39.7
+              },
+              "firstView": {
+                "ms": 68.5
+              },
+              "allThumbs": {
+                "ms": 2858.8
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 25.9
+              },
+              "firstThumb": {
+                "ms": 9.2
+              },
+              "firstView": {
+                "ms": 11.8
+              },
+              "allThumbs": {
+                "ms": 13712.9
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 538.3,
+              "bytes": 84331574,
+              "pagesOk": true
+            },
+            "rotateMixed": {
+              "ms": 211.3,
+              "bytes": 54648579,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": null
+            },
+            "mixedOpen": {
+              "wasm": 237109248,
+              "total": null
+            },
+            "end": {
+              "wasm": 491847680,
+              "total": null
+            }
+          }
+        }
+      ],
+      "pdfium": [
+        {
+          "engine": "pdfium",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:157.0) Gecko/20100101 Firefox/157.0",
+          "init": {
+            "ms": 517.3
+          },
+          "resources": [
+            "/assets/pdfium-BJ-AOwh6.js",
+            "/assets/engine-CZMPGfV_.js",
+            "/assets/index.browser-BdkrGalv.js",
+            "/assets/pdfium-BJ2Yip8Q.wasm"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 1.2
+              },
+              "firstThumb": {
+                "ms": 28.8
+              },
+              "firstView": {
+                "ms": 67
+              },
+              "allThumbs": {
+                "ms": 201.6
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 27.3
+              },
+              "firstThumb": {
+                "ms": 211.4
+              },
+              "firstView": {
+                "ms": 233.2
+              },
+              "allThumbs": {
+                "ms": 16424.1
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 19.3
+              },
+              "firstThumb": {
+                "ms": 13.5
+              },
+              "firstView": {
+                "ms": 60.6
+              },
+              "allThumbs": {
+                "ms": 25930.3
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 636,
+              "bytes": 84366586,
+              "pagesOk": true
+            },
+            "rotateMixed": {
+              "ms": 681.5,
+              "bytes": 54680053,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": null
+            },
+            "mixedOpen": {
+              "wasm": 200409088,
+              "total": null
+            },
+            "end": {
+              "wasm": 526123008,
+              "total": null
+            }
+          }
+        },
+        {
+          "engine": "pdfium",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:157.0) Gecko/20100101 Firefox/157.0",
+          "init": {
+            "ms": 445.9
+          },
+          "resources": [
+            "/assets/pdfium-BJ-AOwh6.js",
+            "/assets/engine-CZMPGfV_.js",
+            "/assets/index.browser-BdkrGalv.js",
+            "/assets/pdfium-BJ2Yip8Q.wasm"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 1.1
+              },
+              "firstThumb": {
+                "ms": 30.3
+              },
+              "firstView": {
+                "ms": 73.2
+              },
+              "allThumbs": {
+                "ms": 200.6
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 26.9
+              },
+              "firstThumb": {
+                "ms": 244.5
+              },
+              "firstView": {
+                "ms": 322.1
+              },
+              "allThumbs": {
+                "ms": 17571.1
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 22
+              },
+              "firstThumb": {
+                "ms": 14.8
+              },
+              "firstView": {
+                "ms": 61.9
+              },
+              "allThumbs": {
+                "ms": 27299.8
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 632.4,
+              "bytes": 84366586,
+              "pagesOk": true
+            },
+            "rotateMixed": {
+              "ms": 746.3,
+              "bytes": 54680053,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": null
+            },
+            "mixedOpen": {
+              "wasm": 200409088,
+              "total": null
+            },
+            "end": {
+              "wasm": 526123008,
+              "total": null
+            }
+          }
+        },
+        {
+          "engine": "pdfium",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:157.0) Gecko/20100101 Firefox/157.0",
+          "init": {
+            "ms": 544.2
+          },
+          "resources": [
+            "/assets/pdfium-BJ-AOwh6.js",
+            "/assets/engine-CZMPGfV_.js",
+            "/assets/index.browser-BdkrGalv.js",
+            "/assets/pdfium-BJ2Yip8Q.wasm"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 1
+              },
+              "firstThumb": {
+                "ms": 32
+              },
+              "firstView": {
+                "ms": 90.6
+              },
+              "allThumbs": {
+                "ms": 209
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 24.9
+              },
+              "firstThumb": {
+                "ms": 216.3
+              },
+              "firstView": {
+                "ms": 251.6
+              },
+              "allThumbs": {
+                "ms": 18518.1
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 19.3
+              },
+              "firstThumb": {
+                "ms": 15.6
+              },
+              "firstView": {
+                "ms": 91.7
+              },
+              "allThumbs": {
+                "ms": 26239.1
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 814.5,
+              "bytes": 84366586,
+              "pagesOk": true
+            },
+            "rotateMixed": {
+              "ms": 747.5,
+              "bytes": 54680053,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": null
+            },
+            "mixedOpen": {
+              "wasm": 200409088,
+              "total": null
+            },
+            "end": {
+              "wasm": 526123008,
+              "total": null
+            }
+          }
+        }
+      ],
+      "pdfjs": [
+        {
+          "engine": "pdfjs",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:157.0) Gecko/20100101 Firefox/157.0",
+          "init": {
+            "ms": 1151.4
+          },
+          "resources": [
+            "/assets/pdfjs-69Gfs99Y.js",
+            "/assets/pdf-ULJPBbF3.js",
+            "/assets/pdf.worker.min-CjEcRF4W.mjs"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 29.2
+              },
+              "firstThumb": {
+                "ms": 217.9
+              },
+              "firstView": {
+                "ms": 187.1
+              },
+              "allThumbs": {
+                "ms": 987.1
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 52.8
+              },
+              "firstThumb": {
+                "ms": 123.9
+              },
+              "firstView": {
+                "ms": 145.6
+              },
+              "allThumbs": {
+                "ms": 8139.1
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 40.4
+              },
+              "firstThumb": {
+                "ms": 29.7
+              },
+              "firstView": {
+                "ms": 36.6
+              },
+              "allThumbs": {
+                "ms": 7032
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 907.9,
+              "bytes": 84358385,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": null
+            },
+            "mixedOpen": {
+              "wasm": 0,
+              "total": null
+            },
+            "end": {
+              "wasm": 0,
+              "total": null
+            }
+          }
+        },
+        {
+          "engine": "pdfjs",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:157.0) Gecko/20100101 Firefox/157.0",
+          "init": {
+            "ms": 290.3
+          },
+          "resources": [
+            "/assets/pdfjs-69Gfs99Y.js",
+            "/assets/pdf-ULJPBbF3.js",
+            "/assets/pdf.worker.min-CjEcRF4W.mjs"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 8.5
+              },
+              "firstThumb": {
+                "ms": 50.2
+              },
+              "firstView": {
+                "ms": 24.2
+              },
+              "allThumbs": {
+                "ms": 243.6
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 13.3
+              },
+              "firstThumb": {
+                "ms": 31.4
+              },
+              "firstView": {
+                "ms": 35.1
+              },
+              "allThumbs": {
+                "ms": 3366.5
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 109.4
+              },
+              "firstThumb": {
+                "ms": 113
+              },
+              "firstView": {
+                "ms": 43.2
+              },
+              "allThumbs": {
+                "ms": 5572.6
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 887.6,
+              "bytes": 84358385,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": null
+            },
+            "mixedOpen": {
+              "wasm": 0,
+              "total": null
+            },
+            "end": {
+              "wasm": 0,
+              "total": null
+            }
+          }
+        },
+        {
+          "engine": "pdfjs",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:157.0) Gecko/20100101 Firefox/157.0",
+          "init": {
+            "ms": 309.1
+          },
+          "resources": [
+            "/assets/pdfjs-69Gfs99Y.js",
+            "/assets/pdf-ULJPBbF3.js",
+            "/assets/pdf.worker.min-CjEcRF4W.mjs"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 6.9
+              },
+              "firstThumb": {
+                "ms": 46
+              },
+              "firstView": {
+                "ms": 23.7
+              },
+              "allThumbs": {
+                "ms": 247.1
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 15
+              },
+              "firstThumb": {
+                "ms": 30.3
+              },
+              "firstView": {
+                "ms": 35.8
+              },
+              "allThumbs": {
+                "ms": 3332.8
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 101
+              },
+              "firstThumb": {
+                "ms": 19.5
+              },
+              "firstView": {
+                "ms": 86.3
+              },
+              "allThumbs": {
+                "ms": 5100.1
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 925.2,
+              "bytes": 84358387,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": null
+            },
+            "mixedOpen": {
+              "wasm": 0,
+              "total": null
+            },
+            "end": {
+              "wasm": 0,
+              "total": null
+            }
+          }
+        }
+      ],
+      "pdflib": [
+        {
+          "engine": "pdflib",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:157.0) Gecko/20100101 Firefox/157.0",
+          "init": {
+            "ms": 194.8
+          },
+          "resources": [
+            "/assets/pdflib-CLdg-tkT.js",
+            "/assets/es-DkgDTHgD.js",
+            "/assets/rolldown-runtime-WkwZ5CU-.js"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 11.4
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 31.7
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 47.1
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 340.9,
+              "bytes": 84360067,
+              "pagesOk": true
+            },
+            "rotateMixed": {
+              "ms": 142.5,
+              "bytes": 54675313,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": null
+            },
+            "mixedOpen": {
+              "wasm": 0,
+              "total": null
+            },
+            "end": {
+              "wasm": 0,
+              "total": null
+            }
+          }
+        },
+        {
+          "engine": "pdflib",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:157.0) Gecko/20100101 Firefox/157.0",
+          "init": {
+            "ms": 152
+          },
+          "resources": [
+            "/assets/pdflib-CLdg-tkT.js",
+            "/assets/es-DkgDTHgD.js",
+            "/assets/rolldown-runtime-WkwZ5CU-.js"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 10.1
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 39.1
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 55.6
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 359.3,
+              "bytes": 84360067,
+              "pagesOk": true
+            },
+            "rotateMixed": {
+              "ms": 137.8,
+              "bytes": 54675313,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": null
+            },
+            "mixedOpen": {
+              "wasm": 0,
+              "total": null
+            },
+            "end": {
+              "wasm": 0,
+              "total": null
+            }
+          }
+        },
+        {
+          "engine": "pdflib",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:157.0) Gecko/20100101 Firefox/157.0",
+          "init": {
+            "ms": 190.4
+          },
+          "resources": [
+            "/assets/pdflib-CLdg-tkT.js",
+            "/assets/es-DkgDTHgD.js",
+            "/assets/rolldown-runtime-WkwZ5CU-.js"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 9.7
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 28.3
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 46.2
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 398.9,
+              "bytes": 84360067,
+              "pagesOk": true
+            },
+            "rotateMixed": {
+              "ms": 145.7,
+              "bytes": 54675313,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": null
+            },
+            "mixedOpen": {
+              "wasm": 0,
+              "total": null
+            },
+            "end": {
+              "wasm": 0,
+              "total": null
+            }
+          }
+        }
+      ]
+    },
+    "webkit": {
+      "mupdf": [
+        {
+          "engine": "mupdf",
+          "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15",
+          "init": {
+            "ms": 222.7
+          },
+          "resources": [
+            "/assets/mupdf-BAuFtpGZ.js",
+            "/assets/engine-CZMPGfV_.js",
+            "/assets/mupdf-BLkpbI_K.js",
+            "/assets/rolldown-runtime-WkwZ5CU-.js",
+            "/assets/mupdf-wasm-Bvf0xebB.wasm"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 3.5
+              },
+              "firstThumb": {
+                "ms": 29.4
+              },
+              "firstView": {
+                "ms": 16.9
+              },
+              "allThumbs": {
+                "ms": 49.6
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 15.1
+              },
+              "firstThumb": {
+                "ms": 30.5
+              },
+              "firstView": {
+                "ms": 52
+              },
+              "allThumbs": {
+                "ms": 2003.4
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 23.5
+              },
+              "firstThumb": {
+                "ms": 9.1
+              },
+              "firstView": {
+                "ms": 10.5
+              },
+              "allThumbs": {
+                "ms": 4224.9
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 137.4,
+              "bytes": 84331574,
+              "pagesOk": true
+            },
+            "rotateMixed": {
+              "ms": 46.4,
+              "bytes": 54648579,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": null
+            },
+            "mixedOpen": {
+              "wasm": 237109248,
+              "total": null
+            },
+            "end": {
+              "wasm": 491847680,
+              "total": null
+            }
+          }
+        },
+        {
+          "engine": "mupdf",
+          "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15",
+          "init": {
+            "ms": 182.8
+          },
+          "resources": [
+            "/assets/mupdf-BAuFtpGZ.js",
+            "/assets/engine-CZMPGfV_.js",
+            "/assets/mupdf-BLkpbI_K.js",
+            "/assets/rolldown-runtime-WkwZ5CU-.js",
+            "/assets/mupdf-wasm-Bvf0xebB.wasm"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 1.8
+              },
+              "firstThumb": {
+                "ms": 22
+              },
+              "firstView": {
+                "ms": 13.9
+              },
+              "allThumbs": {
+                "ms": 46.8
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 14.5
+              },
+              "firstThumb": {
+                "ms": 31.3
+              },
+              "firstView": {
+                "ms": 50.9
+              },
+              "allThumbs": {
+                "ms": 1996.2
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 21.3
+              },
+              "firstThumb": {
+                "ms": 7.3
+              },
+              "firstView": {
+                "ms": 7.8
+              },
+              "allThumbs": {
+                "ms": 3511
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 131.7,
+              "bytes": 84331574,
+              "pagesOk": true
+            },
+            "rotateMixed": {
+              "ms": 43.1,
+              "bytes": 54648579,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": null
+            },
+            "mixedOpen": {
+              "wasm": 237109248,
+              "total": null
+            },
+            "end": {
+              "wasm": 491847680,
+              "total": null
+            }
+          }
+        },
+        {
+          "engine": "mupdf",
+          "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15",
+          "init": {
+            "ms": 184.3
+          },
+          "resources": [
+            "/assets/mupdf-BAuFtpGZ.js",
+            "/assets/engine-CZMPGfV_.js",
+            "/assets/mupdf-BLkpbI_K.js",
+            "/assets/rolldown-runtime-WkwZ5CU-.js",
+            "/assets/mupdf-wasm-Bvf0xebB.wasm"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 2.1
+              },
+              "firstThumb": {
+                "ms": 26.6
+              },
+              "firstView": {
+                "ms": 14.2
+              },
+              "allThumbs": {
+                "ms": 49.6
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 17.8
+              },
+              "firstThumb": {
+                "ms": 34.3
+              },
+              "firstView": {
+                "ms": 51.4
+              },
+              "allThumbs": {
+                "ms": 2172.4
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 23.9
+              },
+              "firstThumb": {
+                "ms": 7.4
+              },
+              "firstView": {
+                "ms": 9
+              },
+              "allThumbs": {
+                "ms": 3583
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 124.2,
+              "bytes": 84331574,
+              "pagesOk": true
+            },
+            "rotateMixed": {
+              "ms": 36.1,
+              "bytes": 54648579,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": null
+            },
+            "mixedOpen": {
+              "wasm": 237109248,
+              "total": null
+            },
+            "end": {
+              "wasm": 491847680,
+              "total": null
+            }
+          }
+        }
+      ],
+      "pdfium": [
+        {
+          "engine": "pdfium",
+          "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15",
+          "init": {
+            "ms": 174.1
+          },
+          "resources": [
+            "/assets/pdfium-BJ-AOwh6.js",
+            "/assets/engine-CZMPGfV_.js",
+            "/assets/index.browser-BdkrGalv.js",
+            "/assets/pdfium-BJ2Yip8Q.wasm"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 1.8
+              },
+              "firstThumb": {
+                "ms": 10
+              },
+              "firstView": {
+                "ms": 21.4
+              },
+              "allThumbs": {
+                "ms": 54.9
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 7.7
+              },
+              "firstThumb": {
+                "ms": 54.1
+              },
+              "firstView": {
+                "ms": 53.1
+              },
+              "allThumbs": {
+                "ms": 3012.2
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 4.6
+              },
+              "firstThumb": {
+                "ms": 2.6
+              },
+              "firstView": {
+                "ms": 11.6
+              },
+              "allThumbs": {
+                "ms": 4963.3
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 151.8,
+              "bytes": 84366586,
+              "pagesOk": true
+            },
+            "rotateMixed": {
+              "ms": 138.6,
+              "bytes": 54680053,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": null
+            },
+            "mixedOpen": {
+              "wasm": 200409088,
+              "total": null
+            },
+            "end": {
+              "wasm": 526123008,
+              "total": null
+            }
+          }
+        },
+        {
+          "engine": "pdfium",
+          "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15",
+          "init": {
+            "ms": 166.2
+          },
+          "resources": [
+            "/assets/pdfium-BJ-AOwh6.js",
+            "/assets/engine-CZMPGfV_.js",
+            "/assets/index.browser-BdkrGalv.js",
+            "/assets/pdfium-BJ2Yip8Q.wasm"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 1.7
+              },
+              "firstThumb": {
+                "ms": 9.2
+              },
+              "firstView": {
+                "ms": 21.1
+              },
+              "allThumbs": {
+                "ms": 48.4
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 7.8
+              },
+              "firstThumb": {
+                "ms": 52.9
+              },
+              "firstView": {
+                "ms": 56.3
+              },
+              "allThumbs": {
+                "ms": 3123.6
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 5
+              },
+              "firstThumb": {
+                "ms": 2.7
+              },
+              "firstView": {
+                "ms": 12.4
+              },
+              "allThumbs": {
+                "ms": 5651.9
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 152,
+              "bytes": 84366586,
+              "pagesOk": true
+            },
+            "rotateMixed": {
+              "ms": 136.7,
+              "bytes": 54680053,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": null
+            },
+            "mixedOpen": {
+              "wasm": 200409088,
+              "total": null
+            },
+            "end": {
+              "wasm": 526123008,
+              "total": null
+            }
+          }
+        },
+        {
+          "engine": "pdfium",
+          "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15",
+          "init": {
+            "ms": 170.1
+          },
+          "resources": [
+            "/assets/pdfium-BJ-AOwh6.js",
+            "/assets/engine-CZMPGfV_.js",
+            "/assets/index.browser-BdkrGalv.js",
+            "/assets/pdfium-BJ2Yip8Q.wasm"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 1.9
+              },
+              "firstThumb": {
+                "ms": 12.8
+              },
+              "firstView": {
+                "ms": 20.2
+              },
+              "allThumbs": {
+                "ms": 51
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 7.6
+              },
+              "firstThumb": {
+                "ms": 62.2
+              },
+              "firstView": {
+                "ms": 66.3
+              },
+              "allThumbs": {
+                "ms": 3360.5
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 6.3
+              },
+              "firstThumb": {
+                "ms": 3.8
+              },
+              "firstView": {
+                "ms": 14.9
+              },
+              "allThumbs": {
+                "ms": 6346.6
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 177.4,
+              "bytes": 84366586,
+              "pagesOk": true
+            },
+            "rotateMixed": {
+              "ms": 175,
+              "bytes": 54680053,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": null
+            },
+            "mixedOpen": {
+              "wasm": 200409088,
+              "total": null
+            },
+            "end": {
+              "wasm": 526123008,
+              "total": null
+            }
+          }
+        }
+      ],
+      "pdfjs": [
+        {
+          "engine": "pdfjs",
+          "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15",
+          "init": {
+            "ms": 196.3
+          },
+          "resources": [
+            "/assets/pdfjs-69Gfs99Y.js",
+            "/assets/pdf-ULJPBbF3.js",
+            "/assets/pdf.worker.min-CjEcRF4W.mjs"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 14
+              },
+              "firstThumb": {
+                "ms": 90.7
+              },
+              "firstView": {
+                "ms": 14.3
+              },
+              "allThumbs": {
+                "ms": 170.4
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 13.3
+              },
+              "firstThumb": {
+                "ms": 262.6
+              },
+              "firstView": {
+                "ms": 152.8
+              },
+              "allThumbs": {
+                "ms": 32469.8
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 35
+              },
+              "firstThumb": {
+                "ms": 37.2
+              },
+              "firstView": {
+                "ms": 17.5
+              },
+              "allThumbs": {
+                "ms": 18584.6
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 1018.2,
+              "bytes": 84358387,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": null
+            },
+            "mixedOpen": {
+              "wasm": 0,
+              "total": null
+            },
+            "end": {
+              "wasm": 0,
+              "total": null
+            }
+          }
+        },
+        {
+          "engine": "pdfjs",
+          "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15",
+          "init": {
+            "ms": 216.8
+          },
+          "resources": [
+            "/assets/pdfjs-69Gfs99Y.js",
+            "/assets/pdf-ULJPBbF3.js",
+            "/assets/pdf.worker.min-CjEcRF4W.mjs"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 17.3
+              },
+              "firstThumb": {
+                "ms": 74.6
+              },
+              "firstView": {
+                "ms": 16.4
+              },
+              "allThumbs": {
+                "ms": 247.6
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 20.2
+              },
+              "firstThumb": {
+                "ms": 348.5
+              },
+              "firstView": {
+                "ms": 206.8
+              },
+              "allThumbs": {
+                "ms": 21410.1
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 41
+              },
+              "firstThumb": {
+                "ms": 16
+              },
+              "firstView": {
+                "ms": 15.1
+              },
+              "allThumbs": {
+                "ms": 17526.2
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 639.3,
+              "bytes": 84358387,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": null
+            },
+            "mixedOpen": {
+              "wasm": 0,
+              "total": null
+            },
+            "end": {
+              "wasm": 0,
+              "total": null
+            }
+          }
+        },
+        {
+          "engine": "pdfjs",
+          "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15",
+          "init": {
+            "ms": 177.6
+          },
+          "resources": [
+            "/assets/pdfjs-69Gfs99Y.js",
+            "/assets/pdf-ULJPBbF3.js",
+            "/assets/pdf.worker.min-CjEcRF4W.mjs"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 15
+              },
+              "firstThumb": {
+                "ms": 51.5
+              },
+              "firstView": {
+                "ms": 13.2
+              },
+              "allThumbs": {
+                "ms": 168.4
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 13.2
+              },
+              "firstThumb": {
+                "ms": 254.7
+              },
+              "firstView": {
+                "ms": 154.9
+              },
+              "allThumbs": {
+                "ms": 22498.8
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 33
+              },
+              "firstThumb": {
+                "ms": 26
+              },
+              "firstView": {
+                "ms": 16.3
+              },
+              "allThumbs": {
+                "ms": 17305.5
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 700.4,
+              "bytes": 84358385,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": null
+            },
+            "mixedOpen": {
+              "wasm": 0,
+              "total": null
+            },
+            "end": {
+              "wasm": 0,
+              "total": null
+            }
+          }
+        }
+      ],
+      "pdflib": [
+        {
+          "engine": "pdflib",
+          "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15",
+          "init": {
+            "ms": 83.3
+          },
+          "resources": [
+            "/assets/pdflib-CLdg-tkT.js",
+            "/assets/es-DkgDTHgD.js",
+            "/assets/rolldown-runtime-WkwZ5CU-.js"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 12.8
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 23.6
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 57.7
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 335.5,
+              "bytes": 84360067,
+              "pagesOk": true
+            },
+            "rotateMixed": {
+              "ms": 167.8,
+              "bytes": 54675313,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": null
+            },
+            "mixedOpen": {
+              "wasm": 0,
+              "total": null
+            },
+            "end": {
+              "wasm": 0,
+              "total": null
+            }
+          }
+        },
+        {
+          "engine": "pdflib",
+          "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15",
+          "init": {
+            "ms": 79.3
+          },
+          "resources": [
+            "/assets/pdflib-CLdg-tkT.js",
+            "/assets/es-DkgDTHgD.js",
+            "/assets/rolldown-runtime-WkwZ5CU-.js"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 11.6
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 20.2
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 49.7
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 332,
+              "bytes": 84360068,
+              "pagesOk": true
+            },
+            "rotateMixed": {
+              "ms": 149.6,
+              "bytes": 54675313,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": null
+            },
+            "mixedOpen": {
+              "wasm": 0,
+              "total": null
+            },
+            "end": {
+              "wasm": 0,
+              "total": null
+            }
+          }
+        },
+        {
+          "engine": "pdflib",
+          "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15",
+          "init": {
+            "ms": 83
+          },
+          "resources": [
+            "/assets/pdflib-CLdg-tkT.js",
+            "/assets/es-DkgDTHgD.js",
+            "/assets/rolldown-runtime-WkwZ5CU-.js"
+          ],
+          "files": {
+            "text": {
+              "pages": 12,
+              "open": {
+                "ms": 12.1
+              }
+            },
+            "scanned": {
+              "pages": 100,
+              "open": {
+                "ms": 21.3
+              }
+            },
+            "mixed": {
+              "pages": 42,
+              "open": {
+                "ms": 49.8
+              }
+            }
+          },
+          "ops": {
+            "merge": {
+              "ms": 340.1,
+              "bytes": 84360068,
+              "pagesOk": true
+            },
+            "rotateMixed": {
+              "ms": 159.9,
+              "bytes": 54675313,
+              "pagesOk": true
+            }
+          },
+          "memory": {
+            "baseline": {
+              "wasm": 0,
+              "total": null
+            },
+            "mixedOpen": {
+              "wasm": 0,
+              "total": null
+            },
+            "end": {
+              "wasm": 0,
+              "total": null
+            }
+          }
+        }
+      ]
+    }
+  }
+}
