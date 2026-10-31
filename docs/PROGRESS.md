@@ -3,7 +3,7 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M0: Foundation
-- **Next action:** Get CI green on [PR #1](https://github.com/ajiohjesse/plyleaf/pull/1) and merge it; then connect
+- **Next action:** Merge [PR #1](https://github.com/ajiohjesse/plyleaf/pull/1) (CI green); then connect
   Cloudflare Pages for a preview deploy. After that, M0 is done and M1 starts with the engine spike (D-006).
 - **Blocked on owner:**
   - A Cloudflare account/project for Pages (preview deploys). Build command `pnpm build`, output `dist/`, Node 24.
@@ -20,7 +20,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] GitHub repo created, AGPL-3.0 LICENSE, README
 - [x] Astro + React + TypeScript + Tailwind v4 scaffold builds
 - [x] Oxlint + Prettier + typecheck + Vitest + Playwright configured
-- [ ] GitHub Actions CI runs all checks on PRs (first run on PR #1; tick once green)
+- [x] GitHub Actions CI runs all checks on PRs
 - [x] Design tokens and fonts from DESIGN.md implemented
 - [x] Landing page: hero, promise strip, tool grid, comparison table, CTA, footer (responsive)
 - [ ] Cloudflare Pages preview deploy live
@@ -90,7 +90,8 @@ Newest first. One entry per session: date, milestone, what changed, what was ver
   Lighthouse target if needed (vanilla filter or Preact).
 - Owner chose a public repo under `ajiohjesse` and deferred the domain (D-013). Created
   https://github.com/ajiohjesse/plyleaf, pushed `main` and `m0/scaffold`, opened PR #1.
-- Next: CI green on PR #1 → merge; Cloudflare Pages preview.
+- CI passed on PR #1 on GitHub runners: lint/typecheck/unit/build and E2E in all four browser projects.
+- Next: merge PR #1; Cloudflare Pages preview.
 
 ### 2026-10-31: Planning session
 - Researched competitors and the open-source landscape; wrote GOAL, STRATEGY, DESIGN, DECISIONS, CLAUDE.md.
