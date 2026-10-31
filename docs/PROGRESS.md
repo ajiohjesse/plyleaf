@@ -3,8 +3,9 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M1: Engine and core architecture (M0 done 2026-10-31)
-- **Next action:** Start M1 with the engine spike: benchmark MuPDF.js vs MuPDF.js + pdf-lib vs pdf.js/PDFium on the 3
-  reference PDFs and resolve D-006.
+- **Next action:** Worker + Comlink typed engine API around MuPDF.js (D-015): bytes in → bytes out operations, the
+  engine fetched lazily (start on file-picker open / dragenter), worker recycled after large jobs. Move `mupdf` from
+  devDependencies to dependencies then.
 - **Live:** https://plyleaf.ajiohjesse.workers.dev (Workers Builds deploys `main`; other branches get Preview URLs).
 - **Blocked on owner:**
   - Later, at the owner's pace: register `plyleaf.com` (and optionally the `plyleaf` GitHub org). Not blocking (D-013).
@@ -26,7 +27,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] Cloudflare preview deploy live (Workers static assets, D-014): https://plyleaf.ajiohjesse.workers.dev
 
 ### [ ] M1: Engine and core architecture
-- [ ] Engine spike done; D-006 resolved with numbers
+- [x] Engine spike done; D-006 resolved with numbers (D-015, [report](research/engine-spike.md))
 - [ ] Worker + Comlink typed engine API
 - [ ] File intake (drop, picker, paste, multi-file) + validation and errors
 - [ ] Virtualised page thumbnails
@@ -69,6 +70,21 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-10-31: Engine spike, D-006 resolved (M1)
+- Built `bench/engine/`: a fixture generator (seeded, licence-clean: 12-page text 40 KB, 100-page scan 28 MB,
+  42-page mixed 52 MB; not committed), adapters for MuPDF.js 1.28, PDFium (`@embedpdf/pdfium` 2.15), pdf.js 6.4 and
+  pdf-lib (`@cantoo/pdf-lib` 2.11), a Vite page and a Playwright runner (3 runs × 3 browser engines, fresh context per
+  run). `pnpm bench:fixtures`, `pnpm bench:engine`, then `node bench/engine/report.ts <results.json>`.
+- Result: MuPDF.js was fastest at bulk thumbnails in Chromium, Firefox and WebKit, and fastest at merge/rotate.
+  PDFium was 7× slower in Firefox, pdf.js 7–11× slower in WebKit. MuPDF.js's cost is the download (3.5 MB Brotli vs 1.6 MB
+  for PDFium). Decision D-015: MuPDF.js only, in a worker. Full tables in `docs/research/engine-spike.md`.
+- Verified: every engine's merged and rotated output reopened with the right page count; first-page thumbnails from
+  all three renderers checked by eye. `pnpm check` passes (bench code is linted and typechecked too).
+- Open: the WASM heap reached 226 MB with the 52 MB file open and 469 MB after merging 80 MB of input, and it never
+  shrinks. The worker API needs recycling and size-based memory warnings. `measureUserAgentSpecificMemory` only works in
+  Playwright's full Chromium channel, not the headless shell. Check Cloudflare serves `.wasm` compressed once it ships.
+- Next: worker + Comlink engine API.
 
 ### 2026-10-31: M0 done, site live
 - Owner connected the repo to a Worker named `plyleaf` with Workers Builds. Found it with the Cloudflare connector
