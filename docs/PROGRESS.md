@@ -3,8 +3,8 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M2: Organize suite (M0 and M1 done 2026-10-31)
-- **Next action:** M2, Extract pages next, with the shared page-grid Organize workspace (`ThumbnailGrid` with
-  selectable pages, D-023) that delete, rotate, reorder, insert blank and duplicate then reuse. Crop after those.
+- **Next action:** M2, Delete pages next: a `delete` mode in `OrganizeWorkspace` (D-023). Then rotate, reorder,
+  insert blank, duplicate (each a mode on the same board), then Crop.
 - **Live:** https://plyleaf.ajiohjesse.workers.dev (Workers Builds deploys `main`; other branches get Preview URLs).
 - **Blocked on owner:**
   - Later, at the owner's pace: register `plyleaf.com` (and optionally the `plyleaf` GitHub org). Not blocking (D-013).
@@ -36,7 +36,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] Network egress test (no file bytes leave the browser)
 
 ### [ ] M2: Organize suite
-- [x] Merge · [x] Split · [ ] Extract · [ ] Delete · [ ] Rotate · [ ] Reorder · [ ] Insert blank · [ ] Duplicate · [ ] Crop
+- [x] Merge · [x] Split · [x] Extract · [ ] Delete · [ ] Rotate · [ ] Reorder · [ ] Insert blank · [ ] Duplicate · [ ] Crop
 - [ ] Shared Organize workspace
 - [ ] Per-tool landing pages + E2E tests
 
@@ -71,6 +71,25 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-10-31: Extract pages and the shared page board (M2)
+- `src/organize/board.ts`: the page board model for the page-level tools (D-023). A board is an immutable list of
+  pages with stable keys (source page or blank, size, added rotation); operations remove, rotate, move, reverse,
+  duplicate, insert blanks, select by typed ranges or a shift-click span; `toSpecs` turns it (or a selection) into
+  `engine.assemble` specs. All unit-tested, including ones later tools will use.
+- `src/components/organize/PageBoard.tsx`: every page as a selectable thumbnail (a toggle button, `aria-pressed`,
+  primary ring with the selection-frame corner handles and a check), added rotation shown with CSS, blank pages drawn
+  white, renders only near the viewport like `ThumbnailGrid` (whose hooks it now shares). Per-page buttons via a
+  `controls` render prop, for later tools.
+- `OrganizeWorkspace` (`tool` prop; tool specs in one table): single-file intake, a select bar (type ranges, Select
+  all, Clear), the board, the action bar; the board and selection survive the done screen and reset for a new file.
+  `/extract-pages` is its first tool: selected pages in original order → `<name>-extracted.pdf`.
+- `tests/helpers/organize.ts`: shared E2E steps (numbered-width PDFs, board locators, `readPages` with /Rotate, download).
+- Verified: 8 new unit tests. New E2E `extract.spec.ts` (click, shift-click span, deselect, extract and check pages
+  with MuPDF, back keeps the selection, typed ranges, select all/clear, typed-range errors, swapping files gives a
+  fresh board, linked from home, `watchEgress` clean): 12/12 in all four browser projects. Checked at 375 px
+  (2 columns) and desktop (5 columns), no horizontal scroll; fixed the board's padding counting toward column width.
+- Next: Delete pages.
 
 ### 2026-10-31: Split PDF (M2)
 - `/split-pdf` (`SplitWorkspace`, single file): split by page ranges (typed, like `1-3, 5, 8-`; suggested as halves

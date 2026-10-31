@@ -1,0 +1,50 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { OrganizeWorkspace } from "~/components/organize/OrganizeWorkspace";
+---
+
+<ToolPage
+  slug="extract-pages"
+  title="Extract pages from a PDF free, no sign-up"
+  description="Pick pages from a PDF and save them as a new file, in your browser. Free with no limits, no watermark and no account, and your file is never uploaded."
+  heading="Extract pages"
+  intro="Pick the pages you need and save them as a new PDF. Free, no sign-up, no watermark, and your file never leaves this device."
+  steps={[
+    { title: "Add your PDF", text: "Choose it, drop it anywhere on the page, or paste it." },
+    {
+      title: "Select pages",
+      text: "Tap the pages you want, or type them, like 1-3, 7. Shift-click selects a run.",
+    },
+    {
+      title: "Extract and download",
+      text: "Plyleaf builds the new PDF on your device, with the pages in their original order.",
+    },
+  ]}
+  faqs={[
+    {
+      question: "Is it really free?",
+      answer:
+        "Yes. There is no paid plan, no daily limit and no watermark. Plyleaf can be free because your own browser does the work, so there are no servers to pay for.",
+    },
+    {
+      question: "Is my file uploaded?",
+      answer:
+        "No. Your PDF is read right here in your browser, and the new file is made here too. It never goes over the internet.",
+    },
+    {
+      question: "Does the original file change?",
+      answer: "No. Plyleaf makes a new PDF with the pages you picked; the file on your device stays as it is.",
+    },
+    {
+      question: "Will the pages look the same?",
+      answer:
+        "Yes. Each page is copied as it is, with its text, fonts and images, so nothing is re-compressed or lowered in quality. Bookmarks and fillable form fields aren't carried over yet.",
+    },
+    {
+      question: "Can I save each page as its own file?",
+      answer: "Yes, with Split PDF: choose “Every N pages” and set it to 1.",
+    },
+  ]}
+>
+  <OrganizeWorkspace tool="extract" client:load />
+</ToolPage>
