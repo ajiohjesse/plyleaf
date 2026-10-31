@@ -30,6 +30,7 @@ import {
   docSummary,
   FailureAlert,
   FirstPage,
+  GripIcon,
   IconButton,
   plural,
   primaryButton,
@@ -262,14 +263,6 @@ function ChevronIcon({ up = false }: { up?: boolean }) {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeWidth={2.5}>
       <path d={up ? "M6 15l6-6 6 6" : "M6 9l6 6 6-6"} strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function GripIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5" fill="currentColor">
-      {[6, 12, 18].flatMap((y) => [9, 15].map((x) => <circle key={`${x}-${y}`} cx={x} cy={y} r={1.6} />))}
     </svg>
   );
 }

@@ -3,8 +3,8 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M2: Organize suite (M0 and M1 done 2026-10-31)
-- **Next action:** M2, Reorder pages next: a `reorder` mode in `OrganizeWorkspace` (D-023) with dnd-kit drag on
-  the board (pointer, touch, keyboard) plus move buttons and reverse. Then insert blank, duplicate, then Crop.
+- **Next action:** M2, Insert blank pages next: an `insert` mode in `OrganizeWorkspace` (D-023) using
+  `insertBlanks`. Then duplicate, then Crop.
 - **Live:** https://plyleaf.ajiohjesse.workers.dev (Workers Builds deploys `main`; other branches get Preview URLs).
 - **Blocked on owner:**
   - Later, at the owner's pace: register `plyleaf.com` (and optionally the `plyleaf` GitHub org). Not blocking (D-013).
@@ -36,7 +36,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] Network egress test (no file bytes leave the browser)
 
 ### [ ] M2: Organize suite
-- [x] Merge · [x] Split · [x] Extract · [x] Delete · [x] Rotate · [ ] Reorder · [ ] Insert blank · [ ] Duplicate · [ ] Crop
+- [x] Merge · [x] Split · [x] Extract · [x] Delete · [x] Rotate · [x] Reorder · [ ] Insert blank · [ ] Duplicate · [ ] Crop
 - [ ] Shared Organize workspace
 - [ ] Per-tool landing pages + E2E tests
 
@@ -71,6 +71,21 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-10-31: Reorder pages (M2)
+- `/reorder-pages`: a `reorder` mode of `OrganizeWorkspace`. `PageBoard` takes `onMove` and then sorts with dnd-kit
+  (`rectSortingStrategy`): a drag handle under each page (pointer, touch, keyboard with arrow keys in the grid) and
+  announcements by position. The toolbar moves the selection to the start or end, reverses, and resets. Moved pages
+  are named with where they came from ("Page 2, page 4 of the original"). Output `<name>-reordered.pdf`.
+- `board.ts`: `moveToEdge`, `originalOrder`, `isReordered` (unit-tested). `GripIcon` moved to the shared parts.
+- E2E notes: drag tests centre the board first (the sticky action bar covers handles at the bottom of the viewport),
+  and wait for dnd-kit's "Over position" announcement before releasing, because WebKit can process the last pointer
+  move after the button is released.
+- Verified: new E2E `reorder.spec.ts` (keyboard drag with announcements, pointer drag, output order checked with
+  MuPDF, move to start/end with the selection following, reverse, reset, linked from home, `watchEgress` clean),
+  3 runs each in all four browser projects (one run timed out under 8 parallel workers × 3 repeats; 5/5 alone).
+  Checked at 375 px, no horizontal scroll.
+- Next: Insert blank pages.
 
 ### 2026-10-31: Rotate PDF (M2)
 - `/rotate-pdf`: a `rotate` mode of `OrganizeWorkspace`. Each page has turn left/right buttons; a toolbar turns the

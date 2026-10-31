@@ -88,6 +88,21 @@ export function movePage(board: Board, key: string, index: number): Board {
   return next;
 }
 
+/** Moves the pages in `keys` to the start or end of the board, keeping their order among themselves. */
+export function moveToEdge(board: Board, keys: ReadonlySet<string>, edge: "start" | "end"): Board {
+  const moving = board.filter((page) => keys.has(page.key));
+  const staying = board.filter((page) => !keys.has(page.key));
+  return edge === "start" ? [...moving, ...staying] : [...staying, ...moving];
+}
+
+/** Puts the document's pages back in their original order (blank pages keep their place after the page before). */
+export function originalOrder(board: Board): Board {
+  return board.slice().sort((a, b) => (a.source ?? Infinity) - (b.source ?? Infinity));
+}
+
+/** The pages aren't in the document's order. */
+export const isReordered = (board: Board) => board.some((page, index) => page.source !== index);
+
 export function reversePages(board: Board): Board {
   return board.slice().reverse();
 }

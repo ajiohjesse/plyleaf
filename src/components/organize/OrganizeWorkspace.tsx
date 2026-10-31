@@ -6,8 +6,13 @@ import type { ReadyDocument } from "~/intake/intake";
 import {
   boardFrom,
   keysBetween,
+  isReordered,
   keysInRanges,
+  movePage,
+  moveToEdge,
+  originalOrder,
   removePages,
+  reversePages,
   rotatePages,
   toSpecs,
   type Board,
@@ -29,7 +34,7 @@ import {
 } from "~/components/workspace/parts";
 import { PageBoard } from "./PageBoard";
 
-export type OrganizeTool = "extract" | "delete" | "rotate";
+export type OrganizeTool = "extract" | "delete" | "rotate" | "reorder";
 
 /** What a tool's own toolbar and per-page buttons get to work with. */
 interface ToolContext {
@@ -62,6 +67,8 @@ interface ToolSpec {
   toolbar?: (context: ToolContext) => React.ReactNode;
   /** Buttons under each page. */
   controls?: (page: BoardPage, index: number, context: ToolContext) => React.ReactNode;
+  /** Pages can be dragged into a new order. */
+  sortable?: boolean;
 }
 
 /** A smaller, outlined pill for secondary actions. */
@@ -73,6 +80,62 @@ const targets = (board: Board, selected: ReadonlySet<string>) =>
   selected.size > 0 ? selected : new Set(board.map((page) => page.key));
 
 const turned = (board: Board) => board.filter((page) => page.rotate !== 0).length;
+
+const reorder: ToolSpec = {
+  action: () => "Reorder PDF",
+  making: "Reordering…",
+  suffix: "reordered",
+  status: (_selected, _total, board) =>
+    isReordered(board)
+      ? "Pages in a new order"
+      : "Drag pages by their handles, or select pages and move them together.",
+  tone: "keep",
+  build: (board) => (isReordered(board) ? board : null),
+  sortable: true,
+  toolbar: (context) => {
+    const count = context.selected.size;
+    const which = plural(count, "selected page");
+    return (
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          className={smallButton}
+          disabled={count === 0}
+          onClick={() =>
+            context.change((board, selected) => moveToEdge(board, selected, "start"), `Moved ${which} to the start.`)
+          }
+        >
+          Move to start
+        </button>
+        <button
+          type="button"
+          className={smallButton}
+          disabled={count === 0}
+          onClick={() =>
+            context.change((board, selected) => moveToEdge(board, selected, "end"), `Moved ${which} to the end.`)
+          }
+        >
+          Move to end
+        </button>
+        <button
+          type="button"
+          className={smallButton}
+          onClick={() => context.change(reversePages, "The pages are in reverse order.")}
+        >
+          Reverse order
+        </button>
+        <button
+          type="button"
+          className={smallButton}
+          disabled={!isReordered(context.board)}
+          onClick={() => context.change(originalOrder, "The pages are back in their original order.")}
+        >
+          Reset
+        </button>
+      </div>
+    );
+  },
+};
 
 const TOOLS: Record<OrganizeTool, ToolSpec> = {
   extract: {
@@ -157,6 +220,7 @@ const TOOLS: Record<OrganizeTool, ToolSpec> = {
       );
     },
   },
+  reorder,
 };
 
 function RotateIcon({ clockwise = false }: { clockwise?: boolean }) {
@@ -298,6 +362,10 @@ export function OrganizeWorkspace({ tool }: { tool: OrganizeTool }) {
             tone={spec.tone}
             onToggle={toggle}
             {...(spec.controls && { controls: (page, index) => spec.controls!(page, index, context) })}
+            {...(spec.sortable && {
+              // dnd-kit announces the drop itself.
+              onMove: (key: string, index: number) => context.change((board) => movePage(board, key, index), ""),
+            })}
           />
           <p aria-live="polite" className="sr-only">
             {announcement}

@@ -79,6 +79,7 @@ export const tools: Tool[] = [
     description: "Drag pages into a new order.",
     category: "organize",
     keywords: ["sort", "rearrange", "move"],
+    available: true,
   },
   {
     slug: "insert-blank-page",

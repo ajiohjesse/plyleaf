@@ -1,4 +1,17 @@
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
+import {
+  closestCenter,
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type Announcements,
+  type DragEndEvent,
+  type UniqueIdentifier,
+} from "@dnd-kit/core";
+import { rectSortingStrategy, SortableContext, sortableKeyboardCoordinates, useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import type { DocId } from "~/engine/types";
 import { shownSize, type Board, type BoardPage } from "~/organize/board";
 import { thumbnails } from "~/thumbnails/thumbnails";
@@ -13,6 +26,7 @@ import {
   useViewportObserver,
   type Observe,
 } from "~/components/thumbnails/ThumbnailGrid";
+import { GripIcon } from "~/components/workspace/parts";
 
 interface Props {
   board: Board;
@@ -26,20 +40,28 @@ interface Props {
   onToggle: (key: string, span: boolean) => void;
   /** Per-page buttons under the thumbnail (rotate, remove…), for tools that have them. */
   controls?: (page: BoardPage, index: number) => React.ReactNode;
+  /** Pages can be dragged into a new order by a handle under each (pointer, touch or keyboard). */
+  onMove?: (key: string, index: number) => void;
+}
+
+/** How a page is named to screen readers: by position, and where it came from once it has moved. */
+export function pageName(page: BoardPage, index: number) {
+  if (page.source === null) return `Page ${index + 1}, blank`;
+  return page.source === index ? `Page ${index + 1}` : `Page ${index + 1}, page ${page.source + 1} of the original`;
 }
 
 /**
  * The "board": every page of the document as a thumbnail that can be selected, in board order, with any added
  * rotation shown. Like ThumbnailGrid, every page is in the list but only those near the viewport render.
  */
-export function PageBoard({ board, docId, label, selected, tone = "keep", onToggle, controls }: Props) {
+export function PageBoard({ board, docId, label, selected, tone = "keep", onToggle, controls, onMove }: Props) {
   const ref = useRef<HTMLOListElement>(null);
   const { columns, cellWidth } = useColumns(ref);
   const observeNear = useViewportObserver(NEAR);
   const observeOnScreen = useViewportObserver(ON_SCREEN);
   useEffect(() => () => thumbnails.forget(docId), [docId]);
 
-  return (
+  const list = (
     // The padding is on a wrapper so the list's own width is what the columns divide.
     <div className="rounded-card bg-surface-band p-3 sm:p-4">
       <ol
@@ -48,23 +70,120 @@ export function PageBoard({ board, docId, label, selected, tone = "keep", onTogg
         className="grid"
         style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, gap: GAP }}
       >
-        {board.map((page, index) => (
-          <BoardCard
-            key={page.key}
-            page={page}
-            index={index}
-            docId={docId}
-            cellWidth={cellWidth}
-            selected={selected.has(page.key)}
-            tone={tone}
-            onToggle={onToggle}
-            controls={controls?.(page, index)}
-            observeNear={observeNear}
-            observeOnScreen={observeOnScreen}
-          />
-        ))}
+        {board.map((page, index) => {
+          const props: CardProps = {
+            page,
+            index,
+            docId,
+            cellWidth,
+            selected: selected.has(page.key),
+            tone,
+            onToggle,
+            controls: controls?.(page, index),
+            observeNear,
+            observeOnScreen,
+          };
+          return onMove ? <SortableCard key={page.key} {...props} /> : <BoardCard key={page.key} {...props} />;
+        })}
       </ol>
     </div>
+  );
+  return onMove ? (
+    <Sortable board={board} onMove={onMove}>
+      {list}
+    </Sortable>
+  ) : (
+    list
+  );
+}
+
+/** dnd-kit around the board: sensors, the page order, and what screen readers hear while a page is dragged. */
+function Sortable({
+  board,
+  onMove,
+  children,
+}: {
+  board: Board;
+  onMove: (key: string, index: number) => void;
+  children: React.ReactNode;
+}) {
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+  const count = board.length;
+  const position = (id: UniqueIdentifier) => board.findIndex((page) => page.key === id) + 1;
+  const name = (id: UniqueIdentifier) => {
+    const index = position(id) - 1;
+    return index >= 0 ? pageName(board[index]!, index) : "The page";
+  };
+  // dnd-kit reports the picked-up page as over its own place straight after "picked up"; saying that too would
+  // replace the more useful message.
+  const justPickedUp = useRef(false);
+  const announcements: Announcements = {
+    onDragStart: ({ active }) => {
+      justPickedUp.current = true;
+      return `Picked up ${name(active.id)}.`;
+    },
+    onDragOver: ({ active, over }) => {
+      const first = justPickedUp.current;
+      justPickedUp.current = false;
+      if (first && over?.id === active.id) return undefined;
+      return over ? `Over position ${position(over.id)} of ${count}.` : "Outside the pages.";
+    },
+    onDragEnd: ({ over }) => (over ? `Dropped at position ${position(over.id)} of ${count}.` : "Put back."),
+    onDragCancel: ({ active }) => `Moving was cancelled. The page stays at position ${position(active.id)}.`,
+  };
+
+  function dropped({ active, over }: DragEndEvent) {
+    if (over && active.id !== over.id) onMove(String(active.id), position(over.id) - 1);
+  }
+
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={dropped}
+      accessibility={{
+        announcements,
+        screenReaderInstructions: {
+          draggable:
+            "To move a page, press space or enter to pick it up, use the arrow keys to move it, then press space or enter to drop it. Press escape to cancel.",
+        },
+      }}
+    >
+      <SortableContext items={board.map((page) => page.key)} strategy={rectSortingStrategy}>
+        {children}
+      </SortableContext>
+    </DndContext>
+  );
+}
+
+function SortableCard(props: CardProps) {
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
+    id: props.page.key,
+  });
+  return (
+    <BoardCard
+      {...props}
+      drag={{
+        setNodeRef,
+        style: { transform: CSS.Translate.toString(transform), transition },
+        dragging: isDragging,
+        handle: (
+          <button
+            type="button"
+            ref={setActivatorNodeRef}
+            {...attributes}
+            {...listeners}
+            aria-label={`Drag ${pageName(props.page, props.index)}`}
+            className="grid size-9 shrink-0 cursor-grab touch-none place-items-center rounded-full text-ink-muted hover:bg-ink/10 hover:text-ink active:cursor-grabbing"
+          >
+            <GripIcon />
+          </button>
+        ),
+      }}
+    />
   );
 }
 
@@ -79,6 +198,13 @@ interface CardProps {
   controls: React.ReactNode;
   observeNear: Observe;
   observeOnScreen: Observe;
+  /** Set when the board is sortable. */
+  drag?: {
+    setNodeRef: (element: HTMLElement | null) => void;
+    style: React.CSSProperties;
+    dragging: boolean;
+    handle: React.ReactNode;
+  };
 }
 
 const BoardCard = memo(function BoardCard({
@@ -92,8 +218,17 @@ const BoardCard = memo(function BoardCard({
   controls,
   observeNear,
   observeOnScreen,
+  drag,
 }: CardProps) {
-  const ref = useRef<HTMLLIElement>(null);
+  const ref = useRef<HTMLLIElement | null>(null);
+  const setNodeRef = drag?.setNodeRef;
+  const setRef = useCallback(
+    (element: HTMLLIElement | null) => {
+      ref.current = element;
+      setNodeRef?.(element);
+    },
+    [setNodeRef],
+  );
   const [near, setNear] = useState(false);
   const [onScreen, setOnScreen] = useState(false);
   useEffect(() => observeNear(ref.current!, setNear), [observeNear]);
@@ -102,10 +237,16 @@ const BoardCard = memo(function BoardCard({
   const box = fit(shownSize(page), cellWidth - 8);
   const upright = page.rotate % 180 === 0 ? box : { width: box.height, height: box.width };
   const removing = selected && tone === "remove";
-  const name = page.source === null ? `Page ${index + 1}, blank` : `Page ${index + 1}`;
+  const name = pageName(page, index);
 
   return (
-    <li ref={ref} data-page={index} data-source={page.source ?? "blank"} className="flex flex-col items-center gap-1">
+    <li
+      ref={setRef}
+      data-page={index}
+      data-source={page.source ?? "blank"}
+      style={drag?.style}
+      className={["flex flex-col items-center gap-1", drag?.dragging ? "relative z-20" : ""].join(" ")}
+    >
       <button
         type="button"
         aria-pressed={selected}
@@ -119,7 +260,8 @@ const BoardCard = memo(function BoardCard({
       >
         <span
           className={[
-            "relative block rounded-sm bg-surface shadow-sticky",
+            "relative block rounded-sm bg-surface",
+            drag?.dragging ? "shadow-lg" : "shadow-sticky",
             selected ? (removing ? "ring-3 ring-sticky-coral" : "ring-3 ring-primary") : "ring-1 ring-line",
           ].join(" ")}
           style={{ width: box.width, height: box.height }}
@@ -160,7 +302,8 @@ const BoardCard = memo(function BoardCard({
           </span>
         )}
       </button>
-      <span className="flex min-h-9 items-center gap-0.5">
+      <span className="flex min-h-9 flex-wrap items-center justify-center gap-0.5">
+        {drag?.handle}
         <span aria-hidden="true" className="px-1 text-sm font-medium text-ink-muted">
           {index + 1}
         </span>
