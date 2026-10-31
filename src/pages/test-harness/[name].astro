@@ -1,0 +1,27 @@
+---
+// Pages that let E2E tests drive internals in a real browser. They're built only when PLYLEAF_TEST_HARNESS=1, which
+// the Playwright web server sets, so they never ship.
+export function getStaticPaths() {
+  return process.env["PLYLEAF_TEST_HARNESS"] === "1" ? [{ params: { name: "engine" } }] : [];
+}
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex" />
+    <title>Engine harness</title>
+  </head>
+  <body>
+    <p>
+      Engine harness. Tests call <code>window.harness</code>.
+    </p>
+    <script>
+      import { engine, EngineError, preloadEngine } from "~/engine/client";
+
+      Object.assign(window, { harness: { engine, EngineError, preloadEngine } });
+      document.body.dataset["ready"] = "true";
+    </script>
+  </body>
+</html>
