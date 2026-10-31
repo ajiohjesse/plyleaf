@@ -65,6 +65,9 @@ test("drags pages into a new order with the keyboard and the pointer, without se
   await announced("Over position 4 of 4.");
   await page.mouse.up();
   await expect.poll(() => order(page)).toEqual([2, 4, 3, 1]);
+  // dnd-kit swallows clicks on the document for 50 ms after a pointer drag ends (so the drop isn't also a click), and
+  // Playwright can click faster than that.
+  await page.waitForTimeout(100);
 
   await action.click();
   const result = await download(page);

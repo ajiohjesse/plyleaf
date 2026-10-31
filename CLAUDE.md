@@ -63,7 +63,7 @@ Cloudflare Pages. Package manager: pnpm.
 - `src/organize/`: pure Organize logic (page ranges, split part names, zipping several outputs, D-022).
   `src/components/workspace/parts.tsx`: pieces every tool workspace shares (action bar, failure alert, file card,
   radio cards); `src/components/split/SplitWorkspace.tsx` is the single-file tool pattern.
-- Page-level Organize tools are modes of `src/components/organize/OrganizeWorkspace.tsx` (`TOOLS` table) on the pure
+- Page-level Organize tools are modes of `src/components/organize/OrganizeWorkspace.tsx` (specs in `tools.tsx`) on the pure
   page board `src/organize/board.ts` (D-023); `PageBoard` renders it. E2E steps they share: `tests/helpers/organize.ts`.
 - `src/download/`: output names, `downloadFile` and `saveAs`; `src/components/download/DownloadPanel` is the "done"
   screen. Show engine failures with `openFailureMessage` / `operationFailureMessage` from `src/intake/files.ts` (D-019).

@@ -87,6 +87,7 @@ export const tools: Tool[] = [
     description: "Add empty pages anywhere.",
     category: "organize",
     keywords: ["add page"],
+    available: true,
   },
   {
     slug: "duplicate-pages",
