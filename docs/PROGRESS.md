@@ -89,8 +89,7 @@ Newest first. One entry per session: date, milestone, what changed, what was ver
 - Verified: full E2E 104/104 in Chromium, Firefox, WebKit and Pixel 7; egress + intake specs ×3 stable. `pnpm check`
   passes. No UI changed.
 - Ticked the last M1 item and M1.
-- Open: PR #8 (download pipeline) still needs merging; this branch is stacked on it. Workers started by a worker
-  aren't checked (we start none). M9's service worker will need Chromium's service-worker network events
+- Open: workers started by a worker aren't checked (we start none). M9's service worker will need Chromium's service-worker network events
   (`PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS`) before the watch can allow it.
 - Next: M2, Merge first.
 
