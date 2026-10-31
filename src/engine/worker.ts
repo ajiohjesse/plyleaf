@@ -8,7 +8,11 @@ carryEngineErrors();
 
 // MuPDF compiles its WASM in a top-level await. Importing it dynamically lets us expose the API straight away, so no
 // message can arrive before there is a listener for it while the WASM is still loading.
-const loading = import("./ops");
+const loading = import("./ops").catch((error: unknown) => {
+  throw new EngineError("engine-unavailable", `Couldn't load MuPDF: ${error instanceof Error ? error.message : error}`);
+});
+// Calls report the failure; this only stops it also showing up as an unhandled rejection.
+loading.catch(() => {});
 
 const docs = new Map<DocId, PDFDocument>();
 let nextId = 1;

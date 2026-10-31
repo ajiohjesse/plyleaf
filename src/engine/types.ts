@@ -43,5 +43,11 @@ export type EngineErrorCode =
   | "unknown-document"
   /** An argument is out of range (page index, render size, blank page size). */
   | "invalid-argument"
-  /** Anything else MuPDF threw, including running out of memory. */
+  /** MuPDF couldn't allocate memory for this operation. The documents stay open and the engine stays usable. */
+  | "out-of-memory"
+  /** The worker died or its WASM aborted. It has been restarted, and the documents it held are gone. */
+  | "engine-crashed"
+  /** The engine couldn't be loaded (offline before it was cached, say). The next call tries again. */
+  | "engine-unavailable"
+  /** Anything else MuPDF threw. */
   | "engine-failure";
