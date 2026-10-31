@@ -52,6 +52,10 @@ Cloudflare Pages. Package manager: pnpm.
 - `src/data/tools.ts`: the tool catalogue. Set `available: true` when a tool's page ships; the home grid and footer
   link it automatically.
 - `src/components/`: Astro components (static) and React islands (`.tsx`). `src/components/home/`: home page sections.
+- `src/engine/`: the PDF engine (D-016). Pages and islands import only `client.ts`; operations go in `ops.ts` (pure,
+  unit-tested in Node) and are exposed by `worker.ts`.
+- `src/pages/test-harness/`: pages for E2E tests to drive internals, built only when `PLYLEAF_TEST_HARNESS=1`.
+- `tests/helpers/pdf.ts`: builds test PDFs with MuPDF (works in Vitest and Playwright).
 
 ## Conventions
 - Each tool = a static landing page under `src/pages/<tool-slug>.astro` + a React workspace island + an engine

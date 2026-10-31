@@ -25,6 +25,8 @@ export default defineConfig({
     ? []
     : {
         command: `pnpm build && pnpm preview --port ${port}`,
+        // Also build the test-harness pages (src/pages/test-harness), which production builds leave out.
+        env: { PLYLEAF_TEST_HARNESS: "1" },
         url: `http://localhost:${port}`,
         reuseExistingServer: !process.env["CI"],
         timeout: 180_000,

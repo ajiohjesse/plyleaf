@@ -1,0 +1,47 @@
+// Types shared by the engine worker and the main thread. Keep this file free of runtime imports so that pages can
+// import it without pulling in the engine.
+
+/** Identifies a document the worker holds open. Only valid for the worker that issued it. */
+export type DocId = string;
+
+export type Rotation = 0 | 90 | 180 | 270;
+
+export interface PageInfo {
+  /** Size in PDF points (1/72 in) as displayed, i.e. after the page's own rotation. */
+  width: number;
+  height: number;
+  /** The page's /Rotate value. */
+  rotation: Rotation;
+}
+
+export interface DocInfo {
+  id: DocId;
+  pageCount: number;
+  pages: PageInfo[];
+  /** MuPDF had to repair the file's structure to open it. The output of any operation is a clean file. */
+  repaired: boolean;
+}
+
+/** One page of an assembled document: a page of an open document, or a new blank page. */
+export type PageSpec =
+  | { doc: DocId; page: number; /** Added to the page's own rotation. */ rotate?: Rotation }
+  | { blank: { width: number; height: number } };
+
+/** An RGBA bitmap, 4 bytes per pixel, not premultiplied. */
+export interface Bitmap {
+  width: number;
+  height: number;
+  pixels: Uint8ClampedArray<ArrayBuffer>;
+}
+
+export type EngineErrorCode =
+  /** The bytes aren't a PDF MuPDF can open, even with repair. */
+  | "invalid-file"
+  /** The PDF is encrypted with a user password. */
+  | "password-required"
+  /** The DocId isn't open in this worker (closed, or issued by a recycled worker). */
+  | "unknown-document"
+  /** An argument is out of range (page index, render size, blank page size). */
+  | "invalid-argument"
+  /** Anything else MuPDF threw, including running out of memory. */
+  | "engine-failure";
