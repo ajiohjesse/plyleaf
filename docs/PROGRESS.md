@@ -10,7 +10,9 @@ Single source of truth for where Plyleaf is. **Every session updates this file b
 - **Blocked on owner:**
   - Later, at the owner's pace: register `plyleaf.com` (and optionally the `plyleaf` GitHub org). Not blocking (D-013).
 - **Repo:** https://github.com/ajiohjesse/plyleaf (public). `gh`'s active account on this machine is `angosam`, so run
-  `gh`/`git push` as ajiohjesse (e.g. `GH_TOKEN=$(gh auth token --user ajiohjesse)`) or switch with `gh auth switch`.
+  `gh` as ajiohjesse with `GH_TOKEN=$(gh auth token --user ajiohjesse) gh …`. For `git push`, GH_TOKEN alone isn't
+  enough (git's stored credential is angosam's): `GH_TOKEN=$(gh auth token --user ajiohjesse) git -c credential.helper= -c
+  'credential.helper=!gh auth git-credential' push`.
 
 ## Milestones
 
