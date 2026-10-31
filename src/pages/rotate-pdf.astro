@@ -1,0 +1,52 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { OrganizeWorkspace } from "~/components/organize/OrganizeWorkspace";
+---
+
+<ToolPage
+  slug="rotate-pdf"
+  title="Rotate PDF pages free, no sign-up"
+  description="Turn PDF pages the right way up, one page or all of them, in your browser. Free with no limits, no watermark and no account, and your file is never uploaded."
+  heading="Rotate PDF"
+  intro="Turn pages the right way up, one at a time or all together. Free, no sign-up, no watermark, and your file never leaves this device."
+  steps={[
+    { title: "Add your PDF", text: "Choose it, drop it anywhere on the page, or paste it." },
+    {
+      title: "Turn the pages",
+      text: "Use the arrows under a page, or select pages and turn them together. You see each change straight away.",
+    },
+    {
+      title: "Rotate and download",
+      text: "Plyleaf saves the new rotation into the PDF on your device, in seconds.",
+    },
+  ]}
+  faqs={[
+    {
+      question: "Is it really free?",
+      answer:
+        "Yes. There is no paid plan, no daily limit and no watermark. Plyleaf can be free because your own browser does the work, so there are no servers to pay for.",
+    },
+    {
+      question: "Is my file uploaded?",
+      answer:
+        "No. Your PDF is read right here in your browser, and the new file is made here too. It never goes over the internet.",
+    },
+    {
+      question: "Does rotating lower the quality?",
+      answer:
+        "No. Rotating only changes which way up each page is shown. The text, fonts and images inside stay exactly as they were.",
+    },
+    {
+      question: "Can I rotate just some pages?",
+      answer:
+        "Yes. Use the arrows under any page, or select several pages (shift-click selects a run, or type them, like 2-5) and turn them together. With nothing selected, the turn buttons turn every page.",
+    },
+    {
+      question: "Will the rotation stick in other apps?",
+      answer:
+        "Yes. The rotation is saved in the file, so every PDF reader shows the pages the way you left them. Bookmarks and fillable form fields aren't carried over yet.",
+    },
+  ]}
+>
+  <OrganizeWorkspace tool="rotate" client:load />
+</ToolPage>

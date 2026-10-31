@@ -3,16 +3,48 @@ import { engine } from "~/engine/client";
 import { outputName } from "~/download/download";
 import { operationFailureMessage } from "~/intake/files";
 import type { ReadyDocument } from "~/intake/intake";
-import { boardFrom, keysBetween, keysInRanges, removePages, toSpecs, type Board } from "~/organize/board";
+import {
+  boardFrom,
+  keysBetween,
+  keysInRanges,
+  removePages,
+  rotatePages,
+  toSpecs,
+  type Board,
+  type BoardPage,
+} from "~/organize/board";
 import { parseRanges } from "~/organize/ranges";
 import { DownloadPanel } from "~/components/download/DownloadPanel";
 import { FileDrop } from "~/components/intake/FileDrop";
 import { IntakeNotices } from "~/components/intake/IntakePanel";
 import { useIntake } from "~/components/intake/useIntake";
-import { ActionBar, FailureAlert, FileCard, plural, primaryButton, type Result } from "~/components/workspace/parts";
+import {
+  ActionBar,
+  FailureAlert,
+  FileCard,
+  IconButton,
+  plural,
+  primaryButton,
+  type Result,
+} from "~/components/workspace/parts";
 import { PageBoard } from "./PageBoard";
 
-export type OrganizeTool = "extract" | "delete";
+export type OrganizeTool = "extract" | "delete" | "rotate";
+
+/** What a tool's own toolbar and per-page buttons get to work with. */
+interface ToolContext {
+  board: Board;
+  selected: ReadonlySet<string>;
+  /**
+   * Changes the board, from the latest one (two quick changes both count), and the selection if `select` is given,
+   * and tells screen readers what happened.
+   */
+  change: (
+    next: (board: Board, selected: ReadonlySet<string>) => Board,
+    message: string,
+    select?: (board: Board) => ReadonlySet<string>,
+  ) => void;
+}
 
 interface ToolSpec {
   /** The primary button, given how many pages are selected. */
@@ -21,12 +53,26 @@ interface ToolSpec {
   /** Added to the file name: "report-extracted.pdf". */
   suffix: string;
   /** What the action bar says, given how many pages are selected of how many. */
-  status: (selected: number, total: number) => string;
+  status: (selected: number, total: number, board: Board) => string;
   /** What selecting a page means, which sets how selected pages look. */
   tone: "keep" | "remove";
   /** Builds the output's pages from the board and selection; null while there's nothing to make. */
   build: (board: Board, selected: ReadonlySet<string>) => Board | null;
+  /** Buttons under the select bar that act on the selection (or every page). */
+  toolbar?: (context: ToolContext) => React.ReactNode;
+  /** Buttons under each page. */
+  controls?: (page: BoardPage, index: number, context: ToolContext) => React.ReactNode;
 }
+
+/** A smaller, outlined pill for secondary actions. */
+const smallButton =
+  "btn-pill min-h-10 gap-1.5 border-2 border-line bg-surface px-4 text-sm hover:border-primary disabled:cursor-default disabled:opacity-50 disabled:hover:border-line";
+
+/** The selected pages, or every page when none are. */
+const targets = (board: Board, selected: ReadonlySet<string>) =>
+  selected.size > 0 ? selected : new Set(board.map((page) => page.key));
+
+const turned = (board: Board) => board.filter((page) => page.rotate !== 0).length;
 
 const TOOLS: Record<OrganizeTool, ToolSpec> = {
   extract: {
@@ -51,7 +97,85 @@ const TOOLS: Record<OrganizeTool, ToolSpec> = {
     build: (board, selected) =>
       selected.size > 0 && selected.size < board.length ? removePages(board, selected) : null,
   },
+  rotate: {
+    action: () => "Rotate PDF",
+    making: "Rotating…",
+    suffix: "rotated",
+    status: (_selected, _total, board) =>
+      turned(board) === 0
+        ? "Turn pages with their arrows, or select pages and turn them together."
+        : `${plural(turned(board), "page")} turned`,
+    tone: "keep",
+    build: (board) => (turned(board) > 0 ? board : null),
+    toolbar: (context) => {
+      const which = context.selected.size > 0 ? plural(context.selected.size, "selected page") : "all pages";
+      const turn = (by: -90 | 90) =>
+        context.change(
+          (board, selected) => rotatePages(board, targets(board, selected), by),
+          `Turned ${which} ${by < 0 ? "left" : "right"}.`,
+        );
+      return (
+        <fieldset className="flex flex-wrap items-center gap-2">
+          <legend className="float-left mr-1 text-sm font-semibold">Turn {which}</legend>
+          <button type="button" className={smallButton} onClick={() => turn(-90)}>
+            <RotateIcon /> Left
+          </button>
+          <button type="button" className={smallButton} onClick={() => turn(90)}>
+            <RotateIcon clockwise /> Right
+          </button>
+          <button
+            type="button"
+            className={smallButton}
+            disabled={turned(context.board) === 0}
+            onClick={() =>
+              context.change(
+                (board) => board.map((page) => (page.rotate === 0 ? page : { ...page, rotate: 0 })),
+                "Every page is back the way it was.",
+              )
+            }
+          >
+            Reset
+          </button>
+        </fieldset>
+      );
+    },
+    controls: (page, index, context) => {
+      const turn = (by: -90 | 90) =>
+        context.change(
+          (board) => rotatePages(board, new Set([page.key]), by),
+          `Page ${index + 1} turned ${by < 0 ? "left" : "right"}.`,
+        );
+      return (
+        <>
+          <IconButton label={`Turn page ${index + 1} left`} onClick={() => turn(-90)}>
+            <RotateIcon />
+          </IconButton>
+          <IconButton label={`Turn page ${index + 1} right`} onClick={() => turn(90)}>
+            <RotateIcon clockwise />
+          </IconButton>
+        </>
+      );
+    },
+  },
 };
+
+function RotateIcon({ clockwise = false }: { clockwise?: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className={clockwise ? "size-5 -scale-x-100" : "size-5"}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2.25}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M4 5v5h5" />
+      <path d="M4.6 10A8 8 0 1 1 6 16.5" />
+    </svg>
+  );
+}
 
 interface BoardState {
   /** The intake document this board was made from. */
@@ -85,6 +209,8 @@ export function OrganizeWorkspace({ tool }: { tool: OrganizeTool }) {
     if (returning) actionRef.current?.focus();
   }, [returning]);
 
+  // What the last change did, for screen readers.
+  const [announcement, setAnnouncement] = useState("");
   const update = useCallback((change: (state: BoardState) => Partial<BoardState>) => {
     setBoardState((previous) => (previous ? { ...previous, ...change(previous) } : previous));
   }, []);
@@ -136,18 +262,34 @@ export function OrganizeWorkspace({ tool }: { tool: OrganizeTool }) {
   }
 
   const output = current ? spec.build(current.board, current.selected) : null;
+  const context: ToolContext | null = current && {
+    board: current.board,
+    selected: current.selected,
+    change: (next, message, select) => {
+      update((previous) => {
+        const board = next(previous.board, previous.selected);
+        // Selected pages that are gone stop being selected.
+        const keys = new Set(board.map((page) => page.key));
+        const selected = select ? select(board) : previous.selected;
+        return { board, selected: new Set([...selected].filter((key) => keys.has(key))) };
+      });
+      setAnnouncement(message);
+    },
+  };
   return (
     <div className="space-y-4" data-files={doc ? true : undefined} data-busy={state.busy || making || undefined}>
       {doc && <FileCard doc={doc} onRemove={() => void intake.remove(doc.key)} />}
       <IntakeNotices state={state} intake={intake} />
       {result && "error" in result && <FailureAlert message={result.error} />}
-      {ready && current && (
+      {ready && current && context && (
         <>
           <SelectBar
             board={current.board}
             selected={current.selected}
             onSelect={(selected) => update(() => ({ selected, anchor: null }))}
-          />
+          >
+            {spec.toolbar?.(context)}
+          </SelectBar>
           <PageBoard
             board={current.board}
             docId={ready.info.id}
@@ -155,8 +297,14 @@ export function OrganizeWorkspace({ tool }: { tool: OrganizeTool }) {
             selected={current.selected}
             tone={spec.tone}
             onToggle={toggle}
+            {...(spec.controls && { controls: (page, index) => spec.controls!(page, index, context) })}
           />
-          <ActionBar status={making ? spec.making : spec.status(current.selected.size, current.board.length)}>
+          <p aria-live="polite" className="sr-only">
+            {announcement}
+          </p>
+          <ActionBar
+            status={making ? spec.making : spec.status(current.selected.size, current.board.length, current.board)}
+          >
             <button
               type="button"
               ref={actionRef}
@@ -175,15 +323,17 @@ export function OrganizeWorkspace({ tool }: { tool: OrganizeTool }) {
   );
 }
 
-/** Select all, none, or the pages typed as ranges. */
+/** Select all, none, or the pages typed as ranges; then any buttons the tool has for the selection. */
 function SelectBar({
   board,
   selected,
   onSelect,
+  children,
 }: {
   board: Board;
   selected: ReadonlySet<string>;
   onSelect: (selected: ReadonlySet<string>) => void;
+  children?: React.ReactNode;
 }) {
   const inputId = useId();
   const errorId = useId();
@@ -202,8 +352,7 @@ function SelectBar({
     onSelect(keysInRanges(board, parsed.ranges));
   }
 
-  const small =
-    "btn-pill min-h-10 border-2 border-line bg-surface px-4 text-sm hover:border-primary disabled:cursor-default disabled:opacity-50 disabled:hover:border-line";
+  const small = smallButton;
   return (
     <div className="flex flex-wrap items-end gap-x-4 gap-y-3 rounded-card border border-line bg-surface p-3 sm:p-4">
       <form className="flex min-w-0 flex-1 basis-60 flex-col" onSubmit={selectTyped}>
@@ -250,6 +399,7 @@ function SelectBar({
       <p className="w-full text-sm text-ink-muted">
         Tap or click pages to select them. Shift-click selects a run of pages.
       </p>
+      {children && <div className="w-full border-t border-line pt-3">{children}</div>}
     </div>
   );
 }
