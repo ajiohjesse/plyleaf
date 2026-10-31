@@ -35,7 +35,8 @@ test("combines the open files and downloads the result under a sensible name", a
     page.waitForEvent("download"),
     page.getByRole("button", { name: "Download", exact: true }).click(),
   ]);
-  expect(download.suggestedFilename()).toBe("Q3 report-combined.pdf");
+  // WebKit on Linux swaps spaces in a download's name for underscores (it keeps them on Windows and macOS).
+  expect(download.suggestedFilename()).toMatch(/^Q3[ _]report-combined\.pdf$/);
   const bytes = await readFile((await download.path())!);
   const doc = mupdf.Document.openDocument(bytes, "application/pdf");
   expect(doc.countPages()).toBe(3);
