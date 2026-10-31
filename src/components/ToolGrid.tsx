@@ -1,14 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { categories, filterTools, tools, type Category } from "~/data/tools";
+import { categories, filterTools, tools } from "~/data/tools";
 import { CategoryIcon } from "./CategoryIcon";
-
-const stickyBg: Record<Category["sticky"], string> = {
-  yellow: "bg-sticky-yellow",
-  lavender: "bg-sticky-lavender",
-  pink: "bg-sticky-pink",
-  mint: "bg-sticky-mint",
-  coral: "bg-sticky-coral",
-};
+import { stickyBg } from "./sticky";
 
 /** Searchable tool grid, grouped by category. Rendered to HTML at build time, then hydrated for the search box. */
 export function ToolGrid() {

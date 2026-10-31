@@ -1,0 +1,56 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { MergeWorkspace } from "~/components/merge/MergeWorkspace";
+---
+
+<ToolPage
+  slug="merge-pdf"
+  title="Merge PDF files free, no sign-up"
+  description="Combine PDFs into one file in your browser. Free with no limits, no watermark and no account, and your files are never uploaded."
+  heading="Merge PDF"
+  intro="Combine PDFs into one file, in the order you choose. Free, no sign-up, no watermark, and your files never leave this device."
+  steps={[
+    { title: "Add your PDFs", text: "Choose them, drop them anywhere on the page, or paste them." },
+    {
+      title: "Put them in order",
+      text: "Drag files into place or use the arrows. Pages keep their order inside each file.",
+    },
+    {
+      title: "Merge and download",
+      text: "Plyleaf joins them on your device in seconds. Download the result, no account needed.",
+    },
+  ]}
+  faqs={[
+    {
+      question: "Is it really free?",
+      answer:
+        "Yes. There is no paid plan, no daily limit and no watermark. Plyleaf can be free because your own browser does the work, so there are no servers to pay for.",
+    },
+    {
+      question: "Are my files uploaded?",
+      answer:
+        "No. Your PDFs are read and merged right here in your browser. They never go over the internet, and Plyleaf has no server that could receive them.",
+    },
+    {
+      question: "How many files, or how big, can I merge?",
+      answer:
+        "There's no limit we set. Very large files are limited only by your device's memory; Plyleaf tells you if what you've added is a lot for a browser to hold.",
+    },
+    {
+      question: "Will the pages look the same?",
+      answer:
+        "Yes. Each page is copied as it is, with its text, fonts and images, so nothing is re-compressed or lowered in quality. Bookmarks and fillable form fields from the originals aren't carried over yet.",
+    },
+    {
+      question: "Can I merge images too?",
+      answer:
+        "Not yet. Turning images into PDF pages comes with the Images to PDF tool, and Merge will take images as well once it's ready.",
+    },
+    {
+      question: "Can I merge password-protected PDFs?",
+      answer: "Not yet. Opening protected files with their password is planned and will be free like everything else.",
+    },
+  ]}
+>
+  <MergeWorkspace client:load />
+</ToolPage>

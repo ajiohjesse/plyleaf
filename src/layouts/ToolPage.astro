@@ -1,0 +1,131 @@
+---
+// A tool's landing page (DESIGN.md "Tool page"): a compact hero in the tool's category colour with the workspace (the
+// default slot, a React island) right under the heading, then how it works, questions and related tools. Once the
+// workspace has files (it marks itself `data-files`), the intro gives way so the work sits near the top.
+import Base from "./Base.astro";
+import { CategoryIcon } from "~/components/CategoryIcon";
+import { stickyBg, stickyWash } from "~/components/sticky";
+import { categories, tools } from "~/data/tools";
+
+interface Props {
+  slug: string;
+  /** The page's <title> (the site name is added) and meta description, written for search. */
+  title: string;
+  description: string;
+  heading: string;
+  intro: string;
+  /** How it works, three short steps. */
+  steps: { title: string; text: string }[];
+  faqs: { question: string; answer: string }[];
+}
+
+const { slug, title, description, heading, intro, steps, faqs } = Astro.props;
+const tool = tools.find((t) => t.slug === slug);
+if (!tool) throw new Error(`No tool "${slug}" in src/data/tools.ts`);
+const category = categories.find((c) => c.id === tool.category)!;
+const related = tools.filter((t) => t.category === tool.category && t.slug !== slug);
+---
+
+<Base title={title} description={description}>
+  <section class:list={["tool-hero border-b border-line", stickyWash[category.sticky]]}>
+    <div class="mx-auto max-w-3xl px-4 pt-8 pb-12 sm:px-6 sm:pt-12 md:pb-16">
+      <div class="flex items-center gap-4">
+        <span
+          class:list={[
+            "grid size-12 shrink-0 -rotate-3 place-items-center rounded-lg shadow-sticky sm:size-14",
+            stickyBg[category.sticky],
+          ]}
+          aria-hidden="true"
+        >
+          <CategoryIcon category={tool.category} className="size-7" />
+        </span>
+        <h1 class="text-4xl sm:text-5xl">{heading}</h1>
+      </div>
+      <p class="tool-intro mt-4 max-w-2xl text-lg">{intro}</p>
+      <div class="mt-8">
+        <slot />
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="how-heading" class="px-4 py-16 sm:px-6">
+    <div class="mx-auto max-w-5xl">
+      <h2 id="how-heading" class="text-center text-3xl sm:text-4xl">
+        How it works
+      </h2>
+      <ol class="mt-10 grid gap-6 md:grid-cols-3">
+        {steps.map((step, i) => (
+          <li class="rounded-card border border-line bg-surface p-6">
+            <span
+              class:list={[
+                "grid size-10 -rotate-3 place-items-center rounded-lg font-display text-lg font-extrabold shadow-sticky",
+                stickyBg[category.sticky],
+              ]}
+              aria-hidden="true"
+            >
+              {i + 1}
+            </span>
+            <h3 class="mt-4 text-xl">{step.title}</h3>
+            <p class="mt-2 text-ink-muted">{step.text}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <section aria-labelledby="faq-heading" class="bg-surface-band px-4 py-16 sm:px-6">
+    <div class="mx-auto max-w-3xl">
+      <h2 id="faq-heading" class="text-center text-3xl sm:text-4xl">
+        Questions
+      </h2>
+      <div class="mt-10 space-y-3">
+        {faqs.map((faq) => (
+          <details class="group rounded-card border border-line bg-surface">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 font-semibold [&::-webkit-details-marker]:hidden">
+              {faq.question}
+              <span class="text-xl leading-none transition-transform group-open:rotate-45" aria-hidden="true">
+                +
+              </span>
+            </summary>
+            <p class="px-5 pb-5 text-ink-muted">{faq.answer}</p>
+          </details>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  {related.length > 0 && (
+    <section aria-labelledby="related-heading" class="px-4 py-16 sm:px-6">
+      <div class="mx-auto max-w-5xl">
+        <h2 id="related-heading" class="text-center text-3xl sm:text-4xl">
+          More {category.name.toLowerCase()} tools
+        </h2>
+        <ul class="mt-10 flex flex-wrap justify-center gap-3">
+          {related.map((t) =>
+            t.available ? (
+              <li>
+                <a
+                  href={`/${t.slug}`}
+                  class="inline-flex min-h-11 items-center rounded-pill border-2 border-line bg-surface px-4 font-semibold hover:border-primary"
+                >
+                  {t.name}
+                </a>
+              </li>
+            ) : (
+              <li class="inline-flex min-h-11 items-center gap-2 rounded-pill border-2 border-dashed border-line px-4 text-ink-muted">
+                {t.name}
+                <span class="text-xs font-semibold">Soon</span>
+              </li>
+            ),
+          )}
+        </ul>
+      </div>
+    </section>
+  )}
+</Base>
+
+<style>
+  .tool-hero:has([data-files]) .tool-intro {
+    display: none;
+  }
+</style>

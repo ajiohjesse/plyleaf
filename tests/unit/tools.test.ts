@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { categories, filterTools, tools, type Tool } from "~/data/tools";
 
@@ -13,6 +14,13 @@ describe("tool catalogue", () => {
     const used = new Set(tools.map((t) => t.category));
     for (const tool of tools) expect(ids).toContain(tool.category);
     for (const id of ids) expect(used).toContain(id);
+  });
+
+  it("has a page for every available tool, and marks every tool with a page available", () => {
+    for (const tool of tools) {
+      const page = existsSync(new URL(`../../src/pages/${tool.slug}.astro`, import.meta.url));
+      expect(page, `src/pages/${tool.slug}.astro`).toBe(!!tool.available);
+    }
   });
 });
 

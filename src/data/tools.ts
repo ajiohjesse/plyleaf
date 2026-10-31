@@ -35,9 +35,11 @@ export const tools: Tool[] = [
   {
     slug: "merge-pdf",
     name: "Merge PDF",
-    description: "Combine PDFs and images into one file.",
+    // Images join when Images to PDF lands (M3).
+    description: "Combine PDFs into one file, in any order.",
     category: "organize",
     keywords: ["combine", "join"],
+    available: true,
   },
   {
     slug: "split-pdf",

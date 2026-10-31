@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { canSaveAs, downloadFile, saveAs } from "~/download/download";
 import { formatSize } from "~/intake/files";
 
@@ -19,6 +19,9 @@ export function DownloadPanel({ file, name, onStartOver, startOverLabel = "Start
   // Only rendered after the user has done something, so this runs in the browser.
   const [saveAsSupported] = useState(canSaveAs);
   const [status, setStatus] = useState("");
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  // The workspace this replaces had focus (the button that made the file), so bring focus and the view here.
+  useEffect(() => headingRef.current?.focus(), []);
 
   async function chooseWhere() {
     setStatus("");
@@ -34,7 +37,12 @@ export function DownloadPanel({ file, name, onStartOver, startOverLabel = "Start
       aria-labelledby={headingId}
       className="space-y-4 rounded-card border-2 border-sticky-mint bg-sticky-mint/30 px-5 py-6 text-center sm:px-8"
     >
-      <h2 id={headingId} className="font-display text-2xl font-extrabold sm:text-3xl">
+      <h2
+        id={headingId}
+        ref={headingRef}
+        tabIndex={-1}
+        className="scroll-mt-24 font-display text-2xl font-extrabold focus:outline-none sm:text-3xl"
+      >
         Done — your file is ready
       </h2>
       <p className="text-ink-muted">
