@@ -80,13 +80,14 @@ Newest first. One entry per session: date, milestone, what changed, what was ver
   Figtree self-hosted via Fontsource (D-009). A unit test checks every text/background token pair for WCAG AA in both
   themes; they all pass with the DESIGN.md starting values, so no colour changes were needed.
 - Home page: header, hero with the sticky-note/selection-frame illustration, promise strip, product-frame mock of the
-  workspace, searchable tool grid (React island, `client:visible`, 36 tools from `src/data/tools.ts`, all "Soon"),
+  workspace, searchable tool grid (React island, `client:idle`, 36 tools from `src/data/tools.ts`, all "Soon"),
   how-it-works, comparison table, CTA band, navy footer. No hero drop zone yet: that comes with M1 file intake (D-011).
 - Verified: lint, format check, typecheck, 36 unit tests, build; Playwright home tests (sections, search filter,
-  same-origin requests only, no horizontal scroll) pass in Chromium and the Pixel 7 profile, repeated 5×.
-  Checked in a browser at 375 px and desktop widths. Fixed on the way: search text typed before the island hydrated was
-  dropped; the comparison table overflowed on phones.
-- Home page JS: ~72 KB gzipped (mostly React), loaded only when the tool grid scrolls into view. Revisit for the M9
+  same-origin requests only, no horizontal scroll) pass in Chromium, Firefox, WebKit and the Pixel 7 profile, repeated
+  3×. Checked in a browser at 375 px and desktop widths. Fixed on the way: search text typed before the island hydrated
+  was dropped (the input is now uncontrolled and read on hydration); `client:visible` never hydrated in WebKit when the
+  page scrolled by focusing the input, so the grid hydrates on idle instead; the comparison table overflowed on phones.
+- Home page JS: ~72 KB gzipped (mostly React), loaded after the page is idle, never blocking first paint. Revisit for the M9
   Lighthouse target if needed (vanilla filter or Preact).
 - Next: owner approves the GitHub repo → push, open the PR, confirm CI is green; Cloudflare Pages preview.
 

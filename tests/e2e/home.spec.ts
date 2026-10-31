@@ -32,7 +32,8 @@ test.describe("home page", () => {
     const origins = new Set<string>();
     page.on("request", (request) => origins.add(new URL(request.url()).origin));
     await page.goto("/", { waitUntil: "networkidle" });
-    // Scroll to the grid so the client:visible island hydrates too.
+    // Wait for the tool grid island to hydrate so its scripts are counted too.
+    await expect(page.locator("astro-island")).not.toHaveAttribute("ssr");
     await page.locator("#tools").scrollIntoViewIfNeeded();
     await page.waitForLoadState("networkidle");
     expect([...origins]).toEqual([new URL(baseURL!).origin]);

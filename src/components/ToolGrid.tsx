@@ -15,7 +15,8 @@ export function ToolGrid() {
   const [query, setQuery] = useState("");
   const searchId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
-  // The grid hydrates when it scrolls into view; keep anything typed into the static HTML before that.
+  // The grid hydrates when it scrolls into view. The input is uncontrolled so React never resets text typed into the
+  // static HTML before or during hydration; this picks it up.
   useEffect(() => {
     if (inputRef.current?.value) setQuery(inputRef.current.value);
   }, []);
@@ -47,7 +48,6 @@ export function ToolGrid() {
             id={searchId}
             type="search"
             ref={inputRef}
-            value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search tools: merge, sign, jpg…"
             autoComplete="off"
