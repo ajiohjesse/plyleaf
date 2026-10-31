@@ -77,6 +77,10 @@ Newest first. One entry per session: date, milestone, what changed, what was ver
   unknown paths, `/_astro/*` cached immutable, self-hosted fonts. Playwright can now target a deployed site with
   `BASE_URL`; all 20 E2E runs pass against production, including the same-origin-only check (so Cloudflare injects no
   third-party scripts).
+- PR Previews: the first Preview build (PR #3) failed. `wrangler preview` needs a `previews` block in `wrangler.jsonc`,
+  even an empty one; after adding it the build passed and Cloudflare posted the Preview URL on the PR
+  (`<branch>-plyleaf.ajiohjesse.workers.dev`, served with `X-Robots-Tag: noindex`). E2E: 20/20 pass against it.
+  Workers Builds logs are only in the dashboard (the connector can't read them, and the GitHub check has no log text).
 - Ticked the last M0 item and M0 itself.
 - Next: M1, starting with the engine spike (D-006).
 
