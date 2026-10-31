@@ -1,0 +1,51 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { OrganizeWorkspace } from "~/components/organize/OrganizeWorkspace";
+---
+
+<ToolPage
+  slug="insert-blank-page"
+  title="Insert blank pages into a PDF free, no sign-up"
+  description="Add empty pages anywhere in a PDF, in your browser. Free with no limits, no watermark and no account, and your file is never uploaded."
+  heading="Insert blank page"
+  intro="Add empty pages anywhere in a PDF, for notes, printing or binding. Free, no sign-up, no watermark, and your file never leaves this device."
+  steps={[
+    { title: "Add your PDF", text: "Choose it, drop it anywhere on the page, or paste it." },
+    {
+      title: "Add blank pages",
+      text: "Press + under a page to add one after it, or select pages and add blanks before or after each.",
+    },
+    {
+      title: "Insert and download",
+      text: "Plyleaf builds the new PDF on your device, in seconds.",
+    },
+  ]}
+  faqs={[
+    {
+      question: "Is it really free?",
+      answer:
+        "Yes. There is no paid plan, no daily limit and no watermark. Plyleaf can be free because your own browser does the work, so there are no servers to pay for.",
+    },
+    {
+      question: "Is my file uploaded?",
+      answer:
+        "No. Your PDF is read right here in your browser, and the new file is made here too. It never goes over the internet.",
+    },
+    {
+      question: "What size are the blank pages?",
+      answer:
+        "Each blank page is the same size and way round as the page next to it, so it prints and binds like the rest of the file.",
+    },
+    {
+      question: "Can I add a blank page at the very start?",
+      answer: "Yes. Select page 1 and choose Before selected.",
+    },
+    {
+      question: "Will the other pages look the same?",
+      answer:
+        "Yes. Each page is copied as it is, with its text, fonts and images, so nothing is re-compressed or lowered in quality. Bookmarks and fillable form fields aren't carried over yet.",
+    },
+  ]}
+>
+  <OrganizeWorkspace tool="insert" client:load />
+</ToolPage>
