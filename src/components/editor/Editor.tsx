@@ -220,9 +220,10 @@ export function Editor({ doc, onSaved }: Props) {
   function restyleShape(patch: Partial<ShapeStyle>) {
     setShapeStyle((style) => ({ ...style, ...patch }));
     if (selectedItem?.kind !== "shape") return;
-    const { shape: _kind, ...change } = patch;
-    const key = Object.keys(change).join();
-    update((list) => updateItem(list, selectedItem.id, change), `style:${selectedItem.id}:${key}`);
+    // A drawn shape keeps its kind.
+    const { shape: _kind, ...restyled } = patch;
+    const key = Object.keys(restyled).join();
+    update((list) => updateItem(list, selectedItem.id, restyled), `style:${selectedItem.id}:${key}`);
   }
 
   function restyle(patch: Partial<TextStyle>) {
