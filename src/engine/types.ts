@@ -82,6 +82,17 @@ export interface ExtractedImage {
   bytes: Uint8Array<ArrayBuffer>;
 }
 
+/**
+ * How hard Compress works. "low": lossless (shared objects merged, streams and fonts compressed, object streams).
+ * "recommended": also images brought down to 150 dpi for their page, as JPEG quality 70. "extreme": 96 dpi, quality 45.
+ */
+export type CompressLevel = "low" | "recommended" | "extreme";
+
+/** What to change in a copy of an open document before saving it (Optimize & secure tools). */
+export interface TransformOptions {
+  compress?: CompressLevel;
+}
+
 /** An RGBA bitmap, 4 bytes per pixel, not premultiplied. */
 export interface Bitmap {
   width: number;

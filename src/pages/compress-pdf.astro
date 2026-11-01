@@ -1,0 +1,51 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { CompressWorkspace } from "~/components/secure/CompressWorkspace";
+---
+
+<ToolPage
+  slug="compress-pdf"
+  title="Compress PDF: reduce PDF file size free, no sign-up"
+  description="Make PDFs smaller in your browser, at three strengths, and see the size before and after. Free with no limits, no watermark and no account, and your file is never uploaded."
+  heading="Compress PDF"
+  intro="Make a PDF smaller to email or upload. Pick a strength and see how much you save. Free, no sign-up, no watermark, and your file never leaves this device."
+  steps={[
+    { title: "Add your PDF", text: "Choose it, drop it anywhere on the page, or paste it." },
+    {
+      title: "Pick a strength",
+      text: "Low changes nothing you can see, Recommended suits nearly everything, Extreme makes the smallest file.",
+    },
+    {
+      title: "Compress and download",
+      text: "Plyleaf shows the size before and after. Download it straight away, no account needed.",
+    },
+  ]}
+  faqs={[
+    {
+      question: "Is it really free, even the strongest compression?",
+      answer:
+        "Yes. Every level is free with no daily limit and no watermark. Plyleaf can be free because your own browser does the work.",
+    },
+    {
+      question: "Is my PDF uploaded?",
+      answer: "No. It's compressed right here in your browser and never goes over the internet.",
+    },
+    {
+      question: "What does each level do?",
+      answer:
+        "Low is lossless: it removes duplicated and unused parts and packs the file tighter, so nothing looks different. Recommended also brings images down to 150 dpi for the page they're on and stores them as good-quality JPEG. Extreme uses 96 dpi and stronger JPEG compression. Text and drawings stay sharp at every level.",
+    },
+    {
+      question: "Why didn't my file get smaller?",
+      answer:
+        "Files of mostly text are usually small already, and some PDFs are compressed well when they're made. Plyleaf tells you when it can't save anything rather than giving you a file that's no smaller.",
+    },
+    {
+      question: "Will it still open everywhere?",
+      answer:
+        "Yes. The output is a standard PDF, and our tests check every compressed file with qpdf, an independent PDF checker.",
+    },
+  ]}
+>
+  <CompressWorkspace client:load />
+</ToolPage>

@@ -45,6 +45,7 @@
     "@astrojs/check": "^0.9.12",
     "@cantoo/pdf-lib": "2.11.1",
     "@embedpdf/pdfium": "2.15.1",
+    "@neslinesli93/qpdf-wasm": "0.3.0",
     "@playwright/test": "^1.64.1",
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",

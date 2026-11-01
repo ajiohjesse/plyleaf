@@ -218,6 +218,7 @@ export const tools: Tool[] = [
     description: "Make files smaller, three strengths.",
     category: "optimize-secure",
     keywords: ["reduce", "shrink", "size"],
+    available: true,
   },
   {
     slug: "ocr-pdf",

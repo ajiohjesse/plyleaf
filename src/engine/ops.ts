@@ -16,6 +16,7 @@ import {
 } from "./types";
 
 export { MAX_RENDER_SIDE } from "./types";
+export { transform } from "./transform";
 /** Largest page side in PDF points (200 in), the limit in the PDF spec. */
 export const MAX_PAGE_SIDE = 14_400;
 /**
@@ -200,6 +201,23 @@ function pixmapFrom({ width, height, pixels }: Bitmap, alpha: boolean): mupdf.Pi
 export function extractImages(pdf: mupdf.PDFDocument, index: number, skip: readonly number[] = []): ExtractedImage[] {
   checkPageIndex(pdf, index);
   const skipped = new Set(skip);
+  return pageImages(pdf, index)
+    .filter(({ id }) => !skipped.has(id))
+    .flatMap(({ id, ref }) => {
+      try {
+        return [extractImage(pdf, id, ref)];
+      } catch {
+        // An image MuPDF can't decode is left out rather than failing the whole page.
+        return [];
+      }
+    });
+}
+
+/**
+ * The image XObjects a page draws, directly or inside the forms it draws, once each, by object number. Stencil masks
+ * (shapes filled with a colour) aren't included.
+ */
+export function pageImages(pdf: mupdf.PDFDocument, index: number): { id: number; ref: mupdf.PDFObject }[] {
   const found: { id: number; ref: mupdf.PDFObject }[] = [];
   const formsSeen = new Set<number>();
   const visit = (resources: mupdf.PDFObject) => {
@@ -210,7 +228,7 @@ export function extractImages(pdf: mupdf.PDFDocument, index: number, skip: reado
       const id = ref.isIndirect() ? ref.asIndirect() : -1;
       const subtype = object.get("Subtype");
       if (subtype.isName() && subtype.asName() === "Image") {
-        if (id === -1 || skipped.has(id) || found.some((f) => f.id === id)) return;
+        if (id === -1 || found.some((f) => f.id === id)) return;
         if (object.get("ImageMask").isBoolean() && object.get("ImageMask").asBoolean()) return;
         found.push({ id, ref });
       } else if (subtype.isName() && subtype.asName() === "Form" && !formsSeen.has(id)) {
@@ -220,14 +238,7 @@ export function extractImages(pdf: mupdf.PDFDocument, index: number, skip: reado
     });
   };
   visit(pdf.findPage(index).getInheritable("Resources"));
-  return found.flatMap(({ id, ref }) => {
-    try {
-      return [extractImage(pdf, id, ref)];
-    } catch {
-      // An image MuPDF can't decode is left out rather than failing the whole page.
-      return [];
-    }
-  });
+  return found;
 }
 
 function extractImage(pdf: mupdf.PDFDocument, id: number, ref: mupdf.PDFObject): ExtractedImage {
@@ -274,7 +285,7 @@ function isPlainJpeg(image: mupdf.PDFObject) {
 }
 
 /** Grey and RGB stay as they are; anything else (CMYK, Lab, separations) becomes RGB. */
-function toDisplayColours(pixmap: mupdf.Pixmap): mupdf.Pixmap {
+export function toDisplayColours(pixmap: mupdf.Pixmap): mupdf.Pixmap {
   const type = pixmap.getColorSpace()?.getType();
   if (type === "Gray" || type === "RGB") return pixmap;
   return pixmap.convertToColorSpace(mupdf.ColorSpace.DeviceRGB, false);
@@ -552,7 +563,7 @@ function boxOf(page: mupdf.PDFObject, key: "MediaBox" | "CropBox"): [number, num
   return [Math.min(a!, c!), Math.min(b!, d!), Math.max(a!, c!), Math.max(b!, d!)];
 }
 
-function checkPageIndex(pdf: mupdf.PDFDocument, index: number) {
+export function checkPageIndex(pdf: mupdf.PDFDocument, index: number) {
   const count = pdf.countPages();
   if (!Number.isInteger(index) || index < 0 || index >= count) {
     throw new EngineError("invalid-argument", `Page ${index + 1} doesn't exist (the document has ${count})`);
@@ -585,6 +596,6 @@ function toRgba(pixmap: mupdf.Pixmap): Bitmap {
   return { width, height, pixels };
 }
 
-function message(error: unknown) {
+export function message(error: unknown) {
   return error instanceof Error ? error.message : String(error);
 }

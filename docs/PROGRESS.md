@@ -3,7 +3,7 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M4: Optimize and secure (M0–M2 done 2026-10-31, M3 done 2026-11-01)
-- **Next action:** M4, Compress (3 levels, before/after sizes).
+- **Next action:** M4, Grayscale.
 - **Owner asked (2026-11-01):** build all of M3 and M4 in one go, one PR per tool, each auto-merged when CI passes.
   Unlock removes owner-password restrictions only after the user confirms they have the right to; libheif-js approved.
 - **Live:** https://plyleaf.ajiohjesse.workers.dev (Workers Builds deploys `main`; other branches get Preview URLs).
@@ -45,7 +45,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] Images → PDF (incl. HEIC) · [x] PDF → images · [x] Extract images · [x] Camera scan-to-PDF
 
 ### [ ] M4: Optimize and secure
-- [ ] Compress (3 levels) · [ ] Grayscale · [ ] Protect · [ ] Unlock · [ ] Permissions · [ ] Flatten · [ ] Repair · [ ] Metadata
+- [x] Compress (3 levels) · [ ] Grayscale · [ ] Protect · [ ] Unlock · [ ] Permissions · [ ] Flatten · [ ] Repair · [ ] Metadata
 
 ### [ ] M5: Editor
 - [ ] Text add · [ ] Edit existing text · [ ] Images · [ ] Shapes · [ ] Whiteout · [ ] Markup · [ ] Freehand · [ ] Comments · [ ] Stamps
@@ -72,6 +72,21 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-11-01: Compress PDF (M4)
+- Engine (D-029): `engine.transform(doc, options)` changes a copy (`src/engine/transform.ts`); `compress` Low /
+  Recommended / Extreme. `pageImages` (shared with Extract images) walks a page's image XObjects; `replaceImage`
+  swaps an image's data and description in place.
+- `/compress-pdf` (`CompressWorkspace`) on a new shared shell, `src/components/workspace/SingleFileTool.tsx` (intake,
+  file card, the tool's `Options`, done screen, an `info` outcome for "nothing to do"). The done screen says
+  "679 KB → 38 KB, 94% smaller"; under 1% saved, it says the file is already about as small as it gets.
+- `tests/helpers/qpdf.ts`: qpdf in WASM (`qpdfCheck`, `qpdfEncryption`, `qpdfOpens`, by exit code), with a control
+  test that it fails a damaged file. `photoPdf()` in `tests/helpers/pdf.ts` makes a page with a large noisy image.
+- Verified: 5 new unit tests (each level smaller than the last and qpdf-clean, image sizes per level, the open
+  document unchanged between runs, soft masks kept, text-only stays valid; the qpdf control). New E2E
+  `compress.spec.ts` (Recommended then Extreme, sizes shown, qpdf-clean, `watchEgress` clean; nothing to save; linked
+  from home): 12/12 in all four browser projects.
+- Next: Grayscale.
 
 ### 2026-11-01: Scan to PDF, M3 done
 - `/scan-to-pdf` (`ScanWorkspace`, D-028): "Use camera" (live `getUserMedia`, back camera, a shutter that adds page

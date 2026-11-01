@@ -39,3 +39,30 @@ export function makePdf(
 
 export const A4 = { width: 595, height: 842 };
 export const LETTER = { width: 612, height: 792 };
+
+/** A one-page A4 PDF showing a big photo-like image stored losslessly (noisy gradients compress badly with Flate). */
+export function photoPdf(width = 1600, height = 2200): Uint8Array<ArrayBuffer> {
+  const doc = new mupdf.PDFDocument();
+  const pixmap = new mupdf.Pixmap(mupdf.ColorSpace.DeviceRGB, [0, 0, width, height], false);
+  const pixels = pixmap.getPixels();
+  let seed = 3;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+      const i = y * pixmap.getStride() + x * 3;
+      pixels[i] = (x * 255) / width;
+      pixels[i + 1] = (y * 255) / height;
+      pixels[i + 2] = 128 + (seed % 32);
+    }
+  }
+  const image = doc.addImage(new mupdf.Image(pixmap));
+  doc.insertPage(
+    -1,
+    doc.addPage([0, 0, A4.width, A4.height], 0, { XObject: { I: image } }, "q 595 0 0 842 0 0 cm /I Do Q"),
+  );
+  const buffer = doc.saveToBuffer("compress");
+  const bytes = new Uint8Array(buffer.asUint8Array());
+  buffer.destroy();
+  doc.destroy();
+  return bytes;
+}
