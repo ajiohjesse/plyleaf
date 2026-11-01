@@ -47,3 +47,18 @@ export async function encodeWebp({ width, height, pixels }: Bitmap, quality: num
   if (!blob || blob.type !== "image/webp") throw new Error("This browser can't make WebP images");
   return blob;
 }
+
+/** Images smaller than this on both sides (icons, bullets, spacer pixels) are left out unless asked for. */
+export const TINY_IMAGE = 32;
+
+/** "report.pdf", the 2nd image on page 3 of 12 as JPEG, makes "report-page-03-image-2.jpg". */
+export function extractedImageName(
+  source: string,
+  page: number,
+  pageCount: number,
+  index: number,
+  format: "jpeg" | "png",
+): string {
+  const number = String(page + 1).padStart(String(pageCount).length, "0");
+  return outputName(source, `page-${number}-image-${index + 1}`, EXTENSIONS[format]);
+}

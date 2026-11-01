@@ -71,6 +71,17 @@ export interface ImageOptions {
   quality?: number;
 }
 
+/** An image found in a page, ready to save. */
+export interface ExtractedImage {
+  /** Its object number, to skip it on later pages that use it again. */
+  id: number;
+  /** "jpeg": the PDF's own JPEG, byte for byte. "png": decoded, lossless, with any transparency. */
+  format: "jpeg" | "png";
+  width: number;
+  height: number;
+  bytes: Uint8Array<ArrayBuffer>;
+}
+
 /** An RGBA bitmap, 4 bytes per pixel, not premultiplied. */
 export interface Bitmap {
   width: number;
