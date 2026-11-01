@@ -312,7 +312,8 @@ export const tools: Tool[] = [
     name: "Watermark",
     description: "Stamp text or an image on pages.",
     category: "advanced",
-    keywords: ["stamp"],
+    keywords: ["stamp", "confidential", "logo"],
+    available: true,
   },
   {
     slug: "header-footer",

@@ -1,0 +1,43 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { WatermarkWorkspace } from "~/components/pagetools/WatermarkWorkspace";
+---
+
+<ToolPage
+  slug="watermark-pdf"
+  title="Watermark a PDF with text or an image online, free"
+  description="Put CONFIDENTIAL, DRAFT or your logo across the pages of a PDF in your browser: see-through, at any angle, where you want it. Free, no account, and your file is never uploaded."
+  heading="Watermark"
+  intro="Stamp words or a picture across your pages, see-through and at any angle. Free, no sign-up, and your file never leaves this device."
+  steps={[
+    { title: "Add your PDF", text: "Choose it, drop it anywhere on the page, or paste it." },
+    {
+      title: "Make the watermark",
+      text: "Type the words or choose a picture, then set how strong, the angle and where.",
+    },
+    { title: "Download", text: "The watermark is written into the pages. No account needed." },
+  ]}
+  faqs={[
+    {
+      question: "Is it really free, without your own watermark?",
+      answer:
+        "Yes. Plyleaf never adds anything of its own to your files, and there's no paid plan or daily limit. It can be free because your own browser does the work.",
+    },
+    {
+      question: "Does the watermark go behind or over the page?",
+      answer:
+        "Over it, see-through, so it shows on pages with pictures too while the text underneath stays readable and copyable.",
+    },
+    {
+      question: "Can a watermark be removed?",
+      answer:
+        "It's part of each page's content, so ordinary readers can't switch it off. Someone with a PDF editor could still take it out: a watermark marks a document, it doesn't lock it.",
+    },
+    {
+      question: "Is my PDF uploaded?",
+      answer: "No. The watermark is added right here in your browser and the file never goes over the internet.",
+    },
+  ]}
+>
+  <WatermarkWorkspace client:load />
+</ToolPage>

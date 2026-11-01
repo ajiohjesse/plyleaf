@@ -21,7 +21,7 @@ export interface TextStyle {
 export const DEFAULT_STYLE: TextStyle = { font: "helvetica", bold: false, size: 11, color: [0, 0, 0] };
 
 /** How far above the baseline a standard font's capitals reach, and how far below it its descenders go, per point. */
-const CAP_HEIGHT = 0.72;
+export const CAP_HEIGHT = 0.72;
 const DESCENT = 0.22;
 
 /**
