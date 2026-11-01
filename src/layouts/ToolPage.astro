@@ -100,7 +100,7 @@ const related = tools.filter((t) => t.category === tool.category && t.slug !== s
     <section aria-labelledby="related-heading" class="px-4 py-16 sm:px-6">
       <div class="mx-auto max-w-5xl">
         <h2 id="related-heading" class="text-center text-3xl sm:text-4xl">
-          More {category.name.toLowerCase()} tools
+          More {category.name.toLowerCase().replace(/ tools$/, "")} tools
         </h2>
         <ul class="mt-10 flex flex-wrap justify-center gap-3">
           {related.map((t) =>

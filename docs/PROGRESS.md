@@ -3,7 +3,7 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M5: Editor (M0–M2 done 2026-10-31, M3 and M4 done 2026-11-01)
-- **Next action:** M5: page numbers (the page tools).
+- **Next action:** M5: watermark.
 - **Owner asked (2026-11-01):** build all of M5 in one go, one PR per item, each auto-merged when CI passes.
 - **Owner asked earlier (2026-11-01):** build all of M3 and M4 in one go, one PR per tool, each auto-merged when CI passes.
   Unlock removes owner-password restrictions only after the user confirms they have the right to; libheif-js approved.
@@ -50,7 +50,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 
 ### [ ] M5: Editor
 - [x] Text add · [x] Edit existing text · [x] Images · [x] Shapes · [x] Whiteout · [x] Markup · [x] Freehand · [x] Comments · [x] Stamps
-- [ ] Page numbers · [ ] Watermark · [ ] Header/footer · [ ] Bates · [x] Undo/redo
+- [x] Page numbers · [ ] Watermark · [ ] Header/footer · [ ] Bates · [x] Undo/redo
 - [ ] Output verified in Acrobat Reader, Chrome, macOS Preview
 
 ### [ ] M6: Sign and forms
@@ -73,6 +73,21 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-11-01: Page numbers (M5)
+- `src/pagetools/stamping.ts` (pure, shared by the page tools): nine positions with a margin (capitals start at the
+  margin at the top, descenders end at it at the bottom), `{page}`/`{pages}`/`{date}`/`{file}` tokens, pages counted
+  from a page on with a first number. `src/pagetools/numbers.ts`: formats ("1", "Page 1", "Page 1 of 9", "1 / 9",
+  "- 1 -") or the user's own words with {page}.
+- `/add-page-numbers` (`PageNumbersWorkspace` on `SingleFileTool`): format, font/size/colour/bold, from page, first
+  number, margin, a 3 × 3 position grid and a live preview of the first numbered page
+  (`components/pagetools/fields.tsx`: `PositionGrid`, `StyleFields`, `WholeNumberField`, `PagePreview`, all reused by
+  the next page tools). Output `<name>-numbered.pdf` through `engine.transform`'s edits.
+- Fixed on the way: ToolPage said "More page tools tools".
+- Verified: 4 new unit tests (positions, tokens, counting from a page, formats). New E2E `page-numbers.spec.ts` (pages
+  2–3 numbered "Page 1 of 2" top right, read back with MuPDF and right-aligned at the margin, qpdf-clean,
+  `watchEgress`; own words need {page}; linked from home): 12/12 in all four projects. Checked at 375 px.
+- Next: watermark.
 
 ### 2026-11-01: Edit existing text (M5)
 - Engine: `engine.textLines(doc, page)` (`src/engine/text.ts`): each left-to-right line with its text, box, baseline
