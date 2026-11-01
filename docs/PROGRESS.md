@@ -3,7 +3,7 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M4: Optimize and secure (M0–M2 done 2026-10-31, M3 done 2026-11-01)
-- **Next action:** M4, Repair.
+- **Next action:** M4, Metadata (edit and remove).
 - **Owner asked (2026-11-01):** build all of M3 and M4 in one go, one PR per tool, each auto-merged when CI passes.
   Unlock removes owner-password restrictions only after the user confirms they have the right to; libheif-js approved.
 - **Live:** https://plyleaf.ajiohjesse.workers.dev (Workers Builds deploys `main`; other branches get Preview URLs).
@@ -45,7 +45,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] Images → PDF (incl. HEIC) · [x] PDF → images · [x] Extract images · [x] Camera scan-to-PDF
 
 ### [ ] M4: Optimize and secure
-- [x] Compress (3 levels) · [x] Grayscale · [x] Protect · [x] Unlock · [x] Permissions · [x] Flatten · [ ] Repair · [ ] Metadata
+- [x] Compress (3 levels) · [x] Grayscale · [x] Protect · [x] Unlock · [x] Permissions · [x] Flatten · [x] Repair · [ ] Metadata
 
 ### [ ] M5: Editor
 - [ ] Text add · [ ] Edit existing text · [ ] Images · [ ] Shapes · [ ] Whiteout · [ ] Markup · [ ] Freehand · [ ] Comments · [ ] Stamps
@@ -72,6 +72,15 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-11-01: Repair PDF (M4)
+- `/repair-pdf` (`RepairWorkspace`): MuPDF rebuilds a damaged file when opening it (`DocInfo.repaired`); the tool
+  says whether it found damage and how many pages it recovered, and saves a clean copy (`transform` with no options).
+- `truncatedPdf()` test fixture (cut before the xref).
+- Verified: 1 new unit test (qpdf faults the cut-off original, not the repaired copy; pages kept). New E2E
+  `repair.spec.ts` (cut-off file → "found 3 pages", qpdf-clean output, `watchEgress` clean; undamaged file; linked
+  from home): 12/12 in all four browser projects.
+- Next: Metadata.
 
 ### 2026-11-01: Flatten PDF (M4)
 - Engine: `transform` takes `flatten` ("forms" or "all"): MuPDF's `bake`, before greyscale and compression, so

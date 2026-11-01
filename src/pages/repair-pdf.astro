@@ -1,0 +1,43 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { RepairWorkspace } from "~/components/secure/RepairWorkspace";
+---
+
+<ToolPage
+  slug="repair-pdf"
+  title="Repair PDF: fix damaged or broken PDF files free"
+  description="Recover damaged PDFs, such as cut-off downloads or files with a broken structure, in your browser. Free with no limits and no account, and your file is never uploaded."
+  heading="Repair PDF"
+  intro="Fix a PDF that won't open or shows errors, such as a cut-off download. Free, no sign-up, and your file never leaves this device."
+  steps={[
+    { title: "Add the damaged PDF", text: "Choose it, drop it anywhere on the page, or paste it." },
+    {
+      title: "Plyleaf rebuilds it",
+      text: "It reads what's there, rebuilds the file's structure and tells you how many pages it found.",
+    },
+    { title: "Download", text: "Save the repaired copy as a clean new PDF. No account needed." },
+  ]}
+  faqs={[
+    {
+      question: "Is it really free?",
+      answer:
+        "Yes. There is no paid plan, no daily limit and no watermark. Plyleaf can be free because your own browser does the work.",
+    },
+    {
+      question: "What can it fix?",
+      answer:
+        "Damage to a PDF's structure, the most common kind: files cut off during a download or upload, broken cross-reference tables and wrong offsets. Pages whose content is itself missing or scrambled can't be brought back.",
+    },
+    {
+      question: "Is my PDF uploaded?",
+      answer: "No. It's repaired right here in your browser and never goes over the internet.",
+    },
+    {
+      question: "What if it can't be opened at all?",
+      answer:
+        "Then too little of the file is left to rebuild. If you still have where it came from, download or export it again.",
+    },
+  ]}
+>
+  <RepairWorkspace client:load />
+</ToolPage>
