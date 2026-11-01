@@ -9,6 +9,9 @@ import {
   MIN_LINE_WIDTH,
   MIN_TEXT_SIZE,
   toHex,
+  MAX_INK_WIDTH,
+  MIN_INK_WIDTH,
+  type InkStyle,
   type MarkupStyle,
   type ShapeStyle,
   type TextStyle,
@@ -307,6 +310,38 @@ export function MarkupOptions({
         ))}
       </span>
       <ColourField label="Colour" value={color} onChange={onColour} />
+    </OptionsPanel>
+  );
+}
+
+/** Colour, thickness and see-through for the selected stroke or new ones. */
+export function InkOptions({
+  style,
+  onChange,
+  onRemove,
+}: {
+  style: InkStyle;
+  onChange: (patch: Partial<InkStyle>) => void;
+  onRemove: (() => void) | undefined;
+}) {
+  return (
+    <OptionsPanel legend="Drawing options" onRemove={onRemove}>
+      <ColourField label="Colour" value={style.color} onChange={(color) => onChange({ color })} />
+      <NumberField
+        label="Thickness"
+        value={style.width}
+        min={MIN_INK_WIDTH}
+        max={MAX_INK_WIDTH}
+        step={0.5}
+        onChange={(width) => onChange({ width })}
+      />
+      <ToggleButton
+        label="See-through, like a highlighter"
+        pressed={style.opacity < 1}
+        onClick={() => onChange({ opacity: style.opacity < 1 ? 1 : 0.5 })}
+      >
+        <span className="text-sm">See-through</span>
+      </ToggleButton>
     </OptionsPanel>
   );
 }

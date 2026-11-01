@@ -48,6 +48,17 @@ function annotate(pdf: mupdf.PDFDocument, index: number, annotations: Annotation
     const [x0, y0] = page.getBounds();
     const placed = (quad: readonly number[]) => quad.map((n, i) => n + (i % 2 === 0 ? x0 : y0)) as mupdf.Quad;
     for (const annotation of annotations) {
+      if (annotation.type === "ink") {
+        const strokes = annotation.strokes.filter((stroke) => stroke.length > 0);
+        if (strokes.length === 0) continue;
+        const annot = page.createAnnotation("Ink");
+        annot.setColor([...annotation.color]);
+        annot.setBorderWidth(annotation.width);
+        if (annotation.opacity !== undefined && annotation.opacity < 1) annot.setOpacity(annotation.opacity);
+        annot.setInkList(strokes.map((stroke) => stroke.map(({ x, y }): mupdf.Point => [x + x0, y + y0])));
+        annot.update();
+        continue;
+      }
       if (annotation.quads.length === 0) continue;
       const annot = page.createAnnotation(ANNOTATION_TYPES[annotation.type]);
       annot.setColor([...annotation.color]);

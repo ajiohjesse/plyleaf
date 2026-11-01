@@ -6,6 +6,7 @@ import { PageCanvas } from "~/components/thumbnails/PageCanvas";
 import type { Observe } from "~/components/thumbnails/ThumbnailGrid";
 import type { ItemHandlers } from "./gestures";
 import { ImageBox } from "./ImageBox";
+import { InkBox } from "./InkBox";
 import { MarkupBox } from "./MarkupBox";
 import { ShapeBox } from "./ShapeBox";
 import { WhiteoutBox } from "./WhiteoutBox";
@@ -14,10 +15,10 @@ import { TextBox } from "./TextBox";
 /** Pages are rendered at most this many device pixels wide; zoomed further, the image is scaled up. */
 const MAX_RENDER = 1600;
 
-export type Tool = "select" | "text" | "markup" | "shape" | "whiteout";
+export type Tool = "select" | "text" | "markup" | "draw" | "shape" | "whiteout";
 
 /** Tools that draw by dragging across the page (a click places something of a set size). */
-const DRAWING: ReadonlySet<Tool> = new Set(["markup", "shape", "whiteout"]);
+const DRAWING: ReadonlySet<Tool> = new Set(["markup", "draw", "shape", "whiteout"]);
 
 /** A press has to move this many CSS pixels to draw rather than click. */
 const DRAW_THRESHOLD = 4;
@@ -26,7 +27,7 @@ export interface PageHandlers {
   /** The user pressed the page at (x, y) points with a tool that places something. */
   onPlace: (page: number, x: number, y: number) => void;
   /** The user is dragging across the page from `from` to `to` (points) with a drawing tool; `done` when released. */
-  onDraw: (page: number, from: Point, to: Point, done: boolean) => void;
+  onDraw: (page: number, from: Point, to: Point, done: boolean, path: readonly Point[]) => void;
   /** The user pressed the page itself (not an item) with the select tool. */
   onBackground: () => void;
   handlersFor: (item: Item) => ItemHandlers & {
@@ -73,10 +74,11 @@ export const EditorPage = memo(function EditorPage(props: Props) {
   const height = Math.max(1, Math.round(page.height * scale));
   const placing = tool !== "select";
   const drawing = DRAWING.has(tool);
-  const stroke = useRef<{ pointer: number; from: Point; screen: Point; moved: boolean } | null>(null);
+  const stroke = useRef<{ pointer: number; from: Point; screen: Point; moved: boolean; path: Point[] } | null>(null);
 
-  function point(event: React.MouseEvent) {
-    const box = event.currentTarget.getBoundingClientRect();
+  const surfaceRef = useRef<HTMLButtonElement>(null);
+  function point(event: { clientX: number; clientY: number }) {
+    const box = (surfaceRef.current ?? ref.current!).getBoundingClientRect();
     return { x: (event.clientX - box.left) / scale, y: (event.clientY - box.top) / scale };
   }
 
@@ -88,21 +90,25 @@ export const EditorPage = memo(function EditorPage(props: Props) {
       event.preventDefault();
       event.currentTarget.setPointerCapture(event.pointerId);
       const screen = { x: event.clientX, y: event.clientY };
-      stroke.current = { pointer: event.pointerId, from: point(event), screen, moved: false };
+      const from = point(event);
+      stroke.current = { pointer: event.pointerId, from, screen, moved: false, path: [from] };
     },
     onPointerMove(event: React.PointerEvent<HTMLElement>) {
       const active = stroke.current;
       if (active?.pointer !== event.pointerId) return;
       const far = Math.hypot(event.clientX - active.screen.x, event.clientY - active.screen.y) >= DRAW_THRESHOLD;
+      // Every point, coalesced ones included (a fast pen moves several between frames).
+      const events = "getCoalescedEvents" in event.nativeEvent ? event.nativeEvent.getCoalescedEvents() : [];
+      for (const each of events.length > 0 ? events : [event]) active.path.push(point(each));
       if (!active.moved && !far) return;
       active.moved = true;
-      props.onDraw(index, active.from, point(event), false);
+      props.onDraw(index, active.from, point(event), false, active.path);
     },
     onPointerUp(event: React.PointerEvent<HTMLElement>) {
       const active = stroke.current;
       if (active?.pointer !== event.pointerId) return;
       stroke.current = null;
-      if (active.moved) props.onDraw(index, active.from, point(event), true);
+      if (active.moved) props.onDraw(index, active.from, point(event), true, [...active.path, point(event)]);
       else props.onPlace(index, active.from.x, active.from.y);
     },
     onPointerCancel() {
@@ -129,6 +135,7 @@ export const EditorPage = memo(function EditorPage(props: Props) {
       {/* The page's surface: placing tools act on it; with the select tool, pressing it clears the selection. */}
       {placing ? (
         <button
+          ref={surfaceRef}
           type="button"
           aria-label={`Add to page ${index + 1}`}
           className="absolute inset-0 cursor-crosshair"
@@ -147,6 +154,9 @@ export const EditorPage = memo(function EditorPage(props: Props) {
       )}
       {items.map((item) => {
         const { onText, onEndEdit, onResize, ...handlers } = props.handlersFor(item);
+        if (item.kind === "ink") {
+          return <InkBox key={item.id} item={item} scale={scale} selected={item.id === selected} {...handlers} />;
+        }
         if (item.kind === "markup") {
           return <MarkupBox key={item.id} item={item} scale={scale} selected={item.id === selected} {...handlers} />;
         }

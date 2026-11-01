@@ -76,3 +76,37 @@ test("markup becomes highlight, underline and strike-out annotations over the te
   expect(sx1 - sx0).toBeLessThan(sy1 - sy0);
   expect(await qpdfCheck(output)).toBe(0);
 });
+
+test("freehand strokes become ink annotations where they were drawn, on plain and turned pages", async () => {
+  const stroke = [
+    { x: 50, y: 50 },
+    { x: 100, y: 80 },
+    { x: 150, y: 50 },
+  ];
+  const output = transform(openPdf(makePdf([PAGE, { ...PAGE, rotate: 90 }])), {
+    edits: {
+      pages: [0, 1].map((page) => ({
+        page,
+        marks: [],
+        annotations: [{ type: "ink" as const, strokes: [stroke], color: [0, 0, 1] as const, width: 4, opacity: 0.5 }],
+      })),
+    },
+  });
+  const doc = keep(new mupdf.PDFDocument(output));
+  for (const index of [0, 1]) {
+    const [ink] = doc.loadPage(index).getAnnotations();
+    expect(ink!.getType()).toBe("Ink");
+    expect(ink!.getBorderWidth()).toBe(4);
+    expect(ink!.getOpacity()).toBeCloseTo(0.5);
+    const [x0, y0, x1, y1] = ink!.getBounds();
+    // Round the stroke as it's shown, with a little room for the line's width.
+    expect(x0).toBeGreaterThan(38);
+    expect(x0).toBeLessThan(50);
+    expect(x1).toBeGreaterThan(150);
+    expect(x1).toBeLessThan(162);
+    expect(y0).toBeLessThan(50);
+    expect(y1).toBeGreaterThan(80);
+    expect(y1).toBeLessThan(92);
+  }
+  expect(await qpdfCheck(output)).toBe(0);
+});
