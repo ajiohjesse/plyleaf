@@ -32,7 +32,15 @@ function fakeEngine() {
             if (name.startsWith("offline")) return reject(new EngineError("engine-unavailable", "offline"));
             const id = `d${nextId++}`;
             open.add(id);
-            resolve({ id, source: "pdf", pageCount: 3, pages: [], repaired: false });
+            resolve({
+              id,
+              source: "pdf",
+              pageCount: 3,
+              pages: [],
+              repaired: false,
+              encryption: null,
+              permissions: ["print", "print-hq", "copy", "edit", "annotate", "form", "assemble", "accessibility"],
+            });
           },
         });
       }),

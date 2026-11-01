@@ -46,6 +46,8 @@ describe("openPdf and describe", () => {
         { width: 792, height: 612, rotation: 90 },
       ],
       repaired: false,
+      encryption: null,
+      permissions: ["print", "print-hq", "copy", "edit", "annotate", "form", "assemble", "accessibility"],
     });
   });
 

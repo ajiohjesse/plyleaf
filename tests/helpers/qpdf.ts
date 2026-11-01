@@ -34,10 +34,23 @@ export function qpdfCheck(pdf: Uint8Array, password?: string): Promise<number> {
   return qpdf(pdf, ["--check", ...(password === undefined ? [] : [`--password=${password}`])]);
 }
 
-/** What qpdf says about a file's encryption: "none", "restrictions" (opens without a password) or "password". */
-export async function qpdfEncryption(pdf: Uint8Array): Promise<"none" | "restrictions" | "password"> {
-  if ((await qpdf(pdf, ["--is-encrypted"])) === 2) return "none";
-  return (await qpdf(pdf, ["--requires-password"])) === 0 ? "password" : "restrictions";
+/**
+ * What qpdf says about a file's encryption: "none", "restrictions" (encrypted, opens without a password) or "password"
+ * (opens only with `password`). This build can't inspect a file it can't open, so a password file needs its password.
+ */
+export async function qpdfEncryption(
+  pdf: Uint8Array,
+  password?: string,
+): Promise<"none" | "restrictions" | "password"> {
+  if ((await qpdf(pdf, ["--is-encrypted"])) === 0) {
+    return (await qpdf(pdf, ["--requires-password"])) === 0 ? "password" : "restrictions";
+  }
+  if (password !== undefined && (await qpdf(pdf, [`--password=${password}`, "--is-encrypted"])) === 0) {
+    return "password";
+  }
+  // Not encrypted: then it opens and checks without a password.
+  if ((await qpdfCheck(pdf)) === 2) throw new Error("qpdf can't open the file: wrong password, or damaged");
+  return "none";
 }
 
 /** Whether qpdf can decrypt the file with `password` (user or owner). */

@@ -25,6 +25,10 @@ export interface DocInfo {
   pages: PageInfo[];
   /** MuPDF had to repair the file's structure to open it. The output of any operation is a clean file. */
   repaired: boolean;
+  /** How it's encrypted, as MuPDF describes it ("Standard V5 R6 256-bit AES"), or null when it isn't. */
+  encryption: string | null;
+  /** What its permissions allow (everything, for a file that isn't encrypted). */
+  permissions: Permission[];
 }
 
 /**
@@ -88,8 +92,33 @@ export interface ExtractedImage {
  */
 export type CompressLevel = "low" | "recommended" | "extreme";
 
+/** What a PDF's permissions can allow, as MuPDF names them. */
+export type Permission = "print" | "copy" | "edit" | "annotate" | "form" | "accessibility" | "assemble" | "print-hq";
+
+export const PERMISSIONS: readonly Permission[] = [
+  "print",
+  "print-hq",
+  "copy",
+  "edit",
+  "annotate",
+  "form",
+  "assemble",
+  "accessibility",
+];
+
+/**
+ * Encryption for the saved copy. "aes-256": a password to open it (optional: without one it opens freely but keeps
+ * the permissions) and an owner password to change permissions (a random one if not given). "none": no encryption.
+ * Passwords can't contain commas (MuPDF's save options are comma-separated).
+ */
+export type Security =
+  | { encrypt: "aes-256"; userPassword?: string; ownerPassword?: string; permissions?: readonly Permission[] }
+  | { encrypt: "none" };
+
 /** What to change in a copy of an open document before saving it (Optimize & secure tools). */
 export interface TransformOptions {
+  /** Defaults to keeping the document's own encryption. */
+  security?: Security;
   compress?: CompressLevel;
   /** Images become grey for real; everything else on the pages is greyed by a full-page Saturation blend. */
   grayscale?: boolean;

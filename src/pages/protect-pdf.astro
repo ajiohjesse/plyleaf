@@ -1,0 +1,49 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { ProtectWorkspace } from "~/components/secure/ProtectWorkspace";
+---
+
+<ToolPage
+  slug="protect-pdf"
+  title="Protect PDF with a password free (AES-256), no sign-up"
+  description="Add a password to a PDF with AES-256 encryption in your browser. Free with no limits and no account, and neither your file nor your password ever leaves your device."
+  heading="Protect PDF"
+  intro="Add a password so only the people you tell can open your PDF. AES-256 encryption, free, no sign-up, and your file and password never leave this device."
+  steps={[
+    { title: "Add your PDF", text: "Choose it, drop it anywhere on the page, or paste it." },
+    { title: "Choose a password", text: "Type it twice. Anyone opening the PDF will need it." },
+    {
+      title: "Protect and download",
+      text: "Plyleaf encrypts the file on your device. Download it and share the password separately.",
+    },
+  ]}
+  faqs={[
+    {
+      question: "Is it really free?",
+      answer:
+        "Yes. There is no paid plan, no daily limit and no watermark. Plyleaf can be free because your own browser does the work.",
+    },
+    {
+      question: "Are my file and password sent anywhere?",
+      answer:
+        "No. Both stay in your browser: the PDF is encrypted right here, and the password is never stored or sent. Plyleaf has no server that could receive them.",
+    },
+    {
+      question: "How strong is it?",
+      answer:
+        "Plyleaf uses AES-256, the strongest encryption the PDF format has, which every current PDF reader supports. The real strength is your password: a long one, like a few unrelated words, is far harder to guess.",
+    },
+    {
+      question: "What if I forget the password?",
+      answer:
+        "It can't be recovered: that's the point of encryption. Plyleaf never sees it, so keep it somewhere safe, or keep an unprotected copy.",
+    },
+    {
+      question: "Can I stop people printing or copying instead?",
+      answer:
+        "Yes, with PDF permissions: the file opens without a password but limits printing, copying and editing. Note that permissions rely on the reader app honouring them.",
+    },
+  ]}
+>
+  <ProtectWorkspace client:load />
+</ToolPage>

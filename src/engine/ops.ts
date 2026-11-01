@@ -6,6 +6,8 @@ import { isConvex, outputSize, type Quad } from "~/scan/quad";
 import { EngineError } from "./errors";
 import {
   MAX_RENDER_SIDE,
+  PERMISSIONS,
+  type DocInfo,
   type Bitmap,
   type Crop,
   type ExtractedImage,
@@ -321,7 +323,7 @@ function withMask(pixmap: mupdf.Pixmap, mask: mupdf.Image | null): Uint8Array {
   }
 }
 
-export function describe(pdf: mupdf.PDFDocument): { pages: PageInfo[]; repaired: boolean } {
+export function describe(pdf: mupdf.PDFDocument): Omit<DocInfo, "id" | "source" | "pageCount"> {
   const pages: PageInfo[] = [];
   for (let i = 0; i < pdf.countPages(); i++) {
     const page = pdf.loadPage(i);
@@ -329,7 +331,13 @@ export function describe(pdf: mupdf.PDFDocument): { pages: PageInfo[]; repaired:
     pages.push({ width: x1 - x0, height: y1 - y0, rotation: pageRotation(page.getObject()) });
     page.destroy();
   }
-  return { pages, repaired: pdf.wasRepaired() };
+  const method = pdf.getMetaData("encryption");
+  return {
+    pages,
+    repaired: pdf.wasRepaired(),
+    encryption: method && method !== "None" ? method : null,
+    permissions: PERMISSIONS.filter((permission) => pdf.hasPermission(permission)),
+  };
 }
 
 /** Renders a page `width` pixels wide (height follows the page's aspect ratio) on a white background. */
