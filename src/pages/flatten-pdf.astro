@@ -1,0 +1,40 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { FlattenWorkspace } from "~/components/secure/FlattenWorkspace";
+---
+
+<ToolPage
+  slug="flatten-pdf"
+  title="Flatten PDF: lock form fields and annotations into the page, free"
+  description="Make filled-in forms, comments and drawings part of a PDF's pages so they can't be changed, in your browser. Free, no account, and your file is never uploaded."
+  heading="Flatten PDF"
+  intro="Fix filled-in forms, comments and drawings into the pages, so they look the same everywhere and can't be changed. Free, no sign-up, and your file never leaves this device."
+  steps={[
+    { title: "Add your PDF", text: "Choose it, drop it anywhere on the page, or paste it." },
+    { title: "Choose what to flatten", text: "Everything, or only the form fields so comments stay editable." },
+    { title: "Download", text: "The flattened PDF looks the same, and its fields can't be edited. No account needed." },
+  ]}
+  faqs={[
+    {
+      question: "Is it really free?",
+      answer:
+        "Yes. There is no paid plan, no daily limit and no watermark. Plyleaf can be free because your own browser does the work.",
+    },
+    {
+      question: "Why flatten a PDF?",
+      answer:
+        "A filled-in form can still be changed by anyone who opens it, and some apps show fields or comments differently or not at all. Flattening draws them into the page, so what you sent is what everyone sees.",
+    },
+    {
+      question: "Do links still work?",
+      answer:
+        "Yes. Links aren't flattened; only form fields and annotations such as comments, highlights and drawings.",
+    },
+    {
+      question: "Is my PDF uploaded?",
+      answer: "No. It's flattened right here in your browser and never goes over the internet.",
+    },
+  ]}
+>
+  <FlattenWorkspace client:load />
+</ToolPage>

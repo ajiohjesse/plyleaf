@@ -31,6 +31,10 @@ export interface DocInfo {
   permissions: Permission[];
   /** The password that opened it: the user's (to open) or the owner's (to change permissions); null if none was needed. */
   unlockedWith: "user" | "owner" | null;
+  /** Annotations on its pages (comments, highlights, drawings, stamps), not counting links and form fields. */
+  annotations: number;
+  /** Form fields (widgets) on its pages. */
+  formFields: number;
 }
 
 /**
@@ -131,6 +135,11 @@ export interface TransformOptions {
   compress?: CompressLevel;
   /** Images become grey for real; everything else on the pages is greyed by a full-page Saturation blend. */
   grayscale?: boolean;
+  /**
+   * Draws form fields ("forms") or form fields and annotations ("all") into the page content, so they can't be
+   * changed and look the same everywhere. Links stay links.
+   */
+  flatten?: "forms" | "all";
 }
 
 /** An RGBA bitmap, 4 bytes per pixel, not premultiplied. */

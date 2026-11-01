@@ -342,8 +342,12 @@ export function unlockedWith(pdf: mupdf.PDFDocument): "user" | "owner" | null {
 
 export function describe(pdf: mupdf.PDFDocument): Omit<DocInfo, "id" | "source" | "pageCount"> {
   const pages: PageInfo[] = [];
+  let annotations = 0;
+  let formFields = 0;
   for (let i = 0; i < pdf.countPages(); i++) {
     const page = pdf.loadPage(i);
+    annotations += page.getAnnotations().length;
+    formFields += page.getWidgets().length;
     const [x0, y0, x1, y1] = page.getBounds();
     pages.push({ width: x1 - x0, height: y1 - y0, rotation: pageRotation(page.getObject()) });
     page.destroy();
@@ -354,6 +358,8 @@ export function describe(pdf: mupdf.PDFDocument): Omit<DocInfo, "id" | "source" 
     repaired: pdf.wasRepaired(),
     encryption: method && method !== "None" ? method : null,
     unlockedWith: unlockedWith(pdf),
+    annotations,
+    formFields,
     permissions: PERMISSIONS.filter((permission) => pdf.hasPermission(permission)),
   };
 }

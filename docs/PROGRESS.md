@@ -3,7 +3,7 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M4: Optimize and secure (M0–M2 done 2026-10-31, M3 done 2026-11-01)
-- **Next action:** M4, Flatten.
+- **Next action:** M4, Repair.
 - **Owner asked (2026-11-01):** build all of M3 and M4 in one go, one PR per tool, each auto-merged when CI passes.
   Unlock removes owner-password restrictions only after the user confirms they have the right to; libheif-js approved.
 - **Live:** https://plyleaf.ajiohjesse.workers.dev (Workers Builds deploys `main`; other branches get Preview URLs).
@@ -45,7 +45,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] Images → PDF (incl. HEIC) · [x] PDF → images · [x] Extract images · [x] Camera scan-to-PDF
 
 ### [ ] M4: Optimize and secure
-- [x] Compress (3 levels) · [x] Grayscale · [x] Protect · [x] Unlock · [x] Permissions · [ ] Flatten · [ ] Repair · [ ] Metadata
+- [x] Compress (3 levels) · [x] Grayscale · [x] Protect · [x] Unlock · [x] Permissions · [x] Flatten · [ ] Repair · [ ] Metadata
 
 ### [ ] M5: Editor
 - [ ] Text add · [ ] Edit existing text · [ ] Images · [ ] Shapes · [ ] Whiteout · [ ] Markup · [ ] Freehand · [ ] Comments · [ ] Stamps
@@ -72,6 +72,18 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-11-01: Flatten PDF (M4)
+- Engine: `transform` takes `flatten` ("forms" or "all"): MuPDF's `bake`, before greyscale and compression, so
+  links stay links. `DocInfo` counts `annotations` (not links) and `formFields`.
+- `/flatten-pdf` (`FlattenWorkspace`): says how many fields and annotations there are; Everything or Form fields
+  only; nothing to flatten says so.
+- `formsPdf()` test fixture: a text field with an appearance, a square annotation and a link (MuPDF places
+  annotations from the top left, so the square is symmetric).
+- Verified: 3 new unit tests (counts; everything → no fields or annotations, both still drawn, link kept, qpdf-clean;
+  forms only keeps the annotation). New E2E `flatten.spec.ts` (flatten → MuPDF finds no annotations or widgets and
+  one link, qpdf-clean, `watchEgress` clean; nothing to flatten; linked from home): 12/12 in all four projects.
+- Next: Repair.
 
 ### 2026-11-01: Edit permissions (M4)
 - `/pdf-permissions` (`PermissionsWorkspace`): a checkbox per permission, starting from what the file allows

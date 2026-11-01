@@ -264,6 +264,7 @@ export const tools: Tool[] = [
     name: "Flatten PDF",
     description: "Bake forms and notes into the page.",
     category: "optimize-secure",
+    available: true,
   },
   {
     slug: "repair-pdf",
