@@ -1,7 +1,7 @@
 // Optimize & secure: one operation that copies an open document, changes the copy and saves it. Working on a copy keeps
 // the open document as the user gave it, so going back and choosing differently starts from the original.
 import * as mupdf from "mupdf";
-import { message, pageImages, toDisplayColours } from "./ops";
+import { message, pageImages, toDisplayColours, unlockedWith } from "./ops";
 import { EngineError } from "./errors";
 import type { CompressLevel, Permission, Security, TransformOptions } from "./types";
 
@@ -24,7 +24,11 @@ export function transform(
   try {
     if (options.grayscale) toGrey(copy);
     if (options.compress && options.compress !== "low") recompressImages(copy, IMAGE_LEVELS[options.compress]);
-    const save = ["garbage=deduplicate", "compress", encryption(options.security)];
+    const save = [
+      "garbage=deduplicate",
+      "compress",
+      encryption(options.security, unlockedWith(pdf) === "user" ? password : undefined),
+    ];
     if (options.compress) save.push("compress-fonts", "compress-images", "objstms");
     return repacked(saved(copy, "garbage,encrypt=keep"), save.join(","), password);
   } finally {
@@ -51,11 +55,14 @@ export function permissionValue(permissions: readonly Permission[]): number {
   return value;
 }
 
-/** The save option for `security`. */
-function encryption(security: Security | undefined): string {
+/** The save option for `security`; `opening` is the user password that opened the document, if one did. */
+function encryption(security: Security | undefined, opening: string | undefined): string {
   if (!security) return "encrypt=keep";
   if (security.encrypt === "none") return "encrypt=none";
-  const { userPassword = "", permissions = Object.keys(PERMISSION_BITS) as Permission[] } = security;
+  const {
+    userPassword = security.keepUserPassword ? (opening ?? "") : "",
+    permissions = Object.keys(PERMISSION_BITS) as Permission[],
+  } = security;
   const ownerPassword = security.ownerPassword || randomPassword();
   for (const password of [userPassword, ownerPassword]) {
     if (password.includes(",")) throw new EngineError("invalid-argument", "Passwords can't contain a comma");

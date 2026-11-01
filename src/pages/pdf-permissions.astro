@@ -1,0 +1,43 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { PermissionsWorkspace } from "~/components/secure/PermissionsWorkspace";
+---
+
+<ToolPage
+  slug="pdf-permissions"
+  title="Edit PDF permissions: restrict printing, copying and editing free"
+  description="Choose whether a PDF can be printed, copied or changed, in your browser. Free with no limits and no account, and your file is never uploaded."
+  heading="Edit permissions"
+  intro="Choose what people can do with your PDF: print it, copy from it, change it. Free, no sign-up, and your file never leaves this device."
+  steps={[
+    { title: "Add your PDF", text: "Choose it, drop it anywhere on the page, or paste it." },
+    {
+      title: "Choose what's allowed",
+      text: "Tick what readers may do. Add a password if you want to change the permissions again later.",
+    },
+    { title: "Apply and download", text: "The PDF opens as before, with your permissions. No account needed." },
+  ]}
+  faqs={[
+    {
+      question: "Is it really free?",
+      answer:
+        "Yes. There is no paid plan, no daily limit and no watermark. Plyleaf can be free because your own browser does the work.",
+    },
+    {
+      question: "Do permissions really stop people?",
+      answer:
+        "They're a request built into the PDF that Adobe Reader, browsers and most apps follow, but a few apps ignore them. To make sure only certain people can read a file, protect it with a password.",
+    },
+    {
+      question: "What's the permissions password for?",
+      answer:
+        "It's needed to change the permissions later. If you leave it empty, Plyleaf sets a long random one that nobody knows, so the permissions can't be changed by anyone (you'd start again from your original).",
+    },
+    {
+      question: "Is my PDF uploaded?",
+      answer: "No. Permissions are set right here in your browser, and your file never goes over the internet.",
+    },
+  ]}
+>
+  <PermissionsWorkspace client:load />
+</ToolPage>

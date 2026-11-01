@@ -248,7 +248,8 @@ export const tools: Tool[] = [
     name: "Edit permissions",
     description: "Control printing, copying and editing.",
     category: "optimize-secure",
-    keywords: ["restrict"],
+    keywords: ["restrict", "permissions"],
+    available: true,
   },
   {
     slug: "grayscale-pdf",
