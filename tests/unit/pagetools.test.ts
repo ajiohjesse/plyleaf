@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 import { pageNumberEdits, DEFAULT_NUMBERS } from "~/pagetools/numbers";
 import { DEFAULT_STYLE, fillTokens, marksOnPages, placedText } from "~/pagetools/stamping";
+import { DEFAULT_WATERMARK, watermarkEdits } from "~/pagetools/watermark";
 
 const PAGE = { width: 600, height: 800 };
 
@@ -44,4 +45,40 @@ test("page numbers in a format, on every page", () => {
   expect(
     edits.pages.map(({ marks }) => marks.map((mark) => (mark.type === "text" ? [mark.text, mark.x] : null))),
   ).toEqual([[["Page 10 of 11", 300]], [["Page 11 of 11", 150]]]);
+});
+
+test("a turned watermark turns about its own middle, and pictures sit in their place", () => {
+  const style = { ...DEFAULT_STYLE, size: 50 };
+  const level = watermarkEdits([PAGE], {
+    ...DEFAULT_WATERMARK,
+    rotate: 0,
+    content: { kind: "text", text: "DRAFT", style },
+  }).pages[0]!.marks[0]!;
+  const turned = watermarkEdits([PAGE], {
+    ...DEFAULT_WATERMARK,
+    rotate: 90,
+    content: { kind: "text", text: "DRAFT", style },
+  }).pages[0]!.marks[0]!;
+  // Level: centred, capitals' middle on the page's middle.
+  expect(level).toMatchObject({ x: 300, y: 418, align: "center", opacity: 0.3 });
+  // Upright: the anchor moves right by half the capitals, and down to the middle.
+  expect(turned).toMatchObject({ x: 318, y: 400, rotate: 90 });
+  const picture = watermarkEdits([PAGE], {
+    ...DEFAULT_WATERMARK,
+    position: { vertical: "top", horizontal: "right" },
+    content: { kind: "image", width: 0.5, aspect: 0.5 },
+  }).pages[0]!.marks[0]!;
+  expect(picture).toEqual({
+    type: "image",
+    image: 0,
+    x: 264,
+    y: 36,
+    width: 300,
+    height: 150,
+    rotate: 45,
+    opacity: 0.3,
+  });
+  expect(
+    watermarkEdits([PAGE], { ...DEFAULT_WATERMARK, content: { kind: "text", text: " ", style } }).pages[0]!.marks,
+  ).toEqual([]);
 });

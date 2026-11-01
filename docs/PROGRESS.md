@@ -3,7 +3,7 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M5: Editor (M0–M2 done 2026-10-31, M3 and M4 done 2026-11-01)
-- **Next action:** M5: watermark.
+- **Next action:** M5: header and footer.
 - **Owner asked (2026-11-01):** build all of M5 in one go, one PR per item, each auto-merged when CI passes.
 - **Owner asked earlier (2026-11-01):** build all of M3 and M4 in one go, one PR per tool, each auto-merged when CI passes.
   Unlock removes owner-password restrictions only after the user confirms they have the right to; libheif-js approved.
@@ -50,7 +50,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 
 ### [ ] M5: Editor
 - [x] Text add · [x] Edit existing text · [x] Images · [x] Shapes · [x] Whiteout · [x] Markup · [x] Freehand · [x] Comments · [x] Stamps
-- [x] Page numbers · [ ] Watermark · [ ] Header/footer · [ ] Bates · [x] Undo/redo
+- [x] Page numbers · [x] Watermark · [ ] Header/footer · [ ] Bates · [x] Undo/redo
 - [ ] Output verified in Acrobat Reader, Chrome, macOS Preview
 
 ### [ ] M6: Sign and forms
@@ -73,6 +73,19 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-11-01: Watermark (M5)
+- `src/pagetools/watermark.ts`: words (turned about their own middle, so an angle doesn't move them off their place) or
+  a picture (a fraction of the page's width, its own shape, turned about its centre), at any of nine positions with a
+  margin, see-through, from a page on.
+- `/watermark-pdf` (`WatermarkWorkspace`): Words or Picture, font/size/colour/bold, strength (15–100%), angle (level,
+  45°, 90°, −45°), from page, position, margin, live preview. A picture is prepared like the editor's (upright, JPEG or
+  PNG) and stored once for every page. It goes over the page, see-through; the FAQ says a watermark marks, it doesn't
+  lock.
+- Verified: 1 new unit test (turning about the middle, picture placement, empty words). New E2E `watermark.spec.ts`
+  (level words centred on both pages and see-through pink over white, qpdf-clean, `watchEgress`; a picture from page 2
+  stored once; linked from home): 12/12 in all four projects. Preview and saved page compared at 45°.
+- Next: header and footer.
 
 ### 2026-11-01: Page numbers (M5)
 - `src/pagetools/stamping.ts` (pure, shared by the page tools): nine positions with a margin (capitals start at the
