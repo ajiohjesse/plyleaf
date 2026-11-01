@@ -2,6 +2,8 @@
 import { expose, transfer } from "comlink";
 import type { PDFDocument } from "mupdf";
 import { sniffKind } from "~/intake/files";
+import type { ScanFilter } from "~/scan/filters";
+import type { Quad } from "~/scan/quad";
 import { isHeif, mupdfImageType } from "./decode";
 import { carryEngineErrors, EngineError } from "./errors";
 import type { Bitmap, DocId, DocInfo, ExtractedImage, ImageOptions, PageSpec } from "./types";
@@ -67,6 +69,12 @@ const api = {
   async openPixels(bitmap: Bitmap, lossy: boolean): Promise<DocInfo> {
     const ops = await loading;
     return keep(ops, ops.openPixels(bitmap, lossy), "image");
+  },
+
+  /** Opens the page in a photo, straightened (see ops.openScan). */
+  async openScan(photo: Bitmap, quad: Quad, filter: ScanFilter): Promise<DocInfo> {
+    const ops = await loading;
+    return keep(ops, ops.openScan(photo, quad, filter), "image");
   },
 
   async render(id: DocId, page: number, width: number): Promise<Bitmap> {

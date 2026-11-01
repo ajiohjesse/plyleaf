@@ -1,6 +1,8 @@
 // The engine's operations, written against MuPDF.js directly so they run (and are unit-tested) in Node as well as in
 // the worker. They hold no state: the worker owns the open documents and passes them in.
 import * as mupdf from "mupdf";
+import { blackAndWhite, type ScanFilter } from "~/scan/filters";
+import { isConvex, outputSize, type Quad } from "~/scan/quad";
 import { EngineError } from "./errors";
 import {
   MAX_RENDER_SIDE,
@@ -110,44 +112,84 @@ export function openImage(bytes: Uint8Array, type: string): mupdf.PDFDocument {
  * at quality 90 when `lossy` (they were lossy already, like a photo), otherwise losslessly as PNG, with any
  * transparency.
  */
-export function openPixels({ width, height, pixels }: Bitmap, lossy: boolean): mupdf.PDFDocument {
-  if (!(width >= 1 && height >= 1 && pixels.length === width * height * 4)) {
-    throw new EngineError("invalid-image", `Can't make a ${width} × ${height} image from ${pixels.length} bytes`);
-  }
+export function openPixels(bitmap: Bitmap, lossy: boolean): mupdf.PDFDocument {
+  checkBitmap(bitmap);
   let opaque = true;
-  for (let i = 3; i < pixels.length; i += 4) {
-    if (pixels[i] !== 255) {
+  for (let i = 3; i < bitmap.pixels.length; i += 4) {
+    if (bitmap.pixels[i] !== 255) {
       opaque = false;
       break;
     }
   }
-  const pixmap = new mupdf.Pixmap(mupdf.ColorSpace.DeviceRGB, [0, 0, width, height], !opaque);
+  const pixmap = pixmapFrom(bitmap, !opaque);
   try {
-    const target = pixmap.getPixels();
-    const stride = pixmap.getStride();
-    for (let y = 0; y < height; y++) {
-      let from = y * width * 4;
-      let to = y * stride;
-      for (let x = 0; x < width; x++, from += 4) {
-        const alpha = pixels[from + 3]!;
-        if (opaque) {
-          target[to++] = pixels[from]!;
-          target[to++] = pixels[from + 1]!;
-          target[to++] = pixels[from + 2]!;
-        } else {
-          // MuPDF's pixmaps with alpha are premultiplied.
-          target[to++] = Math.round((pixels[from]! * alpha) / 255);
-          target[to++] = Math.round((pixels[from + 1]! * alpha) / 255);
-          target[to++] = Math.round((pixels[from + 2]! * alpha) / 255);
-          target[to++] = alpha;
-        }
-      }
-    }
     const jpeg = opaque && lossy;
     return openImage(jpeg ? pixmap.asJPEG(90) : pixmap.asPNG(), jpeg ? "image/jpeg" : "image/png");
   } finally {
     pixmap.destroy();
   }
+}
+
+/**
+ * Opens a page photographed at an angle as a one-page PDF: the part of `photo` inside `quad` (fractions of the photo,
+ * top-left first, clockwise) straightened into a rectangle, then kept in colour, made grey, or black and white.
+ * Colour and grey are stored as JPEG; black and white as (lossless, and small) PNG.
+ */
+export function openScan(photo: Bitmap, quad: Quad, filter: ScanFilter): mupdf.PDFDocument {
+  checkBitmap(photo);
+  const valid = quad.length === 4 && quad.flat().every((n) => Number.isFinite(n) && n >= 0 && n <= 1) && isConvex(quad);
+  if (!valid) throw new EngineError("invalid-argument", "Those corners don't make a page shape");
+  const size = outputSize(quad, photo.width, photo.height);
+  const pixmap = pixmapFrom(photo, false);
+  const pixmaps = [pixmap];
+  try {
+    const corners = quad.map(([x, y]) => [x * photo.width, y * photo.height] as mupdf.Point);
+    let page = pixmap.warp(corners, size.width, size.height);
+    pixmaps.push(page);
+    if (filter !== "colour") {
+      page = page.convertToColorSpace(mupdf.ColorSpace.DeviceGray, false);
+      pixmaps.push(page);
+    }
+    if (filter === "bw") blackAndWhite(page.getPixels(), page.getWidth(), page.getHeight(), page.getStride());
+    // A resolution that makes the longer side about A4's height (11.7 in), as most scanned pages are about that big.
+    const dpi = Math.max(72, Math.round(Math.max(size.width, size.height) / 11.7));
+    page.setResolution(dpi, dpi);
+    return filter === "bw" ? openImage(page.asPNG(), "image/png") : openImage(page.asJPEG(85), "image/jpeg");
+  } finally {
+    for (const p of pixmaps) p.destroy();
+  }
+}
+
+function checkBitmap({ width, height, pixels }: Bitmap) {
+  if (!(width >= 1 && height >= 1 && pixels.length === width * height * 4)) {
+    throw new EngineError("invalid-image", `Can't make a ${width} × ${height} image from ${pixels.length} bytes`);
+  }
+}
+
+/** A MuPDF pixmap of RGBA pixels (not premultiplied): RGB, or RGB with (premultiplied) alpha. */
+function pixmapFrom({ width, height, pixels }: Bitmap, alpha: boolean): mupdf.Pixmap {
+  const pixmap = new mupdf.Pixmap(mupdf.ColorSpace.DeviceRGB, [0, 0, width, height], alpha);
+  const target = pixmap.getPixels();
+  const stride = pixmap.getStride();
+  for (let y = 0; y < height; y++) {
+    let from = y * width * 4;
+    let to = y * stride;
+    for (let x = 0; x < width; x++, from += 4) {
+      if (!alpha) {
+        target[to++] = pixels[from]!;
+        target[to++] = pixels[from + 1]!;
+        target[to++] = pixels[from + 2]!;
+      } else {
+        // MuPDF's pixmaps with alpha are premultiplied.
+        const a = pixels[from + 3]!;
+        target[to++] = Math.round((pixels[from]! * a) / 255);
+        target[to++] = Math.round((pixels[from + 1]! * a) / 255);
+        target[to++] = Math.round((pixels[from + 2]! * a) / 255);
+        target[to++] = a;
+      }
+    }
+  }
+  return pixmap;
 }
 
 /**

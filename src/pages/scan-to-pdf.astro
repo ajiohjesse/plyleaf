@@ -1,0 +1,55 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { ScanWorkspace } from "~/components/scan/ScanWorkspace";
+---
+
+<ToolPage
+  slug="scan-to-pdf"
+  title="Scan to PDF with your phone camera, free, no sign-up"
+  description="Photograph paper pages and get a straight, clean PDF. The page edges are found and the perspective fixed in your browser. Free, no account, and your photos are never uploaded."
+  heading="Scan to PDF"
+  intro="Photograph paper pages with your phone or webcam and get a clean PDF: Plyleaf finds each page's edges and straightens it. Free, no sign-up, and your photos never leave this device."
+  steps={[
+    {
+      title: "Take or add photos",
+      text: "Use the camera page after page, or add photos you've already taken. Lay the paper on a darker surface.",
+    },
+    {
+      title: "Check the corners",
+      text: "Each page's corners are found for you. Drag them if they're off, and choose colour, grey or black and white.",
+    },
+    {
+      title: "Make the PDF",
+      text: "Put the pages in order, pick a page size, and download your scan. No account needed.",
+    },
+  ]}
+  faqs={[
+    {
+      question: "Is it really free?",
+      answer:
+        "Yes. There is no paid plan, no daily limit and no watermark. Plyleaf can be free because your own device does the work.",
+    },
+    {
+      question: "Are my photos uploaded?",
+      answer:
+        "No. The camera picture and your photos are processed right here in your browser. Nothing goes over the internet, and Plyleaf asks for camera access only when you press Use camera.",
+    },
+    {
+      question: "How do I get the best scan?",
+      answer:
+        "Lay the page flat on a surface darker than the paper, in even light, and hold the phone straight above it. Plyleaf finds the page by its contrast with what's around it; if a corner is off, drag it into place.",
+    },
+    {
+      question: "Which look should I choose?",
+      answer:
+        "Colour keeps the page as photographed. Greyscale makes smaller files. Black and white evens out shadows and makes text crisp, like a photocopy, and gives the smallest files.",
+    },
+    {
+      question: "Can I make the text searchable?",
+      answer:
+        "Not yet. Text recognition (OCR) is planned and will be free like everything else. For now the PDF holds pictures of the pages.",
+    },
+  ]}
+>
+  <ScanWorkspace client:load />
+</ToolPage>

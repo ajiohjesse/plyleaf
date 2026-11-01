@@ -120,6 +120,7 @@ export const tools: Tool[] = [
     description: "Use your phone camera to scan paper.",
     category: "convert",
     keywords: ["camera", "scanner"],
+    available: true,
   },
   {
     slug: "pdf-to-jpg",

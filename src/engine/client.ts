@@ -1,6 +1,8 @@
 // The main-thread side of the engine. Nothing here loads MuPDF: the worker (and its 10 MB of WASM) starts on the first
 // call or on preloadEngine(), so pages that import this stay light until the user reaches for a file.
 import { transfer, wrap, type Remote } from "comlink";
+import type { ScanFilter } from "~/scan/filters";
+import type { Quad } from "~/scan/quad";
 import { decodeForEngine } from "./decode";
 import { carryEngineErrors, EngineError } from "./errors";
 import type { Bitmap, DocId, DocInfo, ExtractedImage, ImageOptions, PageSpec } from "./types";
@@ -121,6 +123,19 @@ export const engine = {
       const info = decoded
         ? await running.remote.openPixels(transfer(decoded.bitmap, [decoded.bitmap.pixels.buffer]), decoded.lossy)
         : await running.remote.open(transfer(bytes, [bytes.buffer]));
+      running.open.add(info.id);
+      return info;
+    });
+  },
+
+  /**
+   * Opens the page in a photo as a document: the part inside `quad` straightened, with a filter. The photo's buffer is
+   * transferred to the worker. Close it like any other document.
+   */
+  openScan(photo: Bitmap, quad: Quad, filter: ScanFilter): Promise<DocInfo> {
+    return call(async (running) => {
+      running.bytes += photo.pixels.byteLength;
+      const info = await running.remote.openScan(transfer(photo, [photo.pixels.buffer]), quad, filter);
       running.open.add(info.id);
       return info;
     });
