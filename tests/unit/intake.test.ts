@@ -43,6 +43,8 @@ function fakeEngine() {
               repaired: false,
               encryption: null,
               unlockedWith: null,
+              annotations: 0,
+              formFields: 0,
               permissions: ["print", "print-hq", "copy", "edit", "annotate", "form", "assemble", "accessibility"],
             });
           },

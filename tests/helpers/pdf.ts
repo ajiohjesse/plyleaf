@@ -81,3 +81,48 @@ export function encryptedPdf(
   doc.destroy();
   return encrypted;
 }
+
+/**
+ * A 300 × 300 pt page with a text form field "name" (its appearance a blue box at the bottom left), a red square
+ * annotation (right of centre) and a link (bottom).
+ */
+export function formsPdf(): Uint8Array<ArrayBuffer> {
+  const doc = new mupdf.PDFDocument();
+  doc.insertPage(-1, doc.addPage([0, 0, 300, 300], 0, {}, ""));
+  const page = doc.loadPage(0);
+  const square = page.createAnnotation("Square");
+  // MuPDF places annotations from the top left; this one is symmetric, so the same in PDF coordinates.
+  square.setRect([150, 100, 250, 200]);
+  square.setColor([1, 0, 0]);
+  square.setInteriorColor([1, 0, 0]);
+  square.update();
+  page.createLink([20, 20, 120, 40], "https://example.com/");
+  const appearance = doc.addStream("0 0 1 rg 0 0 100 30 re f", {
+    Type: "XObject",
+    Subtype: "Form",
+    BBox: [0, 0, 100, 30],
+  });
+  const pageObject = doc.findPage(0);
+  const widget = doc.addObject({
+    Type: "Annot",
+    Subtype: "Widget",
+    FT: "Tx",
+    T: "(name)",
+    V: "(Ada)",
+    Rect: [20, 100, 120, 130],
+    F: 4,
+    AP: { N: appearance },
+    P: pageObject,
+  });
+  pageObject.get("Annots").push(widget);
+  doc
+    .getTrailer()
+    .get("Root")
+    .put("AcroForm", doc.addObject({ Fields: [widget] }));
+  page.destroy();
+  const buffer = doc.saveToBuffer("compress");
+  const bytes = new Uint8Array(buffer.asUint8Array());
+  buffer.destroy();
+  doc.destroy();
+  return bytes;
+}

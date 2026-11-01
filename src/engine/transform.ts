@@ -22,6 +22,8 @@ export function transform(
 ): Uint8Array<ArrayBuffer> {
   const copy = copyOf(pdf, password);
   try {
+    // First, so form fields and annotations are greyed and compressed with the rest of the page.
+    if (options.flatten) copy.bake(options.flatten === "all", true);
     if (options.grayscale) toGrey(copy);
     if (options.compress && options.compress !== "low") recompressImages(copy, IMAGE_LEVELS[options.compress]);
     const save = [

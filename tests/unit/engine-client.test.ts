@@ -25,6 +25,8 @@ function FakeWorker() {
         repaired: false,
         encryption: null,
         unlockedWith: null,
+        annotations: 0,
+        formFields: 0,
         permissions: ["print", "print-hq", "copy", "edit", "annotate", "form", "assemble", "accessibility"],
       }),
       // Page 0 hangs (for a worker that dies mid-call); page 1 fails to allocate; page 2 aborts the WASM.
