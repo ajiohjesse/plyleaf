@@ -7,6 +7,8 @@ import {
   moveItem,
   removeItem,
   resizeImage,
+  rewriteLine,
+  unchanged,
   thinStroke,
   toEdits,
   toHex,
@@ -178,4 +180,33 @@ test("strokes drop points too close to keep, and move with their item", () => {
   expect(toEdits([ink]).pages[0]!.annotations).toEqual([
     { type: "ink", strokes: [ink.points], color: [0, 0, 0], width: 2 },
   ]);
+});
+
+test("a rewritten line takes the old one out, and changes nothing until its words or place do", () => {
+  const line = {
+    text: "Old words",
+    box: [72, 100, 150, 116] as [number, number, number, number],
+    x: 72,
+    y: 112,
+    size: 12,
+    fontName: "Helvetica",
+    font: "helvetica" as const,
+    bold: false,
+    italic: false,
+    exact: true,
+    color: [0, 0, 0] as const,
+  };
+  const item = rewriteLine(line, 2);
+  expect(unchanged(item)).toBe(true);
+  expect(unchanged({ ...item, text: "New words" })).toBe(false);
+  expect(unchanged({ ...item, moved: true })).toBe(false);
+  expect(toEdits([{ ...item, text: "New words" }]).pages).toEqual([
+    {
+      page: 2,
+      removeText: [line.box],
+      marks: [expect.objectContaining({ type: "text", text: "New words", x: 72, y: 112, size: 12 })],
+    },
+  ]);
+  // Emptied, the line still comes out.
+  expect(toEdits([{ ...item, text: "" }]).pages).toEqual([{ page: 2, marks: [], removeText: [line.box] }]);
 });

@@ -112,3 +112,10 @@ export const StampIcon = () => (
     <path d="M5 19h14" />
   </Icon>
 );
+
+export const EditTextIcon = () => (
+  <Icon>
+    <path d="M4 7V5h10v2M9 5v12M7 17h4" />
+    <path d="M14 20l1-3 5-5 2 2-5 5z" />
+  </Icon>
+);

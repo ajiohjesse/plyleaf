@@ -2,7 +2,7 @@
 // like everything the editor sends.
 import * as mupdf from "mupdf";
 import { checkPageIndex } from "./ops";
-import type { Quad, TextSelection } from "./types";
+import type { Box, Quad, Rgb, StandardFont, TextLine, TextSelection } from "./types";
 
 /** A page's structured text and where its shown top-left corner is in MuPDF's page space. */
 export interface PageText {
@@ -61,4 +61,64 @@ function overlaps(quad: mupdf.Quad, [x0, y0, x1, y1]: readonly [number, number, 
     Math.min(...ys) <= y1 + margin &&
     Math.max(...ys) >= y0 - margin
   );
+}
+
+const STANDARD_NAMES = /^(Helvetica|Arial|Times|Courier|Nimbus(Sans|Roman|Mono))/i;
+
+/** The standard font closest to a font, by its name first (a font's own flags are often missing), then its flags. */
+export function closestFont(font: mupdf.Font): { font: StandardFont; bold: boolean; italic: boolean; exact: boolean } {
+  const name = font.getName().replace(/^[A-Z]{6}\+/, "");
+  const standard: StandardFont = /courier|mono|consol|menlo/i.test(name)
+    ? "courier"
+    : /sans|helvetica|arial|verdana|calibri|segoe|roboto|gothic/i.test(name)
+      ? "helvetica"
+      : /times|roman|serif|georgia|garamond|cambria|minion|book/i.test(name)
+        ? "times"
+        : font.isMono()
+          ? "courier"
+          : font.isSerif()
+            ? "times"
+            : "helvetica";
+  return {
+    font: standard,
+    bold: font.isBold() || /bold|black|heavy|semibold|demi/i.test(name),
+    italic: font.isItalic() || /italic|oblique/i.test(name),
+    exact: STANDARD_NAMES.test(name),
+  };
+}
+
+/** Each line of horizontal text on a page as it's shown, with how it looks (from its first character). */
+export function textLines({ text, origin: [x0, y0] }: PageText): TextLine[] {
+  const lines: TextLine[] = [];
+  let current: { box: Box; chars: string; first: Omit<TextLine, "text" | "box"> | null } | null = null;
+  text.walk({
+    beginLine(bbox, wmode, direction) {
+      // Only text running left to right as shown can be changed.
+      const across = wmode === 0 && Math.abs(direction[0] - 1) < 0.01 && Math.abs(direction[1]) < 0.01;
+      current = across
+        ? { box: [bbox[0] - x0, bbox[1] - y0, bbox[2] - x0, bbox[3] - y0], chars: "", first: null }
+        : null;
+    },
+    onChar(char, origin, font, size, _quad, color) {
+      if (!current) return;
+      current.chars += char;
+      if (current.first) return;
+      const rgb = (color.length === 3 ? color : color.length === 1 ? [color[0], color[0], color[0]] : [0, 0, 0]) as Rgb;
+      current.first = {
+        x: origin[0] - x0,
+        y: origin[1] - y0,
+        size: Math.round(size * 100) / 100,
+        fontName: font.getName().replace(/^[A-Z]{6}\+/, ""),
+        ...closestFont(font),
+        color: rgb,
+      };
+    },
+    endLine() {
+      const line = current;
+      current = null;
+      if (!line?.first || !line.chars.trim()) return;
+      lines.push({ text: line.chars.trimEnd(), box: line.box, ...line.first });
+    },
+  });
+  return lines;
 }

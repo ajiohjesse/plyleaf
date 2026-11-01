@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useEffectEvent, useLayoutEffect, useRef, useState } from "react";
 import { engine } from "~/engine/client";
 import { outputName } from "~/download/download";
-import { cssFont, unsupportedCharacters } from "~/editor/fonts";
+import { cssFont, FONTS, unsupportedCharacters } from "~/editor/fonts";
 import { canRedo, canUndo, change, redo, settle, startHistory, undo, type History } from "~/editor/history";
 import {
   clickedShape,
@@ -14,6 +14,8 @@ import {
   moveItem,
   newId,
   removeItem,
+  rewriteLine,
+  unchanged,
   thinStroke,
   toEdits,
   MARKUP_COLOURS,
@@ -48,6 +50,7 @@ import { ActionBar, FailureAlert, plural, primaryButton } from "~/components/wor
 import { EditorPage, type PageHandlers, type Tool } from "./EditorPage";
 import {
   CommentIcon,
+  EditTextIcon,
   HighlightIcon,
   ImageIcon,
   PenIcon,
@@ -238,6 +241,14 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
 
   const handlers: PageHandlers = {
     onPlace: place,
+    onPickLine: (page, line) => {
+      const item = rewriteLine(line, page);
+      // One step with the typing that follows; if the words stay the same, it's dropped again.
+      update((list) => [...list, item], `text:${item.id}`);
+      setSelected(item.id);
+      setEditing(item.id);
+      setTool("select");
+    },
     onDraw: (page, from, to, done, path) => {
       if (tool === "markup") return void markUp(page, from, to, done, false);
       if (tool === "draw") {
@@ -279,7 +290,10 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
         onMoveTo: (x, y) => {
           // Markup belongs to its text.
           if (item.kind === "markup") return;
-          const moved = moveItem(item, x - item.x, y - item.y, page);
+          const moved = {
+            ...moveItem(item, x - item.x, y - item.y, page),
+            ...(item.kind === "text" && { moved: true }),
+          };
           if (isDraft) setDraft({ ...draft, ...moved });
           else update((list) => updateItem(list, item.id, moved), `move:${item.id}`);
         },
@@ -302,6 +316,14 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
           setEditing(null);
           if (isDraft) {
             setDraft(null);
+            setSelected(null);
+          } else if (unchanged(item)) {
+            // Opened but left as it was: nothing to rewrite. Just opened, its step is taken back as if it never was.
+            setHistory((current) =>
+              current.open === `text:${item.id}`
+                ? undo(current)
+                : change(current, removeItem(current.present, item.id)),
+            );
             setSelected(null);
           } else if (isEmpty(item)) {
             // Emptied: it goes, in the same step as the typing, so one undo brings back the text it had.
@@ -505,6 +527,16 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
           >
             <WhiteoutIcon />
           </ToolButton>
+          <ToolButton
+            label="Edit text"
+            pressed={tool === "retext"}
+            onClick={() => {
+              setTool(tool === "retext" ? "select" : "retext");
+              setSelected(null);
+            }}
+          >
+            <EditTextIcon />
+          </ToolButton>
           <ToolButton label="Add image" onClick={() => imageInput.current?.click()}>
             <ImageIcon />
           </ToolButton>
@@ -650,6 +682,12 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
           be left out of the PDF.
         </output>
       )}
+      {selectedItem?.kind === "text" && selectedItem.replaces && !selectedItem.replaces.exact && (
+        <output className="block rounded-card border-2 border-sticky-yellow bg-sticky-yellow/30 px-4 py-3">
+          This line is in {selectedItem.replaces.fontName}, which can&apos;t be reused here. It will be written in{" "}
+          {FONTS.find((font) => font.id === selectedItem.font)!.label.toLowerCase()}, the closest standard font.
+        </output>
+      )}
       {error && <FailureAlert message={error} />}
       {notice && (
         <output className="block rounded-card border-2 border-sticky-yellow bg-sticky-yellow/30 px-4 py-3">
@@ -704,6 +742,7 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
 
 function hint(tool: Tool, selected: Item | null, editing: ItemId | null) {
   if (tool === "text") return "Click the page where the text should go.";
+  if (tool === "retext") return "Click a line of the page's text to change it.";
   if (tool === "markup") return "Drag across the text to mark, or click a word.";
   if (tool === "note") return "Click the page where the comment should go.";
   if (tool === "stamp") return "Choose a stamp, then click the page to put it there.";

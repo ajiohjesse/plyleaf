@@ -14,6 +14,7 @@ import type {
   ExtractedImage,
   ImageOptions,
   PageSpec,
+  TextLine,
   TextSelection,
   TransformOptions,
 } from "./types";
@@ -38,6 +39,21 @@ let nextId = 1;
  */
 const texts = new Map<string, PageText>();
 const TEXTS_KEPT = 4;
+
+function textOf(ops: Awaited<typeof loading>, id: DocId, page: number): PageText {
+  const key = `${id}:${page}`;
+  let text = texts.get(key);
+  if (text) texts.delete(key);
+  else text = ops.pageText(get(id), page);
+  // Most recently used last.
+  texts.set(key, text);
+  for (const [old, stale] of texts) {
+    if (texts.size <= TEXTS_KEPT) break;
+    stale.text.destroy();
+    texts.delete(old);
+  }
+  return text;
+}
 
 /** Intake has already checked the file; a PDF without a header (a damaged one MuPDF may repair) isn't an image. */
 const isImage = (bytes: Uint8Array) => sniffKind(bytes.subarray(0, 1024), "", "") === "image";
@@ -131,18 +147,12 @@ const api = {
     words: boolean,
   ): Promise<TextSelection> {
     const ops = await loading;
-    const key = `${id}:${page}`;
-    let text = texts.get(key);
-    if (text) texts.delete(key);
-    else text = ops.pageText(get(id), page);
-    // Most recently used last.
-    texts.set(key, text);
-    for (const [old, stale] of texts) {
-      if (texts.size <= TEXTS_KEPT) break;
-      stale.text.destroy();
-      texts.delete(old);
-    }
-    return ops.selectText(text, from, to, words);
+    return ops.selectText(textOf(ops, id, page), from, to, words);
+  },
+
+  async textLines(id: DocId, page: number): Promise<TextLine[]> {
+    const ops = await loading;
+    return ops.textLines(textOf(ops, id, page));
   },
 
   async assemble(pages: PageSpec[]): Promise<Uint8Array<ArrayBuffer>> {

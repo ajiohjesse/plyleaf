@@ -6,10 +6,10 @@ import { EditorWorkspace } from "~/components/editor/EditorWorkspace";
 <ToolPage
   slug="edit-pdf"
   wide
-  title="Edit PDF: add text, images, shapes and stamps to a PDF online, free"
-  description="Add text, images, boxes, arrows and stamps to any page of a PDF in your browser: choose the font, size and colour, move and resize, and download. Free, no account, no watermark, and your file is never uploaded."
+  title="Edit PDF: change text and add images, shapes and stamps online, free"
+  description="Change a PDF's text, or add text, images, boxes, arrows and stamps, in your browser: choose the font, size and colour, move and resize, and download. Free, no account, no watermark, and your file is never uploaded."
   heading="Edit PDF"
-  intro="Add text, pictures, boxes, arrows and stamps anywhere on your pages, in the size and colour you want. Free, no sign-up, no watermark, and your file never leaves this device."
+  intro="Change the words already on a page, or add text, pictures, boxes, arrows and stamps, in the size and colour you want. Free, no sign-up, no watermark, and your file never leaves this device."
   steps={[
     { title: "Add your PDF", text: "Choose it, drop it anywhere on the page, or paste it." },
     { title: "Add what you need", text: "Type text, pick a picture, or drag out a box or arrow. Move it into place." },
@@ -35,6 +35,11 @@ import { EditorWorkspace } from "~/components/editor/EditorWorkspace";
       question: "Which images can I add?",
       answer:
         "JPG and PNG go in exactly as they are, transparency included. Other pictures your browser can open (WebP, GIF, AVIF, and HEIC on Apple devices) are converted first, and phone photos are turned the right way up.",
+    },
+    {
+      question: "Can I change the text that's already there?",
+      answer:
+        "Yes: pick Edit text and click a line. The old words are taken out of the page and yours go in their place, at the same size and colour. Text in Helvetica, Times or Courier keeps its exact font; other fonts can't be reused, so the line is written in the closest standard font, and the editor says so. Scanned pages have no text to change.",
     },
     {
       question: "Which stamps are there?",

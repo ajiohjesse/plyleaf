@@ -280,9 +280,38 @@ export const STAMP_RATIO = 5 / 19;
 /** A note annotation's icon is this many points square. */
 export const NOTE_SIZE = 20;
 
+/** A box on a page, (x0, y0, x1, y1) in points from the shown page's top-left. */
+export type Box = [number, number, number, number];
+
+/**
+ * A line of a page's text, for changing it: what it says and how it looks, with the standard font closest to its own
+ * (`exact` when that's the font it's in).
+ */
+export interface TextLine {
+  text: string;
+  box: Box;
+  /** Where its first character sits: the start of its baseline. */
+  x: number;
+  y: number;
+  size: number;
+  /** The font's own name ("Helvetica-Bold", "ArialMT"…). */
+  fontName: string;
+  font: StandardFont;
+  bold: boolean;
+  italic: boolean;
+  exact: boolean;
+  color: Rgb;
+}
+
 /** Marks to draw on pages and annotations to add to them, by page index. */
 export interface Edits {
-  pages: { page: number; marks: Mark[]; annotations?: Annotation[] }[];
+  pages: {
+    page: number;
+    marks: Mark[];
+    annotations?: Annotation[];
+    /** Text taken out of the page first (the text whose characters are in these boxes), to be written anew. */
+    removeText?: Box[];
+  }[];
   /** JPEG or PNG files that image marks draw. An image used by many marks is stored once in the PDF. */
   images?: Uint8Array[];
 }
