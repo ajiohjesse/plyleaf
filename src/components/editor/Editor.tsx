@@ -5,13 +5,16 @@ import { cssFont, unsupportedCharacters } from "~/editor/fonts";
 import { canRedo, canUndo, change, redo, settle, startHistory, undo, type History } from "~/editor/history";
 import {
   clickedShape,
+  DEFAULT_INK,
   DEFAULT_SHAPE,
   DEFAULT_TEXT,
   drawnShape,
+  inkOrigin,
   isEmpty,
   moveItem,
   newId,
   removeItem,
+  thinStroke,
   toEdits,
   MARKUP_COLOURS,
   quadBounds,
@@ -20,6 +23,7 @@ import {
   type Asset,
   type AssetId,
   type ImageItem,
+  type InkStyle,
   type Item,
   type ItemId,
   type MarkupItem,
@@ -39,6 +43,7 @@ import { EditorPage, type PageHandlers, type Tool } from "./EditorPage";
 import {
   HighlightIcon,
   ImageIcon,
+  PenIcon,
   RedoIcon,
   SelectIcon,
   ShapeIcon,
@@ -49,7 +54,7 @@ import {
   ZoomOutIcon,
 } from "./icons";
 import { baselineRatio } from "./measure";
-import { MarkupOptions, ShapeOptions, TextOptions, WhiteoutOptions } from "./options";
+import { InkOptions, MarkupOptions, ShapeOptions, TextOptions, WhiteoutOptions } from "./options";
 import { prepareImage } from "./prepareImage";
 
 /** Zoom steps, as multiples of the size that fits the pages to the screen's width. */
@@ -84,6 +89,7 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
   // A shape being drawn: shown, but not an item until the pointer is let go.
   const [sketch, setSketch] = useState<Item | null>(null);
   const [coverColour, setCoverColour] = useState(WHITE);
+  const [inkStyle, setInkStyle] = useState<InkStyle>(DEFAULT_INK);
   const [markupStyle, setMarkupStyle] = useState<MarkupStyle>("highlight");
   const [markupColours, setMarkupColours] = useState(MARKUP_COLOURS);
   const [notice, setNotice] = useState<string | null>(null);
@@ -198,8 +204,23 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
 
   const handlers: PageHandlers = {
     onPlace: place,
-    onDraw: (page, from, to, done) => {
+    onDraw: (page, from, to, done, path) => {
       if (tool === "markup") return void markUp(page, from, to, done, false);
+      if (tool === "draw") {
+        const points = thinStroke(path);
+        const stroke: Item = {
+          id: sketch?.id ?? newId(),
+          kind: "ink",
+          page,
+          points,
+          ...inkStyle,
+          ...inkOrigin(points),
+        };
+        if (!done) return setSketch(stroke);
+        setSketch(null);
+        // Drawing is usually several strokes, so the pen stays on.
+        return update((list) => [...list, stroke]);
+      }
       const id = sketch?.id ?? newId();
       let item: Item;
       if (tool === "shape") item = { id, kind: "shape", page, ...shapeStyle, ...drawnShape(shapeStyle, from, to) };
@@ -356,6 +377,7 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
   const shapeOptions = tool === "shape" || selectedItem?.kind === "shape";
   const whiteoutOptions = tool === "whiteout" || selectedItem?.kind === "whiteout";
   const markupOptions = tool === "markup" || selectedItem?.kind === "markup";
+  const inkOptions = tool === "draw" || selectedItem?.kind === "ink";
   const removeSelected = selectedItem ? () => handlers.handlersFor(selectedItem).onRemove() : undefined;
   const missing = selectedItem?.kind === "text" ? unsupportedCharacters(selectedItem.text) : [];
 
@@ -389,6 +411,16 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
             }}
           >
             <HighlightIcon />
+          </ToolButton>
+          <ToolButton
+            label="Draw"
+            pressed={tool === "draw"}
+            onClick={() => {
+              setTool(tool === "draw" ? "select" : "draw");
+              setSelected(null);
+            }}
+          >
+            <PenIcon />
           </ToolButton>
           <ToolButton
             label="Add shape"
@@ -459,6 +491,19 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
           <TextOptions
             style={selectedItem?.kind === "text" ? selectedItem : textStyle}
             onChange={restyle}
+            onRemove={removeSelected}
+          />
+        )}
+        {inkOptions && (
+          <InkOptions
+            style={selectedItem?.kind === "ink" ? selectedItem : inkStyle}
+            onChange={(patch) => {
+              setInkStyle((style) => ({ ...style, ...patch }));
+              if (selectedItem?.kind === "ink") {
+                const key = Object.keys(patch).join();
+                update((list) => updateItem(list, selectedItem.id, patch), `style:${selectedItem.id}:${key}`);
+              }
+            }}
             onRemove={removeSelected}
           />
         )}
@@ -566,6 +611,7 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
 function hint(tool: Tool, selected: Item | null, editing: ItemId | null) {
   if (tool === "text") return "Click the page where the text should go.";
   if (tool === "markup") return "Drag across the text to mark, or click a word.";
+  if (tool === "draw") return "Draw on the page. Each stroke can be moved or deleted afterwards.";
   if (tool === "shape") return "Drag across the page to draw, or click to place one.";
   if (tool === "whiteout") return "Drag over what to cover. It's hidden, not removed from the file.";
   if (editing) return "Type your text. Press Esc or click outside when you're done.";

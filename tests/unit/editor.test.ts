@@ -7,10 +7,12 @@ import {
   moveItem,
   removeItem,
   resizeImage,
+  thinStroke,
   toEdits,
   toHex,
   updateItem,
   type ImageItem,
+  type InkItem,
   type TextItem,
 } from "~/editor/items";
 import { makeJpeg, makePng } from "../helpers/images";
@@ -146,4 +148,34 @@ test("each picture goes into the edits once, however many items use it", () => {
     [{ type: "image", image: 0, x: 1, y: 2, width: 3, height: 4 }],
   ]);
   expect(() => toEdits([image("x", 0)])).toThrow(/no picture/);
+});
+
+test("strokes drop points too close to keep, and move with their item", () => {
+  const points = [0, 0.2, 0.5, 1.5, 1.6, 3].map((x) => ({ x, y: 0 }));
+  expect(thinStroke(points).map((p) => p.x)).toEqual([0, 1.5, 3]);
+  const ink: InkItem = {
+    id: "s",
+    kind: "ink",
+    page: 0,
+    points: [
+      { x: 10, y: 10 },
+      { x: 20, y: 30 },
+    ],
+    color: [0, 0, 0],
+    width: 2,
+    opacity: 1,
+    x: 10,
+    y: 10,
+  };
+  expect(moveItem(ink, 5, -5, { width: 100, height: 100 })).toEqual({
+    x: 15,
+    y: 5,
+    points: [
+      { x: 15, y: 5 },
+      { x: 25, y: 25 },
+    ],
+  });
+  expect(toEdits([ink]).pages[0]!.annotations).toEqual([
+    { type: "ink", strokes: [ink.points], color: [0, 0, 0], width: 2 },
+  ]);
 });

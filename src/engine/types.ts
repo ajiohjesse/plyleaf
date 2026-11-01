@@ -240,7 +240,17 @@ export interface MarkupAnnotation {
   color: Rgb;
 }
 
-export type Annotation = MarkupAnnotation;
+/** Freehand drawing: strokes through points (shown-page points), each a line through its points. */
+export interface InkAnnotation {
+  type: "ink";
+  strokes: { x: number; y: number }[][];
+  color: Rgb;
+  /** In points. */
+  width: number;
+  opacity?: number;
+}
+
+export type Annotation = MarkupAnnotation | InkAnnotation;
 
 /** Marks to draw on pages and annotations to add to them, by page index. */
 export interface Edits {

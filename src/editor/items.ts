@@ -84,7 +84,46 @@ export interface MarkupItem {
   y: number;
 }
 
-export type Item = TextItem | ImageItem | ShapeItem | WhiteoutItem | MarkupItem;
+/** A freehand stroke, saved as an ink annotation. x and y are the top-left of what it covers. */
+export interface InkItem {
+  id: ItemId;
+  kind: "ink";
+  page: number;
+  points: { x: number; y: number }[];
+  color: Rgb;
+  width: number;
+  /** 1, or less to see through it like a highlighter pen. */
+  opacity: number;
+  x: number;
+  y: number;
+}
+
+export type Item = TextItem | ImageItem | ShapeItem | WhiteoutItem | MarkupItem | InkItem;
+
+/** How new strokes look. */
+export type InkStyle = Pick<InkItem, "color" | "width" | "opacity">;
+
+export const DEFAULT_INK: InkStyle = { color: [0.15, 0.39, 0.92], width: 3, opacity: 1 };
+export const MIN_INK_WIDTH = 0.5;
+export const MAX_INK_WIDTH = 30;
+
+/**
+ * A stroke from the points a pointer went through: points closer than `step` to the last one kept are dropped (they
+ * add nothing a reader can see), the last point always stays.
+ */
+export function thinStroke(points: readonly { x: number; y: number }[], step = 1): { x: number; y: number }[] {
+  const kept: { x: number; y: number }[] = [];
+  points.forEach((point, i) => {
+    const last = kept.at(-1);
+    if (!last || i === points.length - 1 || Math.hypot(point.x - last.x, point.y - last.y) >= step) kept.push(point);
+  });
+  return kept;
+}
+
+/** An ink item's top-left, from its points. */
+export function inkOrigin(points: readonly { x: number; y: number }[]) {
+  return { x: Math.min(...points.map((p) => p.x)), y: Math.min(...points.map((p) => p.y)) };
+}
 
 /** The usual colour for each kind of markup. */
 export const MARKUP_COLOURS: Record<MarkupStyle, Rgb> = {
@@ -169,12 +208,13 @@ let counter = 0;
 /** A new id, unique on this page load. */
 export const newId = (): ItemId => `i${++counter}`;
 
-type Patch =
+export type Patch =
   | Partial<Omit<TextItem, "id" | "kind">>
   | Partial<Omit<ImageItem, "id" | "kind">>
   | Partial<Omit<ShapeItem, "id" | "kind">>
   | Partial<Omit<WhiteoutItem, "id" | "kind">>
-  | Partial<Omit<MarkupItem, "id" | "kind">>;
+  | Partial<Omit<MarkupItem, "id" | "kind">>
+  | Partial<Omit<InkItem, "id" | "kind">>;
 
 export function updateItem(items: readonly Item[], id: ItemId, patch: Patch): Item[] {
   return items.map((item) => (item.id === id ? ({ ...item, ...patch } as Item) : item));
@@ -182,14 +222,13 @@ export function updateItem(items: readonly Item[], id: ItemId, patch: Patch): It
 
 export const removeItem = (items: readonly Item[], id: ItemId): Item[] => items.filter((item) => item.id !== id);
 
-/** Moves an item by (dx, dy) points, keeping its anchor on the page. */
-export function moveItem(
-  item: Item,
-  dx: number,
-  dy: number,
-  page: { width: number; height: number },
-): { x: number; y: number } {
-  return { x: clamp(item.x + dx, 0, page.width), y: clamp(item.y + dy, 0, page.height) };
+/** Moves an item by (dx, dy) points, keeping its anchor on the page. A stroke's points move with it. */
+export function moveItem(item: Item, dx: number, dy: number, page: { width: number; height: number }): Patch {
+  const x = clamp(item.x + dx, 0, page.width);
+  const y = clamp(item.y + dy, 0, page.height);
+  if (item.kind !== "ink") return { x, y };
+  const [mx, my] = [x - item.x, y - item.y];
+  return { x, y, points: item.points.map((point) => ({ x: point.x + mx, y: point.y + my })) };
 }
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
@@ -214,7 +253,7 @@ export function toEdits(items: readonly Item[], assets: ReadonlyMap<AssetId, Ass
   const images: Uint8Array[] = [];
   const imageIndex = new Map<AssetId, number>();
 
-  function toMark(item: Exclude<Item, MarkupItem>): Mark {
+  function toMark(item: Exclude<Item, MarkupItem | InkItem>): Mark {
     if (item.kind === "text") {
       const { x, y, text, font, bold, italic, size, color } = item;
       return { type: "text", x, y, text, font, bold, italic, size, color };
@@ -240,8 +279,17 @@ export function toEdits(items: readonly Item[], assets: ReadonlyMap<AssetId, Ass
 
   for (const item of items) {
     if (isEmpty(item)) continue;
-    if (item.kind === "markup") {
-      const annotation: Annotation = { type: item.style, quads: item.quads, color: item.color };
+    if (item.kind === "markup" || item.kind === "ink") {
+      const annotation: Annotation =
+        item.kind === "markup"
+          ? { type: item.style, quads: item.quads, color: item.color }
+          : {
+              type: "ink",
+              strokes: [item.points],
+              color: item.color,
+              width: item.width,
+              ...(item.opacity < 1 && { opacity: item.opacity }),
+            };
       annotations.set(item.page, [...(annotations.get(item.page) ?? []), annotation]);
     } else {
       byPage.set(item.page, [...(byPage.get(item.page) ?? []), toMark(item)]);

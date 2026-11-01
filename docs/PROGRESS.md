@@ -3,7 +3,7 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M5: Editor (M0–M2 done 2026-10-31, M3 and M4 done 2026-11-01)
-- **Next action:** M5: freehand drawing.
+- **Next action:** M5: comments (sticky notes).
 - **Owner asked (2026-11-01):** build all of M5 in one go, one PR per item, each auto-merged when CI passes.
 - **Owner asked earlier (2026-11-01):** build all of M3 and M4 in one go, one PR per tool, each auto-merged when CI passes.
   Unlock removes owner-password restrictions only after the user confirms they have the right to; libheif-js approved.
@@ -49,7 +49,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] Compress (3 levels) · [x] Grayscale · [x] Protect · [x] Unlock · [x] Permissions · [x] Flatten · [x] Repair · [x] Metadata
 
 ### [ ] M5: Editor
-- [x] Text add · [ ] Edit existing text · [x] Images · [x] Shapes · [x] Whiteout · [x] Markup · [ ] Freehand · [ ] Comments · [ ] Stamps
+- [x] Text add · [ ] Edit existing text · [x] Images · [x] Shapes · [x] Whiteout · [x] Markup · [x] Freehand · [ ] Comments · [ ] Stamps
 - [ ] Page numbers · [ ] Watermark · [ ] Header/footer · [ ] Bates · [x] Undo/redo
 - [ ] Output verified in Acrobat Reader, Chrome, macOS Preview
 
@@ -73,6 +73,16 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-11-01: Freehand drawing (M5)
+- Engine: ink annotations (strokes, colour, width, opacity) from `Edits` pages' `annotations`.
+- Editor: Draw tool (colour, thickness, see-through); every pointer point is kept (coalesced events too) and thinned to
+  1 pt; each stroke is an item (one undo step) shown as an SVG path whose stroke, not its box, takes presses; strokes
+  move by drag or arrow keys, restyle, delete. The pen stays on between strokes.
+- Verified: 2 new unit tests (ink bounds on plain and turned pages, width, opacity, qpdf-clean; thinning, moving a
+  stroke, its edits). New E2E `draw.spec.ts` (two strokes, undo/redo a whole stroke, one moved from the keyboard,
+  read back as ink annotations, qpdf-clean, `watchEgress`): 4/4 in all four projects.
+- Next: comments.
 
 ### 2026-11-01: Markup, and Annotate PDF (M5)
 - Engine: `engine.selectText(doc, page, from, to, words)` (`src/engine/text.ts`, MuPDF's structured text, kept for the

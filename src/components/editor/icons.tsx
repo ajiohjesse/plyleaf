@@ -91,3 +91,10 @@ export const HighlightIcon = () => (
     <path d="M14 20h7" />
   </Icon>
 );
+
+export const PenIcon = () => (
+  <Icon>
+    <path d="M4 20c3-1 4-4 7-5s5 1 9-3" />
+    <path d="M15 4l5 5-7 7-5-5z" />
+  </Icon>
+);
