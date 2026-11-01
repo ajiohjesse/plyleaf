@@ -1,0 +1,41 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { MetadataWorkspace } from "~/components/secure/MetadataWorkspace";
+---
+
+<ToolPage
+  slug="pdf-metadata"
+  title="Edit or remove PDF metadata free: title, author and more"
+  description="Change a PDF's title, author, subject and keywords, or strip all hidden metadata, in your browser. Free, no account, and your file is never uploaded."
+  heading="PDF metadata"
+  intro="See and change a PDF's title, author and other hidden details, or remove them all before you share it. Free, no sign-up, and your file never leaves this device."
+  steps={[
+    { title: "Add your PDF", text: "Choose it, drop it anywhere on the page, or paste it." },
+    { title: "Edit or remove", text: "Change the fields you want, or remove every hidden detail in one go." },
+    { title: "Download", text: "The pages stay exactly the same; only the details change. No account needed." },
+  ]}
+  faqs={[
+    {
+      question: "Is it really free?",
+      answer:
+        "Yes. There is no paid plan, no daily limit and no watermark. Plyleaf can be free because your own browser does the work.",
+    },
+    {
+      question: "What is PDF metadata?",
+      answer:
+        "Details stored with the document but not shown on its pages: the title, author, subject, keywords, the apps that made it, and when it was created and changed. They can reveal more than you mean to, like your name or the software you use.",
+    },
+    {
+      question: "What does Remove all metadata remove?",
+      answer:
+        "The document information (title, author, dates and the rest), its XMP copy, and private data some apps leave in the file. The pages themselves don't change.",
+    },
+    {
+      question: "Is my PDF uploaded?",
+      answer:
+        "No. Its details are read and changed right here in your browser, and the file never goes over the internet.",
+    },
+  ]}
+>
+  <MetadataWorkspace client:load />
+</ToolPage>

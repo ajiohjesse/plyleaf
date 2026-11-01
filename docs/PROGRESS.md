@@ -2,8 +2,8 @@
 
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
-- **Current milestone:** M4: Optimize and secure (M0–M2 done 2026-10-31, M3 done 2026-11-01)
-- **Next action:** M4, Metadata (edit and remove).
+- **Current milestone:** M5: Editor (M0–M2 done 2026-10-31, M3 and M4 done 2026-11-01)
+- **Next action:** M5, the unified editor workspace: start with adding text.
 - **Owner asked (2026-11-01):** build all of M3 and M4 in one go, one PR per tool, each auto-merged when CI passes.
   Unlock removes owner-password restrictions only after the user confirms they have the right to; libheif-js approved.
 - **Live:** https://plyleaf.ajiohjesse.workers.dev (Workers Builds deploys `main`; other branches get Preview URLs).
@@ -44,8 +44,8 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ### [x] M3: Images and scanning
 - [x] Images → PDF (incl. HEIC) · [x] PDF → images · [x] Extract images · [x] Camera scan-to-PDF
 
-### [ ] M4: Optimize and secure
-- [x] Compress (3 levels) · [x] Grayscale · [x] Protect · [x] Unlock · [x] Permissions · [x] Flatten · [x] Repair · [ ] Metadata
+### [x] M4: Optimize and secure
+- [x] Compress (3 levels) · [x] Grayscale · [x] Protect · [x] Unlock · [x] Permissions · [x] Flatten · [x] Repair · [x] Metadata
 
 ### [ ] M5: Editor
 - [ ] Text add · [ ] Edit existing text · [ ] Images · [ ] Shapes · [ ] Whiteout · [ ] Markup · [ ] Freehand · [ ] Comments · [ ] Stamps
@@ -72,6 +72,22 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-11-01: PDF metadata, M4 done
+- Engine (D-033): `DocInfo.metadata`; `transform` `metadata` sets changed fields (empty removes) and drops XMP, or
+  removes Info, XMP and PieceInfo entirely.
+- `/pdf-metadata` (`MetadataWorkspace`): Title, Author, Subject, Keywords, Made with, Converted to PDF by, with the
+  created/changed dates shown in the user's locale (`src/secure/metadata.ts`, `parsePdfDate`); Save changes sends
+  only what changed; Remove all metadata. Output `<name>-metadata.pdf` or `<name>-no-metadata.pdf`.
+- Verified: 5 new unit tests (reading; editing with non-Latin text, XMP dropped; removing leaves none of the old
+  values anywhere in the bytes; PDF dates with offsets). New E2E `metadata.spec.ts` (edit and clear, read back with
+  MuPDF, qpdf-clean, `watchEgress` clean; remove all; linked from home): 12/12. Full E2E suite on this branch (all of
+  M3 and M4 stacked): 410 passed, 2 skipped (the camera test runs in Chromium only), in Chromium, Firefox, WebKit and
+  Pixel 7. Checked at 375 px.
+- All eight M4 items work and every output is checked with qpdf in tests, so M4 is done.
+- Open: password-protected files open with their password only in the Optimize & secure tools (other tools point to
+  Unlock); greyscale leaves annotations in colour; scanning hasn't been tried with real phone photos here.
+- Next: M5, the editor.
 
 ### 2026-11-01: Repair PDF (M4)
 - `/repair-pdf` (`RepairWorkspace`): MuPDF rebuilds a damaged file when opening it (`DocInfo.repaired`); the tool

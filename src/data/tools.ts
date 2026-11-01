@@ -280,6 +280,7 @@ export const tools: Tool[] = [
     description: "Change or strip title, author and more.",
     category: "optimize-secure",
     keywords: ["properties", "author"],
+    available: true,
   },
 
   // Page tools

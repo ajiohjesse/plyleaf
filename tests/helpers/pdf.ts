@@ -136,3 +136,26 @@ export function truncatedPdf(pageCount = 3): Uint8Array<ArrayBuffer> {
   const text = new TextDecoder("latin1").decode(bytes);
   return bytes.slice(0, text.lastIndexOf("xref"));
 }
+
+/** A PDF with document information, an XMP copy of it and an application's private data. */
+export function metadataPdf(): Uint8Array<ArrayBuffer> {
+  const doc = new mupdf.PDFDocument(makePdf([A4, A4]));
+  doc.setMetaData("info:Title", "Quarterly secrets");
+  doc.setMetaData("info:Author", "Jane Example");
+  doc.setMetaData("info:Creator", "Writer 9");
+  doc.setMetaData("info:CreationDate", "D:20250102030405Z");
+  const root = doc.getTrailer().get("Root");
+  root.put(
+    "Metadata",
+    doc.addStream("<x:xmpmeta><dc:title>Quarterly secrets</dc:title></x:xmpmeta>", {
+      Type: "Metadata",
+      Subtype: "XML",
+    }),
+  );
+  root.put("PieceInfo", doc.addObject({ Writer: { Private: "(Jane's draft)" } }));
+  const buffer = doc.saveToBuffer("");
+  const bytes = new Uint8Array(buffer.asUint8Array());
+  buffer.destroy();
+  doc.destroy();
+  return bytes;
+}

@@ -50,6 +50,7 @@ describe("openPdf and describe", () => {
       unlockedWith: null,
       annotations: 0,
       formFields: 0,
+      metadata: {},
       permissions: ["print", "print-hq", "copy", "edit", "annotate", "form", "assemble", "accessibility"],
     });
   });
