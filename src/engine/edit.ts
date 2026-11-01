@@ -2,9 +2,18 @@
 // pages of a scratch document, which embeds fonts and images and encodes text for us, and each of those pages then
 // goes onto its page as a form XObject drawn over the existing content.
 import * as mupdf from "mupdf";
+import { KAPPA, lineGeometry } from "~/editor/shapes";
 import { drawOnTop, freeName, ownResources, subDictionary } from "./content";
 import { EngineError } from "./errors";
-import { LINE_HEIGHT, type Edits, type ImageMark, type Mark, type StandardFont, type TextMark } from "./types";
+import {
+  LINE_HEIGHT,
+  type Edits,
+  type ImageMark,
+  type Mark,
+  type ShapeMark,
+  type StandardFont,
+  type TextMark,
+} from "./types";
 
 const FONT_NAMES: Record<StandardFont, [regular: string, bold: string, italic: string, boldItalic: string]> = {
   helvetica: ["Helvetica", "Helvetica-Bold", "Helvetica-Oblique", "Helvetica-BoldOblique"],
@@ -120,6 +129,56 @@ function drawMark(device: mupdf.Device, mark: Mark, origin: mupdf.Matrix, resour
     case "image":
       drawImage(device, mark, origin, resources);
       break;
+    case "shape":
+      drawShape(device, mark, origin);
+      break;
+  }
+}
+
+function drawShape(device: mupdf.Device, mark: ShapeMark, origin: mupdf.Matrix) {
+  const { shape, x, y, width, height, lineWidth, opacity = 1 } = mark;
+  const rgb = mupdf.ColorSpace.DeviceRGB;
+  const line = shape === "line" || shape === "arrow";
+  const stroke = mark.stroke && lineWidth > 0 ? mark.stroke : null;
+  const path = new mupdf.Path();
+  const head = new mupdf.Path();
+  const state = new mupdf.StrokeState({
+    lineCap: line ? "Round" : "Butt",
+    lineJoin: line ? "Round" : "Miter",
+    lineWidth,
+    miterLimit: 10,
+  });
+  try {
+    if (shape === "rectangle") {
+      path.rect(x, y, x + width, y + height);
+    } else if (shape === "ellipse") {
+      const [rx, ry, cx, cy] = [width / 2, height / 2, x + width / 2, y + height / 2];
+      path.moveTo(cx + rx, cy);
+      path.curveTo(cx + rx, cy + ry * KAPPA, cx + rx * KAPPA, cy + ry, cx, cy + ry);
+      path.curveTo(cx - rx * KAPPA, cy + ry, cx - rx, cy + ry * KAPPA, cx - rx, cy);
+      path.curveTo(cx - rx, cy - ry * KAPPA, cx - rx * KAPPA, cy - ry, cx, cy - ry);
+      path.curveTo(cx + rx * KAPPA, cy - ry, cx + rx, cy - ry * KAPPA, cx + rx, cy);
+      path.closePath();
+    } else {
+      const geometry = lineGeometry(x, y, width, height, lineWidth, shape === "arrow");
+      if (!geometry || !stroke) return;
+      path.moveTo(x, y);
+      path.lineTo(geometry.end.x, geometry.end.y);
+      if (geometry.head) {
+        const [tip, left, right] = geometry.head;
+        head.moveTo(tip.x, tip.y);
+        head.lineTo(left.x, left.y);
+        head.lineTo(right.x, right.y);
+        head.closePath();
+      }
+    }
+    if (!line && mark.fill) device.fillPath(path, false, origin, rgb, [...mark.fill], opacity);
+    if (stroke) device.strokePath(path, state, origin, rgb, [...stroke], opacity);
+    if (stroke && shape === "arrow") device.fillPath(head, false, origin, rgb, [...stroke], opacity);
+  } finally {
+    path.destroy();
+    head.destroy();
+    state.destroy();
   }
 }
 

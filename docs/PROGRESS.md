@@ -3,7 +3,7 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M5: Editor (M0–M2 done 2026-10-31, M3 and M4 done 2026-11-01)
-- **Next action:** M5: shapes in the editor.
+- **Next action:** M5: whiteout in the editor.
 - **Owner asked (2026-11-01):** build all of M5 in one go, one PR per item, each auto-merged when CI passes.
 - **Owner asked earlier (2026-11-01):** build all of M3 and M4 in one go, one PR per tool, each auto-merged when CI passes.
   Unlock removes owner-password restrictions only after the user confirms they have the right to; libheif-js approved.
@@ -49,7 +49,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] Compress (3 levels) · [x] Grayscale · [x] Protect · [x] Unlock · [x] Permissions · [x] Flatten · [x] Repair · [x] Metadata
 
 ### [ ] M5: Editor
-- [x] Text add · [ ] Edit existing text · [x] Images · [ ] Shapes · [ ] Whiteout · [ ] Markup · [ ] Freehand · [ ] Comments · [ ] Stamps
+- [x] Text add · [ ] Edit existing text · [x] Images · [x] Shapes · [ ] Whiteout · [ ] Markup · [ ] Freehand · [ ] Comments · [ ] Stamps
 - [ ] Page numbers · [ ] Watermark · [ ] Header/footer · [ ] Bates · [x] Undo/redo
 - [ ] Output verified in Acrobat Reader, Chrome, macOS Preview
 
@@ -73,6 +73,19 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-11-01: Shapes in the editor (M5)
+- Engine: shape marks (rectangle, ellipse, line, arrow; outline colour and width, fill) drawn as paths; the arrow and
+  ellipse geometry lives in `src/editor/shapes.ts` so the editor's SVG and the PDF match.
+- Editor: Add shape tool with floating options (kind, outline colour or none, width, fill and its colour); drag across
+  the page to draw (`EditorPage` drawing tools: a drag draws, a click places 120 × 80, Enter places in the middle), then
+  move, resize from the far corner (a line's end) or with +/−, restyle or delete. The surface doesn't take focus on
+  press, so it can't scroll mid-drag. Option panels moved to `components/editor/options.tsx`; `ResizeHandle` is
+  shared with images.
+- Verified: 3 new unit tests (outline/fill, ellipse corners empty, line direction, arrowhead, rotated page). New E2E
+  `edit-shapes.spec.ts` (drawn rectangle filled, clicked ellipse, dragged arrow, checked by colour; keyboard-placed
+  shape restyled and grown; qpdf-clean; `watchEgress`): 8/8 in all four projects; other editor specs still pass.
+- Next: whiteout.
 
 ### 2026-11-01: Images in the editor (M5)
 - Engine: image marks (a box, optional rotation about its centre and opacity) drawing from `Edits.images` (JPEG/PNG),

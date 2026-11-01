@@ -160,7 +160,7 @@ export type StandardFont = "helvetica" | "times" | "courier";
  * Something drawn onto a page, in PDF points measured from the top-left corner of the page as it's shown (after its
  * own rotation and crop). Marks become part of the page's content, drawn over what's there in the order given.
  */
-export type Mark = TextMark | ImageMark;
+export type Mark = TextMark | ImageMark | ShapeMark;
 
 export interface TextMark {
   type: "text";
@@ -197,6 +197,27 @@ export interface ImageMark {
   height: number;
   /** Degrees anticlockwise, about the box's centre. */
   rotate?: number;
+  opacity?: number;
+}
+
+export type ShapeKind = "rectangle" | "ellipse" | "line" | "arrow";
+
+/** A rectangle, an ellipse filling a box, a line, or a line with an arrowhead at its end. */
+export interface ShapeMark {
+  type: "shape";
+  shape: ShapeKind;
+  /** A rectangle's or ellipse's top-left corner; where a line starts. */
+  x: number;
+  y: number;
+  /** A rectangle's or ellipse's size (positive); for a line, how far its end is from its start (either sign). */
+  width: number;
+  height: number;
+  /** The outline's colour (a line's colour), or null for none. */
+  stroke: Rgb | null;
+  /** The inside's colour, or null for none. Lines have no inside. */
+  fill: Rgb | null;
+  /** The outline's width, in points. */
+  lineWidth: number;
   opacity?: number;
 }
 

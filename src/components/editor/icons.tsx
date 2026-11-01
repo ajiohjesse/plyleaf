@@ -70,3 +70,10 @@ export const ImageIcon = () => (
     <path d="M21 16l-5-5-9 9" />
   </Icon>
 );
+
+export const ShapeIcon = () => (
+  <Icon>
+    <rect x={3} y={10} width={11} height={11} rx={1} />
+    <circle cx={16} cy={8} r={5} />
+  </Icon>
+);
