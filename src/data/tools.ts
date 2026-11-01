@@ -253,7 +253,8 @@ export const tools: Tool[] = [
     name: "Grayscale PDF",
     description: "Convert colour pages to black and white.",
     category: "optimize-secure",
-    keywords: ["black and white"],
+    keywords: ["black and white", "greyscale", "gray", "grey"],
+    available: true,
   },
   {
     slug: "flatten-pdf",
