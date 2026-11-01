@@ -320,6 +320,8 @@ export const tools: Tool[] = [
     name: "Header & footer",
     description: "Add text to the top or bottom.",
     category: "advanced",
+    keywords: ["header", "footer", "title", "date"],
+    available: true,
   },
   {
     slug: "bates-numbering",
