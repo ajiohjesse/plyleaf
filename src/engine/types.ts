@@ -147,8 +147,53 @@ export type Security =
     }
   | { encrypt: "none" };
 
+/** Space between the baselines of a text mark's lines, in units of its size. */
+export const LINE_HEIGHT = 1.2;
+
+/** A colour as red, green and blue, each from 0 to 1. */
+export type Rgb = readonly [number, number, number];
+
+/** The standard PDF fonts text can be added in. They cover Latin, Greek and Cyrillic (see ~/editor/fonts). */
+export type StandardFont = "helvetica" | "times" | "courier";
+
+/**
+ * Something drawn onto a page, in PDF points measured from the top-left corner of the page as it's shown (after its
+ * own rotation and crop). Marks become part of the page's content, drawn over what's there in the order given.
+ */
+export type Mark = TextMark;
+
+export interface TextMark {
+  type: "text";
+  /** Lines are separated by "
+", each 1.2 × size below the last. */
+  text: string;
+  /** Where the first line starts (or centres, or ends: see align)… */
+  x: number;
+  /** …and its baseline. */
+  y: number;
+  font: StandardFont;
+  bold?: boolean;
+  italic?: boolean;
+  /** In points. */
+  size: number;
+  color: Rgb;
+  /** Which end of each line x is: its start (the default), its middle or its end. */
+  align?: "left" | "center" | "right";
+  /** Degrees anticlockwise, about (x, y). */
+  rotate?: number;
+  /** 0 to 1; 1 (the default) is opaque. */
+  opacity?: number;
+}
+
+/** Marks to draw on pages, by page index. */
+export interface Edits {
+  pages: { page: number; marks: Mark[] }[];
+}
+
 /** What to change in a copy of an open document before saving it (Optimize & secure tools). */
 export interface TransformOptions {
+  /** Drawn onto the pages first, so the other options apply to them too. */
+  edits?: Edits;
   /** Defaults to keeping the document's own encryption. */
   security?: Security;
   compress?: CompressLevel;

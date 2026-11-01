@@ -2,6 +2,8 @@
 // the open document as the user gave it, so going back and choosing differently starts from the original.
 import * as mupdf from "mupdf";
 import { message, pageImages, toDisplayColours, unlockedWith } from "./ops";
+import { drawOnTop, ownResources, subDictionary } from "./content";
+import { applyEdits } from "./edit";
 import { EngineError } from "./errors";
 import type { CompressLevel, Metadata, MetadataField, Permission, Security, TransformOptions } from "./types";
 
@@ -22,7 +24,8 @@ export function transform(
 ): Uint8Array<ArrayBuffer> {
   const copy = copyOf(pdf, password);
   try {
-    // First, so form fields and annotations are greyed and compressed with the rest of the page.
+    // Edits first, so what was added is flattened, greyed and compressed with the rest of the page.
+    if (options.edits) applyEdits(copy, options.edits);
     if (options.flatten) copy.bake(options.flatten === "all", true);
     if (options.metadata) changeMetadata(copy, options.metadata);
     if (options.grayscale) toGrey(copy);
@@ -257,19 +260,7 @@ function greyImage(pdf: mupdf.PDFDocument, ref: mupdf.PDFObject) {
 
 /** Wraps the page's content in q/Q and paints black over it with the Saturation blend mode. */
 function desaturatePage(pdf: mupdf.PDFDocument, page: mupdf.PDFObject) {
-  // Resources inherited from the page tree are copied onto the page, so the blend mode is added for this page only.
-  let resources = page.get("Resources");
-  if (!resources.isDictionary()) {
-    resources = pdf.newDictionary();
-    const inherited = page.getInheritable("Resources");
-    if (inherited.isDictionary()) inherited.forEach((value, key) => resources.put(key, value));
-    page.put("Resources", resources);
-  }
-  let states = resources.get("ExtGState");
-  if (!states.isDictionary()) {
-    states = pdf.newDictionary();
-    resources.put("ExtGState", states);
-  }
+  const states = subDictionary(pdf, ownResources(pdf, page), "ExtGState");
   // Pages that share one resources dictionary share the blend mode too.
   let name = "PlyleafGrey";
   for (let n = 2; ; n++) {
@@ -290,17 +281,7 @@ function desaturatePage(pdf: mupdf.PDFDocument, page: mupdf.PDFObject) {
     Math.max(box[0]!, box[2]!),
     Math.max(box[1]!, box[3]!),
   ];
-  const contents = page.get("Contents");
-  const streams = contents.isArray()
-    ? Array.from({ length: contents.length }, (_, i) => contents.get(i))
-    : contents.isNull()
-      ? []
-      : [contents];
-  const wrapped = pdf.newArray();
-  wrapped.push(pdf.addStream("q\n", {}));
-  for (const stream of streams) wrapped.push(stream);
-  wrapped.push(pdf.addStream(`\nQ q /${name} gs 0 g ${x0} ${y0} ${x1 - x0} ${y1 - y0} re f Q\n`, {}));
-  page.put("Contents", wrapped);
+  drawOnTop(pdf, page, `q /${name} gs 0 g ${x0} ${y0} ${x1 - x0} ${y1 - y0} re f Q`);
 }
 
 /** `pixmap` drawn smaller (MuPDF scales down smoothly), without alpha. */

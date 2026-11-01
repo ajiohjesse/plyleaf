@@ -17,9 +17,11 @@ interface Props {
   /** How it works, three short steps. */
   steps: { title: string; text: string }[];
   faqs: { question: string; answer: string }[];
+  /** The workspace needs room (the editor): the hero is as wide as the site rather than a reading column. */
+  wide?: boolean;
 }
 
-const { slug, title, description, heading, intro, steps, faqs } = Astro.props;
+const { slug, title, description, heading, intro, steps, faqs, wide = false } = Astro.props;
 const tool = tools.find((t) => t.slug === slug);
 if (!tool) throw new Error(`No tool "${slug}" in src/data/tools.ts`);
 const category = categories.find((c) => c.id === tool.category)!;
@@ -28,7 +30,7 @@ const related = tools.filter((t) => t.category === tool.category && t.slug !== s
 
 <Base title={title} description={description}>
   <section class:list={["tool-hero border-b border-line", stickyWash[category.sticky]]}>
-    <div class="mx-auto max-w-3xl px-4 pt-8 pb-12 sm:px-6 sm:pt-12 md:pb-16">
+    <div class:list={["mx-auto px-4 pt-8 pb-12 sm:px-6 sm:pt-12 md:pb-16", wide ? "max-w-6xl" : "max-w-3xl"]}>
       <div class="flex items-center gap-4">
         <span
           class:list={[

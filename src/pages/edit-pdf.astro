@@ -1,0 +1,41 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { EditorWorkspace } from "~/components/editor/EditorWorkspace";
+---
+
+<ToolPage
+  slug="edit-pdf"
+  wide
+  title="Edit PDF: add text to a PDF online, free"
+  description="Add text to any page of a PDF in your browser: choose the font, size and colour, move it into place, and download. Free, no account, no watermark, and your file is never uploaded."
+  heading="Edit PDF"
+  intro="Add text anywhere on your pages, in the font, size and colour you want. Free, no sign-up, no watermark, and your file never leaves this device."
+  steps={[
+    { title: "Add your PDF", text: "Choose it, drop it anywhere on the page, or paste it." },
+    { title: "Add your text", text: "Pick Add text, click the page and type. Drag it into place and style it." },
+    { title: "Download", text: "Your text is written into the pages. No account, no watermark." },
+  ]}
+  faqs={[
+    {
+      question: "Is it really free?",
+      answer:
+        "Yes. There is no paid plan, no daily limit and no watermark. Plyleaf can be free because your own browser does the work.",
+    },
+    {
+      question: "Which fonts can I use?",
+      answer:
+        "The three standard PDF fonts: a sans serif (Helvetica), a serif (Times) and a monospace (Courier), each in bold and italic. They cover Latin, Greek and Cyrillic alphabets. The editor tells you if something you type can't be shown in them.",
+    },
+    {
+      question: "Can the text be changed later?",
+      answer:
+        "Until you download, yes: click it to edit, drag it to move it, or delete it. In the downloaded PDF it's part of the page, so it looks the same in every app and stays searchable and copyable.",
+    },
+    {
+      question: "Is my PDF uploaded?",
+      answer: "No. It's edited right here in your browser and never goes over the internet.",
+    },
+  ]}
+>
+  <EditorWorkspace client:load />
+</ToolPage>
