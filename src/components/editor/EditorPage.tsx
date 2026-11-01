@@ -1,6 +1,7 @@
 import { memo, useEffect, useRef, useState } from "react";
 import type { Point } from "~/editor/shapes";
-import type { PageInfo } from "~/engine/types";
+import { engine } from "~/engine/client";
+import type { PageInfo, TextLine } from "~/engine/types";
 import type { Asset, AssetId, Item, ItemId } from "~/editor/items";
 import { PageCanvas } from "~/components/thumbnails/PageCanvas";
 import type { Observe } from "~/components/thumbnails/ThumbnailGrid";
@@ -17,7 +18,7 @@ import { TextBox } from "./TextBox";
 /** Pages are rendered at most this many device pixels wide; zoomed further, the image is scaled up. */
 const MAX_RENDER = 1600;
 
-export type Tool = "select" | "text" | "markup" | "draw" | "note" | "stamp" | "shape" | "whiteout";
+export type Tool = "select" | "text" | "retext" | "markup" | "draw" | "note" | "stamp" | "shape" | "whiteout";
 
 /** Tools that draw by dragging across the page (a click places something of a set size). */
 const DRAWING: ReadonlySet<Tool> = new Set(["markup", "draw", "shape", "whiteout"]);
@@ -30,6 +31,8 @@ export interface PageHandlers {
   onPlace: (page: number, x: number, y: number) => void;
   /** The user is dragging across the page from `from` to `to` (points) with a drawing tool; `done` when released. */
   onDraw: (page: number, from: Point, to: Point, done: boolean, path: readonly Point[]) => void;
+  /** The user chose one of the page's own lines to change (the Edit text tool). */
+  onPickLine: (page: number, line: TextLine) => void;
   /** The user pressed the page itself (not an item) with the select tool. */
   onBackground: () => void;
   handlersFor: (item: Item) => ItemHandlers & {
@@ -71,6 +74,25 @@ export const EditorPage = memo(function EditorPage(props: Props) {
   useEffect(() => observeOnScreen(ref.current!, setOnScreen), [observeOnScreen]);
   const { onVisible } = props;
   useEffect(() => onVisible(onScreen), [onScreen, onVisible]);
+
+  // The page's own lines, for the Edit text tool: asked for once the tool is on and the page is near.
+  const [lines, setLines] = useState<TextLine[] | null>(null);
+  const wantLines = tool === "retext" && near && lines === null;
+  useEffect(() => {
+    if (!wantLines) return;
+    let current = true;
+    engine.textLines(docId, index).then(
+      (found) => current && setLines(found),
+      () => current && setLines([]),
+    );
+    return () => {
+      current = false;
+    };
+  }, [wantLines, docId, index]);
+  // A line already being rewritten isn't offered again.
+  const taken = new Set(
+    items.flatMap((item) => (item.kind === "text" && item.replaces ? [item.replaces.box.join()] : [])),
+  );
 
   const width = Math.max(1, Math.round(page.width * scale));
   const height = Math.max(1, Math.round(page.height * scale));
@@ -154,6 +176,41 @@ export const EditorPage = memo(function EditorPage(props: Props) {
       ) : (
         <div className="absolute inset-0" onPointerDown={() => props.onBackground()} />
       )}
+      {/* Rewritten lines: the old text is covered here (in the PDF it's taken out). */}
+      {items.map((item) =>
+        item.kind === "text" && item.replaces ? (
+          <span
+            key={`cover-${item.id}`}
+            aria-hidden="true"
+            className="pointer-events-none absolute bg-surface"
+            style={{
+              left: item.replaces.box[0] * scale - 1,
+              top: item.replaces.box[1] * scale - 1,
+              width: (item.replaces.box[2] - item.replaces.box[0]) * scale + 2,
+              height: (item.replaces.box[3] - item.replaces.box[1]) * scale + 2,
+            }}
+          />
+        ) : null,
+      )}
+      {tool === "retext" &&
+        lines
+          ?.filter((line) => !taken.has(line.box.join()))
+          .map((line, i) => (
+            <button
+              key={i}
+              type="button"
+              data-line
+              aria-label={`Edit text: ${line.text}`}
+              className="absolute cursor-text rounded-sm outline-1 outline-primary/50 outline-dashed hover:bg-primary/10 hover:outline-2 hover:outline-solid focus-visible:bg-primary/10"
+              style={{
+                left: line.box[0] * scale - 2,
+                top: line.box[1] * scale - 2,
+                width: (line.box[2] - line.box[0]) * scale + 4,
+                height: (line.box[3] - line.box[1]) * scale + 4,
+              }}
+              onClick={() => props.onPickLine(index, line)}
+            />
+          ))}
       {items.map((item) => {
         const { onText, onEndEdit, onResize, ...handlers } = props.handlersFor(item);
         if (item.kind === "stamp") {

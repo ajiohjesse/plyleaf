@@ -1,6 +1,6 @@
 // What the user has added in the editor, and how it becomes the engine's edits. Items are measured like marks: PDF
 // points from the top-left of the page as it's shown. The list is in drawing order, so later items are on top.
-import type { Annotation, Edits, Mark, Quad, Rgb, ShapeKind, StandardFont } from "~/engine/types";
+import type { Annotation, Box, Edits, Mark, Quad, Rgb, ShapeKind, StandardFont, TextLine } from "~/engine/types";
 
 export { NOTE_SIZE, STAMP_RATIO } from "~/engine/types";
 
@@ -20,7 +20,33 @@ export interface TextItem {
   italic: boolean;
   size: number;
   color: Rgb;
+  /** Moved since it was placed (a rewritten line that's moved counts as changed even with the same words). */
+  moved?: boolean;
+  /** A line of the page's own text this rewrites: it's taken out of the page, and this text written in its place. */
+  replaces?: { box: Box; text: string; fontName: string; exact: boolean };
 }
+
+/** A text item rewriting a line of the page, starting as the line is: same words, place and look. */
+export function rewriteLine(line: TextLine, page: number): TextItem {
+  const { text, box, x, y, size, font, bold, italic, color, fontName, exact } = line;
+  return {
+    id: newId(),
+    kind: "text",
+    page,
+    x,
+    y,
+    text,
+    font,
+    bold,
+    italic,
+    size,
+    color,
+    replaces: { box, text, fontName, exact },
+  };
+}
+
+/** A rewritten line that still says what it said, and so changes nothing (but the font, for a non-standard one). */
+export const unchanged = (item: Item) => item.kind === "text" && item.replaces?.text === item.text && !item.moved;
 
 export interface ImageItem {
   id: ItemId;
@@ -290,7 +316,9 @@ export function resizeImage(item: ImageItem, width: number): { width: number; he
 
 /** An item has nothing to draw (text with no characters). */
 export const isEmpty = (item: Item) =>
-  ((item.kind === "text" || item.kind === "note") && item.text.trim() === "") ||
+  (item.kind === "note" && item.text.trim() === "") ||
+  // Rewritten text left empty still takes the old line out.
+  (item.kind === "text" && item.text.trim() === "" && !item.replaces) ||
   (item.kind === "stamp" && item.name.trim() === "");
 
 /**
@@ -300,6 +328,7 @@ export const isEmpty = (item: Item) =>
 export function toEdits(items: readonly Item[], assets: ReadonlyMap<AssetId, Asset> = new Map()): Edits {
   const byPage = new Map<number, Mark[]>();
   const annotations = new Map<number, Annotation[]>();
+  const removals = new Map<number, Box[]>();
   const images: Uint8Array[] = [];
   const imageIndex = new Map<AssetId, number>();
 
@@ -329,6 +358,10 @@ export function toEdits(items: readonly Item[], assets: ReadonlyMap<AssetId, Ass
 
   for (const item of items) {
     if (isEmpty(item)) continue;
+    if (item.kind === "text" && item.replaces) {
+      removals.set(item.page, [...(removals.get(item.page) ?? []), item.replaces.box]);
+      if (!item.text.trim()) continue;
+    }
     if (item.kind === "markup" || item.kind === "ink" || item.kind === "note" || item.kind === "stamp") {
       const annotation: Annotation =
         item.kind === "stamp"
@@ -349,12 +382,13 @@ export function toEdits(items: readonly Item[], assets: ReadonlyMap<AssetId, Ass
       byPage.set(item.page, [...(byPage.get(item.page) ?? []), toMark(item)]);
     }
   }
-  const pages = [...new Set([...byPage.keys(), ...annotations.keys()])].sort((a, b) => a - b);
+  const pages = [...new Set([...byPage.keys(), ...annotations.keys(), ...removals.keys()])].sort((a, b) => a - b);
   return {
     pages: pages.map((page) => ({
       page,
       marks: byPage.get(page) ?? [],
       ...(annotations.has(page) && { annotations: annotations.get(page)! }),
+      ...(removals.has(page) && { removeText: removals.get(page)! }),
     })),
     ...(images.length > 0 && { images }),
   };

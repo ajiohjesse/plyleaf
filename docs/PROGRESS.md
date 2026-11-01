@@ -3,7 +3,7 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M5: Editor (M0–M2 done 2026-10-31, M3 and M4 done 2026-11-01)
-- **Next action:** M5: edit existing text.
+- **Next action:** M5: page numbers (the page tools).
 - **Owner asked (2026-11-01):** build all of M5 in one go, one PR per item, each auto-merged when CI passes.
 - **Owner asked earlier (2026-11-01):** build all of M3 and M4 in one go, one PR per tool, each auto-merged when CI passes.
   Unlock removes owner-password restrictions only after the user confirms they have the right to; libheif-js approved.
@@ -49,7 +49,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] Compress (3 levels) · [x] Grayscale · [x] Protect · [x] Unlock · [x] Permissions · [x] Flatten · [x] Repair · [x] Metadata
 
 ### [ ] M5: Editor
-- [x] Text add · [ ] Edit existing text · [x] Images · [x] Shapes · [x] Whiteout · [x] Markup · [x] Freehand · [x] Comments · [x] Stamps
+- [x] Text add · [x] Edit existing text · [x] Images · [x] Shapes · [x] Whiteout · [x] Markup · [x] Freehand · [x] Comments · [x] Stamps
 - [ ] Page numbers · [ ] Watermark · [ ] Header/footer · [ ] Bates · [x] Undo/redo
 - [ ] Output verified in Acrobat Reader, Chrome, macOS Preview
 
@@ -73,6 +73,22 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-11-01: Edit existing text (M5)
+- Engine: `engine.textLines(doc, page)` (`src/engine/text.ts`): each left-to-right line with its text, box, baseline
+  start, size, colour and closest standard font (by name first, then the font's flags; `exact` for
+  Helvetica/Times/Courier and their URW twins). `Edits` pages take `removeText` boxes, taken out with MuPDF's redaction
+  (text only, each box narrowed to the middle half of its height so neighbouring lines stay) before marks are drawn.
+- Editor: Edit text tool outlines the page's lines; clicking one makes a text item that starts exactly as the line is
+  (words, baseline, size, colour, font) and opens it for typing; the old line is covered on screen and removed in the
+  file. Left unchanged, it's dropped with no undo step; emptied, the line just goes; moved, it counts as changed. A
+  line in a non-standard font says it'll be written in the closest standard one. Text running another way isn't
+  offered.
+- Verified: 4 new unit tests (lines with font, size, colour, baseline; a line rewritten in place with the old words
+  gone and the background kept, qpdf-clean; turned text not offered; the model's removals). New E2E
+  `edit-existing-text.spec.ts` (a Helvetica line changed in place, old words gone from the file, qpdf-clean,
+  `watchEgress`; unchanged line adds nothing; bold red Times title stays bold and red): 8/8 in all four projects.
+- Next: page numbers.
 
 ### 2026-11-01: Stamps (M5)
 - Engine: stamp annotations (a standard PDF stamp name or the user's own words, colour, 19:5 box). MuPDF draws stamps

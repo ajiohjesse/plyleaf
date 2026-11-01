@@ -20,7 +20,7 @@ import {
 
 export { MAX_RENDER_SIDE } from "./types";
 export { transform } from "./transform";
-export { pageText, selectText, type PageText } from "./text";
+export { pageText, selectText, textLines, type PageText } from "./text";
 /** Largest page side in PDF points (200 in), the limit in the PDF spec. */
 export const MAX_PAGE_SIDE = 14_400;
 /**

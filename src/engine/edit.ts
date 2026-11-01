@@ -10,6 +10,7 @@ import {
   NOTE_SIZE,
   STAMP_RATIO,
   type Annotation,
+  type Box,
   type Edits,
   type ImageMark,
   type Mark,
@@ -36,9 +37,37 @@ export function applyEdits(pdf: mupdf.PDFDocument, edits: Edits) {
     }
     if (marks.length > 0) byPage.set(page, [...(byPage.get(page) ?? []), ...marks]);
   }
+  // Text being rewritten comes out first, so the new version (a mark) isn't removed with it.
+  for (const { page, removeText = [] } of edits.pages) {
+    if (removeText.length > 0) removeTextIn(pdf, page, removeText);
+  }
   if (byPage.size > 0) drawMarks(pdf, byPage, edits.images ?? []);
   for (const { page, annotations = [] } of edits.pages) {
     if (annotations.length > 0) annotate(pdf, page, annotations);
+  }
+}
+
+/**
+ * Takes the text out of these boxes for good (MuPDF's redaction, text only: pictures and drawings stay). Each box is
+ * narrowed to the middle half of its height, so the lines above and below are left alone.
+ */
+function removeTextIn(pdf: mupdf.PDFDocument, index: number, boxes: Box[]) {
+  const page = pdf.loadPage(index);
+  try {
+    const [x0, y0] = page.getBounds();
+    for (const [left, top, right, bottom] of boxes) {
+      const inset = (bottom - top) / 4;
+      const redaction = page.createAnnotation("Redact");
+      redaction.setRect([left + x0, top + inset + y0, right + x0, bottom - inset + y0]);
+    }
+    page.applyRedactions(
+      false,
+      mupdf.PDFPage.REDACT_IMAGE_NONE,
+      mupdf.PDFPage.REDACT_LINE_ART_NONE,
+      mupdf.PDFPage.REDACT_TEXT_REMOVE,
+    );
+  } finally {
+    page.destroy();
   }
 }
 

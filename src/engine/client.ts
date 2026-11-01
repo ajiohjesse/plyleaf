@@ -12,6 +12,7 @@ import type {
   ExtractedImage,
   ImageOptions,
   PageSpec,
+  TextLine,
   TextSelection,
   TransformOptions,
 } from "./types";
@@ -182,6 +183,11 @@ export const engine = {
     words = false,
   ): Promise<TextSelection> {
     return call(({ remote }) => remote.selectText(id, page, from, to, words));
+  },
+
+  /** The lines of text on a page (left to right as shown), with how each looks. */
+  textLines(id: DocId, page: number): Promise<TextLine[]> {
+    return call(({ remote }) => remote.textLines(id, page));
   },
 
   /** Builds a new PDF from pages of open documents and blank pages, in order. */
