@@ -345,3 +345,20 @@ export function InkOptions({
     </OptionsPanel>
   );
 }
+
+/** The colour of a comment's note. */
+export function NoteOptions({
+  color,
+  onChange,
+  onRemove,
+}: {
+  color: Rgb;
+  onChange: (color: Rgb) => void;
+  onRemove: (() => void) | undefined;
+}) {
+  return (
+    <OptionsPanel legend="Comment options" onRemove={onRemove}>
+      <ColourField label="Note colour" value={color} onChange={onChange} />
+    </OptionsPanel>
+  );
+}

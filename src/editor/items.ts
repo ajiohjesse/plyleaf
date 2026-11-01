@@ -2,6 +2,8 @@
 // points from the top-left of the page as it's shown. The list is in drawing order, so later items are on top.
 import type { Annotation, Edits, Mark, Quad, Rgb, ShapeKind, StandardFont } from "~/engine/types";
 
+export { NOTE_SIZE } from "~/engine/types";
+
 export type ItemId = string;
 
 export interface TextItem {
@@ -98,7 +100,20 @@ export interface InkItem {
   y: number;
 }
 
-export type Item = TextItem | ImageItem | ShapeItem | WhiteoutItem | MarkupItem | InkItem;
+/** A comment, saved as a note annotation: its icon's top-left is at (x, y). */
+export interface NoteItem {
+  id: ItemId;
+  kind: "note";
+  page: number;
+  x: number;
+  y: number;
+  text: string;
+  color: Rgb;
+}
+
+export const NOTE_COLOUR: Rgb = [1, 0.83, 0.23];
+
+export type Item = TextItem | ImageItem | ShapeItem | WhiteoutItem | MarkupItem | InkItem | NoteItem;
 
 /** How new strokes look. */
 export type InkStyle = Pick<InkItem, "color" | "width" | "opacity">;
@@ -214,7 +229,8 @@ export type Patch =
   | Partial<Omit<ShapeItem, "id" | "kind">>
   | Partial<Omit<WhiteoutItem, "id" | "kind">>
   | Partial<Omit<MarkupItem, "id" | "kind">>
-  | Partial<Omit<InkItem, "id" | "kind">>;
+  | Partial<Omit<InkItem, "id" | "kind">>
+  | Partial<Omit<NoteItem, "id" | "kind">>;
 
 export function updateItem(items: readonly Item[], id: ItemId, patch: Patch): Item[] {
   return items.map((item) => (item.id === id ? ({ ...item, ...patch } as Item) : item));
@@ -241,7 +257,7 @@ export function resizeImage(item: ImageItem, width: number): { width: number; he
 }
 
 /** An item has nothing to draw (text with no characters). */
-export const isEmpty = (item: Item) => item.kind === "text" && item.text.trim() === "";
+export const isEmpty = (item: Item) => (item.kind === "text" || item.kind === "note") && item.text.trim() === "";
 
 /**
  * The items as the engine's edits, page by page in page order. Empty items are left out; each picture used goes into
@@ -253,7 +269,7 @@ export function toEdits(items: readonly Item[], assets: ReadonlyMap<AssetId, Ass
   const images: Uint8Array[] = [];
   const imageIndex = new Map<AssetId, number>();
 
-  function toMark(item: Exclude<Item, MarkupItem | InkItem>): Mark {
+  function toMark(item: Exclude<Item, MarkupItem | InkItem | NoteItem>): Mark {
     if (item.kind === "text") {
       const { x, y, text, font, bold, italic, size, color } = item;
       return { type: "text", x, y, text, font, bold, italic, size, color };
@@ -279,17 +295,19 @@ export function toEdits(items: readonly Item[], assets: ReadonlyMap<AssetId, Ass
 
   for (const item of items) {
     if (isEmpty(item)) continue;
-    if (item.kind === "markup" || item.kind === "ink") {
+    if (item.kind === "markup" || item.kind === "ink" || item.kind === "note") {
       const annotation: Annotation =
-        item.kind === "markup"
-          ? { type: item.style, quads: item.quads, color: item.color }
-          : {
-              type: "ink",
-              strokes: [item.points],
-              color: item.color,
-              width: item.width,
-              ...(item.opacity < 1 && { opacity: item.opacity }),
-            };
+        item.kind === "note"
+          ? { type: "note", x: item.x, y: item.y, text: item.text, color: item.color }
+          : item.kind === "markup"
+            ? { type: item.style, quads: item.quads, color: item.color }
+            : {
+                type: "ink",
+                strokes: [item.points],
+                color: item.color,
+                width: item.width,
+                ...(item.opacity < 1 && { opacity: item.opacity }),
+              };
       annotations.set(item.page, [...(annotations.get(item.page) ?? []), annotation]);
     } else {
       byPage.set(item.page, [...(byPage.get(item.page) ?? []), toMark(item)]);

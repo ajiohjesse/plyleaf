@@ -98,3 +98,10 @@ export const PenIcon = () => (
     <path d="M15 4l5 5-7 7-5-5z" />
   </Icon>
 );
+
+export const CommentIcon = () => (
+  <Icon>
+    <path d="M4 4h16v12h-8l-5 4v-4H4z" />
+    <path d="M8 8.5h8M8 12h5" />
+  </Icon>
+);

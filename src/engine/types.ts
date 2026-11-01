@@ -250,7 +250,19 @@ export interface InkAnnotation {
   opacity?: number;
 }
 
-export type Annotation = MarkupAnnotation | InkAnnotation;
+/** A comment: a note icon with its top-left at (x, y) that opens to show the text. */
+export interface NoteAnnotation {
+  type: "note";
+  x: number;
+  y: number;
+  text: string;
+  color: Rgb;
+}
+
+export type Annotation = MarkupAnnotation | InkAnnotation | NoteAnnotation;
+
+/** A note annotation's icon is this many points square. */
+export const NOTE_SIZE = 20;
 
 /** Marks to draw on pages and annotations to add to them, by page index. */
 export interface Edits {

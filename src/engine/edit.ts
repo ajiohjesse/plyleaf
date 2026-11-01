@@ -7,6 +7,7 @@ import { drawOnTop, freeName, ownResources, subDictionary } from "./content";
 import { EngineError } from "./errors";
 import {
   LINE_HEIGHT,
+  NOTE_SIZE,
   type Annotation,
   type Edits,
   type ImageMark,
@@ -48,6 +49,23 @@ function annotate(pdf: mupdf.PDFDocument, index: number, annotations: Annotation
     const [x0, y0] = page.getBounds();
     const placed = (quad: readonly number[]) => quad.map((n, i) => n + (i % 2 === 0 ? x0 : y0)) as mupdf.Quad;
     for (const annotation of annotations) {
+      if (annotation.type === "note") {
+        if (!annotation.text.trim()) continue;
+        const [x, y] = [annotation.x + x0, annotation.y + y0];
+        const annot = page.createAnnotation("Text");
+        // A note's icon stays upright on a turned page, pinned by its rectangle's upper-left corner in the page's own
+        // (unturned) space; that corner goes where the icon's top-left should show.
+        const ctm = page.getTransform();
+        const [ux, uy] = mupdf.Rect.transform([x, y, x, y], mupdf.Matrix.invert(ctm));
+        annot.setRect(mupdf.Rect.transform([ux, uy - NOTE_SIZE, ux + NOTE_SIZE, uy], ctm));
+        annot.setContents(annotation.text);
+        annot.setColor([...annotation.color]);
+        annot.setIcon("Comment");
+        // Where readers that show notes in a pop-up put it: beside the icon.
+        annot.setPopup([x + NOTE_SIZE + 4, y, x + NOTE_SIZE + 204, y + 100]);
+        annot.update();
+        continue;
+      }
       if (annotation.type === "ink") {
         const strokes = annotation.strokes.filter((stroke) => stroke.length > 0);
         if (strokes.length === 0) continue;

@@ -17,6 +17,8 @@ import {
   thinStroke,
   toEdits,
   MARKUP_COLOURS,
+  NOTE_COLOUR,
+  NOTE_SIZE,
   quadBounds,
   updateItem,
   WHITE,
@@ -27,6 +29,7 @@ import {
   type Item,
   type ItemId,
   type MarkupItem,
+  type NoteItem,
   type MarkupStyle,
   type ShapeStyle,
   type TextItem,
@@ -41,6 +44,7 @@ import { NEAR, ON_SCREEN, useViewportObserver } from "~/components/thumbnails/Th
 import { ActionBar, FailureAlert, plural, primaryButton } from "~/components/workspace/parts";
 import { EditorPage, type PageHandlers, type Tool } from "./EditorPage";
 import {
+  CommentIcon,
   HighlightIcon,
   ImageIcon,
   PenIcon,
@@ -54,7 +58,7 @@ import {
   ZoomOutIcon,
 } from "./icons";
 import { baselineRatio } from "./measure";
-import { InkOptions, MarkupOptions, ShapeOptions, TextOptions, WhiteoutOptions } from "./options";
+import { InkOptions, MarkupOptions, NoteOptions, ShapeOptions, TextOptions, WhiteoutOptions } from "./options";
 import { prepareImage } from "./prepareImage";
 
 /** Zoom steps, as multiples of the size that fits the pages to the screen's width. */
@@ -80,7 +84,8 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
   const [history, setHistory] = useState<History<Item[]>>(() => startHistory([]));
   const items = history.present;
   // A text box that hasn't had anything typed yet. It joins the items (and the history) with its first character.
-  const [draft, setDraft] = useState<TextItem | null>(null);
+  const [draft, setDraft] = useState<TextItem | NoteItem | null>(null);
+  const [noteColour, setNoteColour] = useState(NOTE_COLOUR);
   const [tool, setTool] = useState<Tool>(initialTool);
   const [selected, setSelected] = useState<ItemId | null>(null);
   const [editing, setEditing] = useState<ItemId | null>(null);
@@ -184,6 +189,16 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
   }
 
   function place(page: number, x: number, y: number) {
+    if (tool === "note") {
+      // The press is the icon's middle. Like a text box, it joins the items with its first character.
+      const half = NOTE_SIZE / 2;
+      const note: NoteItem = { id: newId(), kind: "note", page, x: x - half, y: y - half, text: "", color: noteColour };
+      setDraft(note);
+      setSelected(note.id);
+      setEditing(note.id);
+      setTool("select");
+      return;
+    }
     if (tool === "markup") return void markUp(page, { x, y }, { x, y }, true, true);
     if (tool === "shape") {
       return add({ id: newId(), kind: "shape", page, ...shapeStyle, ...clickedShape(shapeStyle, x, y) });
@@ -251,7 +266,7 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
         },
         onMoveEnd: () => setHistory(settle),
         onActivate: () => {
-          if (item.kind === "text") setEditing(item.id);
+          if (item.kind === "text" || item.kind === "note") setEditing(item.id);
         },
         onRemove: () => {
           if (isDraft) setDraft(null);
@@ -378,6 +393,7 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
   const whiteoutOptions = tool === "whiteout" || selectedItem?.kind === "whiteout";
   const markupOptions = tool === "markup" || selectedItem?.kind === "markup";
   const inkOptions = tool === "draw" || selectedItem?.kind === "ink";
+  const noteOptions = tool === "note" || selectedItem?.kind === "note";
   const removeSelected = selectedItem ? () => handlers.handlersFor(selectedItem).onRemove() : undefined;
   const missing = selectedItem?.kind === "text" ? unsupportedCharacters(selectedItem.text) : [];
 
@@ -421,6 +437,16 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
             }}
           >
             <PenIcon />
+          </ToolButton>
+          <ToolButton
+            label="Add comment"
+            pressed={tool === "note"}
+            onClick={() => {
+              setTool(tool === "note" ? "select" : "note");
+              setSelected(null);
+            }}
+          >
+            <CommentIcon />
           </ToolButton>
           <ToolButton
             label="Add shape"
@@ -491,6 +517,18 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
           <TextOptions
             style={selectedItem?.kind === "text" ? selectedItem : textStyle}
             onChange={restyle}
+            onRemove={removeSelected}
+          />
+        )}
+        {noteOptions && (
+          <NoteOptions
+            color={selectedItem?.kind === "note" ? selectedItem.color : noteColour}
+            onChange={(color) => {
+              setNoteColour(color);
+              if (selectedItem?.kind !== "note") return;
+              if (draft?.id === selectedItem.id) setDraft({ ...draft, color });
+              else update((list) => updateItem(list, selectedItem.id, { color }), `style:${selectedItem.id}:color`);
+            }}
             onRemove={removeSelected}
           />
         )}
@@ -611,11 +649,13 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
 function hint(tool: Tool, selected: Item | null, editing: ItemId | null) {
   if (tool === "text") return "Click the page where the text should go.";
   if (tool === "markup") return "Drag across the text to mark, or click a word.";
+  if (tool === "note") return "Click the page where the comment should go.";
   if (tool === "draw") return "Draw on the page. Each stroke can be moved or deleted afterwards.";
   if (tool === "shape") return "Drag across the page to draw, or click to place one.";
   if (tool === "whiteout") return "Drag over what to cover. It's hidden, not removed from the file.";
-  if (editing) return "Type your text. Press Esc or click outside when you're done.";
+  if (editing) return "Type, then press Esc or click outside when you're done.";
   if (selected?.kind === "markup") return "Change its kind or colour, or delete it.";
+  if (selected?.kind === "note") return "Drag to move it. Click again, or press Enter, to change the comment.";
   if (selected && selected.kind !== "text")
     return "Drag to move, or use the arrow keys. Drag the corner, or + and -, to resize.";
   if (selected) return "Drag to move, or use the arrow keys. Click again to change the text.";
