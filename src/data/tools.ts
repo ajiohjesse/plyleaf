@@ -200,8 +200,7 @@ export const tools: Tool[] = [
   {
     slug: "annotate-pdf",
     name: "Annotate PDF",
-    // Says what works today; comments join it when they ship.
-    description: "Highlight, underline, strike out and draw.",
+    description: "Highlight, underline, draw and comment.",
     category: "edit-sign",
     keywords: ["highlight", "comment", "draw", "markup", "underline", "strikethrough"],
     available: true,

@@ -110,3 +110,35 @@ test("freehand strokes become ink annotations where they were drawn, on plain an
   }
   expect(await qpdfCheck(output)).toBe(0);
 });
+
+test("comments become note annotations at their place, with their text", async () => {
+  const output = transform(openPdf(makePdf([PAGE, { ...PAGE, rotate: 90 }])), {
+    edits: {
+      pages: [0, 1].map((page) => ({
+        page,
+        marks: [],
+        annotations: [
+          {
+            type: "note" as const,
+            x: 100,
+            y: 50,
+            text: "Check this, please — ünïcode ✓",
+            color: [1, 0.8, 0.2] as const,
+          },
+          { type: "note" as const, x: 10, y: 10, text: "  ", color: [1, 1, 0] as const },
+        ],
+      })),
+    },
+  });
+  const doc = keep(new mupdf.PDFDocument(output));
+  for (const index of [0, 1]) {
+    const notes = doc.loadPage(index).getAnnotations();
+    // The empty one is left out.
+    expect(notes.map((note) => note.getType())).toEqual(["Text"]);
+    expect(notes[0]!.getContents()).toBe("Check this, please — ünïcode ✓");
+    const [x0, y0] = notes[0]!.getBounds();
+    expect(x0).toBeCloseTo(100, 0);
+    expect(y0).toBeCloseTo(50, 0);
+  }
+  expect(await qpdfCheck(output)).toBe(0);
+});

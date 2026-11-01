@@ -3,7 +3,7 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M5: Editor (M0–M2 done 2026-10-31, M3 and M4 done 2026-11-01)
-- **Next action:** M5: comments (sticky notes).
+- **Next action:** M5: stamps.
 - **Owner asked (2026-11-01):** build all of M5 in one go, one PR per item, each auto-merged when CI passes.
 - **Owner asked earlier (2026-11-01):** build all of M3 and M4 in one go, one PR per tool, each auto-merged when CI passes.
   Unlock removes owner-password restrictions only after the user confirms they have the right to; libheif-js approved.
@@ -49,7 +49,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] Compress (3 levels) · [x] Grayscale · [x] Protect · [x] Unlock · [x] Permissions · [x] Flatten · [x] Repair · [x] Metadata
 
 ### [ ] M5: Editor
-- [x] Text add · [ ] Edit existing text · [x] Images · [x] Shapes · [x] Whiteout · [x] Markup · [x] Freehand · [ ] Comments · [ ] Stamps
+- [x] Text add · [ ] Edit existing text · [x] Images · [x] Shapes · [x] Whiteout · [x] Markup · [x] Freehand · [x] Comments · [ ] Stamps
 - [ ] Page numbers · [ ] Watermark · [ ] Header/footer · [ ] Bates · [x] Undo/redo
 - [ ] Output verified in Acrobat Reader, Chrome, macOS Preview
 
@@ -73,6 +73,18 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-11-01: Comments (M5)
+- Engine: note annotations (a "Comment" icon, the text as its contents, a pop-up beside it). A note's icon stays
+  upright on a turned page, pinned by its rectangle's unturned upper-left corner, so the engine puts that corner where
+  the icon should show.
+- Editor: Add comment tool (note colour): a click (or Enter on a page) places a note with its text box open; like
+  text, it joins the history with its first character and goes if left empty. Selected, the text shows beside the
+  icon; Enter or a second press edits it; drag or arrows move it.
+- Verified: 1 new unit test (note text with non-Latin characters, place on plain and turned pages, empty left out,
+  qpdf-clean). New E2E `comments.spec.ts` (two-line comment placed by click, read back with MuPDF, qpdf-clean,
+  `watchEgress`; empty dropped; keyboard placement and later change): 8/8 in all four projects.
+- Next: stamps.
 
 ### 2026-11-01: Freehand drawing (M5)
 - Engine: ink annotations (strokes, colour, width, opacity) from `Edits` pages' `annotations`.
