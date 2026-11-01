@@ -5,7 +5,7 @@ import type { ScanFilter } from "~/scan/filters";
 import type { Quad } from "~/scan/quad";
 import { decodeForEngine } from "./decode";
 import { carryEngineErrors, EngineError } from "./errors";
-import type { Bitmap, DocId, DocInfo, ExtractedImage, ImageOptions, PageSpec } from "./types";
+import type { Bitmap, DocId, DocInfo, ExtractedImage, ImageOptions, PageSpec, TransformOptions } from "./types";
 import type { EngineApi } from "./worker";
 
 export { EngineError } from "./errors";
@@ -154,6 +154,11 @@ export const engine = {
   /** The images page `page` draws, leaving out the object numbers in `skip` (ones already found on other pages). */
   extractImages(id: DocId, page: number, skip: number[] = []): Promise<ExtractedImage[]> {
     return call(({ remote }) => remote.extractImages(id, page, skip));
+  },
+
+  /** A changed copy of an open document (compressed, secured…), as PDF bytes. The open document stays as it was. */
+  transform(id: DocId, options: TransformOptions): Promise<Uint8Array<ArrayBuffer>> {
+    return call(({ remote }) => remote.transform(id, options));
   },
 
   /** Builds a new PDF from pages of open documents and blank pages, in order. */

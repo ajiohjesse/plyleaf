@@ -6,7 +6,7 @@ import type { ScanFilter } from "~/scan/filters";
 import type { Quad } from "~/scan/quad";
 import { isHeif, mupdfImageType } from "./decode";
 import { carryEngineErrors, EngineError } from "./errors";
-import type { Bitmap, DocId, DocInfo, ExtractedImage, ImageOptions, PageSpec } from "./types";
+import type { Bitmap, DocId, DocInfo, ExtractedImage, ImageOptions, PageSpec, TransformOptions } from "./types";
 
 carryEngineErrors();
 
@@ -96,6 +96,12 @@ const api = {
       images,
       images.map((image) => image.bytes.buffer),
     );
+  },
+
+  async transform(id: DocId, options: TransformOptions): Promise<Uint8Array<ArrayBuffer>> {
+    const ops = await loading;
+    const bytes = ops.transform(get(id), options);
+    return transfer(bytes, [bytes.buffer]);
   },
 
   async assemble(pages: PageSpec[]): Promise<Uint8Array<ArrayBuffer>> {
