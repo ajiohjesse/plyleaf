@@ -3,7 +3,7 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M4: Optimize and secure (M0–M2 done 2026-10-31, M3 done 2026-11-01)
-- **Next action:** M4, Grayscale.
+- **Next action:** M4, Protect (AES-256).
 - **Owner asked (2026-11-01):** build all of M3 and M4 in one go, one PR per tool, each auto-merged when CI passes.
   Unlock removes owner-password restrictions only after the user confirms they have the right to; libheif-js approved.
 - **Live:** https://plyleaf.ajiohjesse.workers.dev (Workers Builds deploys `main`; other branches get Preview URLs).
@@ -45,7 +45,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] Images → PDF (incl. HEIC) · [x] PDF → images · [x] Extract images · [x] Camera scan-to-PDF
 
 ### [ ] M4: Optimize and secure
-- [x] Compress (3 levels) · [ ] Grayscale · [ ] Protect · [ ] Unlock · [ ] Permissions · [ ] Flatten · [ ] Repair · [ ] Metadata
+- [x] Compress (3 levels) · [x] Grayscale · [ ] Protect · [ ] Unlock · [ ] Permissions · [ ] Flatten · [ ] Repair · [ ] Metadata
 
 ### [ ] M5: Editor
 - [ ] Text add · [ ] Edit existing text · [ ] Images · [ ] Shapes · [ ] Whiteout · [ ] Markup · [ ] Freehand · [ ] Comments · [ ] Stamps
@@ -72,6 +72,19 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-11-01: Grayscale PDF (M4)
+- Engine: `transform` takes `grayscale` (D-030): images to DeviceGray in place, a Saturation-blend black overlay on
+  each page (its own ExtGState, shared by pages that share resources) over the content wrapped in q/Q.
+- Found and worked around a MuPDF 1.28 bug: walking image objects, adding streams, then saving with
+  `garbage=compact` or `deduplicate` writes image objects without their streams. `transform` now saves its changes
+  with plain `garbage`, reopens, and does the final save on the fresh copy (`repacked`).
+- `/grayscale-pdf` (`GrayscaleWorkspace` on `SingleFileTool`): one button; output `<name>-grayscale.pdf`.
+- Verified: 3 new unit tests (vectors and text grey at the right luminosity and still text; images Gray; shared
+  resources get one blend mode; all qpdf-clean). New E2E `grayscale.spec.ts` (text page + images page → no colour
+  anywhere when rendered, text extractable, qpdf-clean, `watchEgress` clean; linked from home) and compress again:
+  20/20 in all four browser projects.
+- Next: Protect.
 
 ### 2026-11-01: Compress PDF (M4)
 - Engine (D-029): `engine.transform(doc, options)` changes a copy (`src/engine/transform.ts`); `compress` Low /

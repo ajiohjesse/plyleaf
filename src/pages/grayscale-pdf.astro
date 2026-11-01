@@ -1,0 +1,48 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { GrayscaleWorkspace } from "~/components/secure/GrayscaleWorkspace";
+---
+
+<ToolPage
+  slug="grayscale-pdf"
+  title="Grayscale PDF: convert a colour PDF to black and white free"
+  description="Turn every page of a PDF grey, text, drawings and images alike, in your browser. Free with no limits and no account, and your file is never uploaded."
+  heading="Grayscale PDF"
+  intro="Turn a colour PDF into shades of grey, to print without colour ink or to make files smaller. Free, no sign-up, and your file never leaves this device."
+  steps={[
+    { title: "Add your PDF", text: "Choose it, drop it anywhere on the page, or paste it." },
+    {
+      title: "Convert",
+      text: "Every colour becomes the grey of the same lightness, so nothing disappears and contrast stays the same.",
+    },
+    { title: "Download", text: "Your grayscale PDF is ready straight away. No account needed." },
+  ]}
+  faqs={[
+    {
+      question: "Is it really free?",
+      answer:
+        "Yes. There is no paid plan, no daily limit and no watermark. Plyleaf can be free because your own browser does the work.",
+    },
+    {
+      question: "Is my PDF uploaded?",
+      answer: "No. It's converted right here in your browser and never goes over the internet.",
+    },
+    {
+      question: "Does the text stay text?",
+      answer:
+        "Yes. Text stays selectable and searchable, and drawings stay sharp at any zoom: only their colour changes. Photos and other images are converted to grey pixels, which usually makes the file smaller too.",
+    },
+    {
+      question: "Are comments and form fields grey too?",
+      answer:
+        "Not yet: annotations such as comments, highlights and form fields keep their colours. To include them, flatten the PDF first, then convert it.",
+    },
+    {
+      question: "Why not just print in black and white?",
+      answer:
+        "You can, but a grayscale file looks the same on every printer and screen, uses no colour ink even on printers that mix grey from colours, and is often smaller to send.",
+    },
+  ]}
+>
+  <GrayscaleWorkspace client:load />
+</ToolPage>

@@ -91,6 +91,8 @@ export type CompressLevel = "low" | "recommended" | "extreme";
 /** What to change in a copy of an open document before saving it (Optimize & secure tools). */
 export interface TransformOptions {
   compress?: CompressLevel;
+  /** Images become grey for real; everything else on the pages is greyed by a full-page Saturation blend. */
+  grayscale?: boolean;
 }
 
 /** An RGBA bitmap, 4 bytes per pixel, not premultiplied. */

@@ -16,12 +16,27 @@ const SMALL_IMAGE = 64 * 64;
 export function transform(pdf: mupdf.PDFDocument, options: TransformOptions): Uint8Array<ArrayBuffer> {
   const copy = copyOf(pdf);
   try {
+    if (options.grayscale) toGrey(copy);
     if (options.compress && options.compress !== "low") recompressImages(copy, IMAGE_LEVELS[options.compress]);
     const save = ["garbage=deduplicate", "compress", "encrypt=keep"];
     if (options.compress) save.push("compress-fonts", "compress-images", "objstms");
-    return saved(copy, save.join(","));
+    return repacked(saved(copy, "garbage,encrypt=keep"), save.join(","));
   } finally {
     copy.destroy();
+  }
+}
+
+/**
+ * Saves a document again from scratch with `options`. Renumbering objects (garbage=compact or deduplicate) in the
+ * document we changed loses streams in MuPDF 1.28 when we hold objects we looked at and then added streams, so changes
+ * are saved without renumbering first and the final save is done on a freshly opened copy.
+ */
+function repacked(bytes: Uint8Array, options: string): Uint8Array<ArrayBuffer> {
+  const fresh = new mupdf.PDFDocument(bytes);
+  try {
+    return saved(fresh, options);
+  } finally {
+    fresh.destroy();
   }
 }
 
@@ -97,6 +112,97 @@ function recompressImage(pdf: mupdf.PDFDocument, ref: mupdf.PDFObject, maxSide: 
   }
 }
 
+/**
+ * Greyscale. Images are converted for real (JPEGs stay JPEG at quality 85, the rest lossless), which also makes the
+ * file smaller. Text, drawings and shadings are greyed by painting black over each page with the Saturation blend
+ * mode: it keeps each colour's luminosity and takes away its saturation, exactly a luminance greyscale, while text
+ * stays text. Annotations (comments, form fields) keep their colours.
+ */
+function toGrey(pdf: mupdf.PDFDocument) {
+  const done = new Set<number>();
+  for (let index = 0; index < pdf.countPages(); index++) {
+    for (const { id, ref } of pageImages(pdf, index)) {
+      if (done.has(id)) continue;
+      done.add(id);
+      try {
+        greyImage(pdf, ref);
+      } catch (error) {
+        console.warn(`Kept image ${id} as it was: ${message(error)}`);
+      }
+    }
+    desaturatePage(pdf, pdf.findPage(index));
+  }
+}
+
+function greyImage(pdf: mupdf.PDFDocument, ref: mupdf.PDFObject) {
+  const object = ref.resolve();
+  const bits = object.get("BitsPerComponent");
+  if (bits.isNumber() && bits.asNumber() === 1) return;
+  if (/JBIG2Decode|CCITTFaxDecode/.test(object.get("Filter").toString())) return;
+  const image = pdf.loadImage(ref);
+  const pixmaps: mupdf.Pixmap[] = [];
+  try {
+    if (image.getColorSpace()?.getType() === "Gray") return;
+    const decoded = image.toPixmap();
+    pixmaps.push(decoded);
+    const grey = decoded.convertToColorSpace(mupdf.ColorSpace.DeviceGray, false);
+    pixmaps.push(grey);
+    const jpeg = /DCTDecode|JPXDecode/.test(object.get("Filter").toString());
+    replaceImage(pdf, ref, jpeg ? new mupdf.Image(grey.asJPEG(85).slice()) : new mupdf.Image(grey));
+  } finally {
+    for (const pixmap of pixmaps) pixmap.destroy();
+    image.destroy();
+  }
+}
+
+/** Wraps the page's content in q/Q and paints black over it with the Saturation blend mode. */
+function desaturatePage(pdf: mupdf.PDFDocument, page: mupdf.PDFObject) {
+  // Resources inherited from the page tree are copied onto the page, so the blend mode is added for this page only.
+  let resources = page.get("Resources");
+  if (!resources.isDictionary()) {
+    resources = pdf.newDictionary();
+    const inherited = page.getInheritable("Resources");
+    if (inherited.isDictionary()) inherited.forEach((value, key) => resources.put(key, value));
+    page.put("Resources", resources);
+  }
+  let states = resources.get("ExtGState");
+  if (!states.isDictionary()) {
+    states = pdf.newDictionary();
+    resources.put("ExtGState", states);
+  }
+  // Pages that share one resources dictionary share the blend mode too.
+  let name = "PlyleafGrey";
+  for (let n = 2; ; n++) {
+    const existing = states.get(name);
+    if (existing.isNull()) {
+      states.put(name, pdf.addObject({ Type: "ExtGState", BM: "Saturation", ca: 1, CA: 1 }));
+      break;
+    }
+    if (existing.get("BM").isName() && existing.get("BM").asName() === "Saturation") break;
+    name = `PlyleafGrey${n}`;
+  }
+
+  const media = page.getInheritable("MediaBox");
+  const box = [0, 1, 2, 3].map((i) => (media.isArray() ? media.get(i).asNumber() : [0, 0, 612, 792][i]!));
+  const [x0, y0, x1, y1] = [
+    Math.min(box[0]!, box[2]!),
+    Math.min(box[1]!, box[3]!),
+    Math.max(box[0]!, box[2]!),
+    Math.max(box[1]!, box[3]!),
+  ];
+  const contents = page.get("Contents");
+  const streams = contents.isArray()
+    ? Array.from({ length: contents.length }, (_, i) => contents.get(i))
+    : contents.isNull()
+      ? []
+      : [contents];
+  const wrapped = pdf.newArray();
+  wrapped.push(pdf.addStream("q\n", {}));
+  for (const stream of streams) wrapped.push(stream);
+  wrapped.push(pdf.addStream(`\nQ q /${name} gs 0 g ${x0} ${y0} ${x1 - x0} ${y1 - y0} re f Q\n`, {}));
+  page.put("Contents", wrapped);
+}
+
 /** `pixmap` drawn smaller (MuPDF scales down smoothly), without alpha. */
 function resized(pixmap: mupdf.Pixmap, width: number, height: number): mupdf.Pixmap {
   const out = new mupdf.Pixmap(pixmap.getColorSpace()!, [0, 0, Math.max(1, width), Math.max(1, height)], false);
@@ -130,7 +236,7 @@ export function replaceImage(pdf: mupdf.PDFDocument, ref: mupdf.PDFObject, image
     if (target.get("Mask").isArray()) target.delete("Mask");
     ref.writeRawStream(fresh.readRawStream());
   } finally {
-    pdf.deleteObject(fresh);
+    // The temporary image object is no longer used; saving (always with garbage=) drops it.
     image.destroy();
   }
 }
