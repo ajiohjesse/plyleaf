@@ -142,3 +142,29 @@ test("comments become note annotations at their place, with their text", async (
   }
   expect(await qpdfCheck(output)).toBe(0);
 });
+
+test("stamps become stamp annotations with their name, colour and shape", async () => {
+  const output = transform(openPdf(makePdf([PAGE, { ...PAGE, rotate: 90 }])), {
+    edits: {
+      pages: [0, 1].map((page) => ({
+        page,
+        marks: [],
+        annotations: [
+          { type: "stamp" as const, x: 40, y: 220, width: 190, name: "Approved", color: [0, 0.5, 0] as const },
+          { type: "stamp" as const, x: 40, y: 300, width: 95, name: "PAID", color: [1, 0, 0] as const },
+        ],
+      })),
+    },
+  });
+  const doc = keep(new mupdf.PDFDocument(output));
+  for (const index of [0, 1]) {
+    const [approved, paid] = doc.loadPage(index).getAnnotations();
+    expect(approved!.getType()).toBe("Stamp");
+    expect(approved!.getIcon()).toBe("Approved");
+    expect(paid!.getIcon()).toBe("PAID");
+    expect(paid!.getColor()).toEqual([1, 0, 0]);
+    const [x0, y0, x1, y1] = approved!.getBounds();
+    expect([x0, y0, x1 - x0, y1 - y0].map(Math.round)).toEqual([40, 220, 190, 50]);
+  }
+  expect(await qpdfCheck(output)).toBe(0);
+});

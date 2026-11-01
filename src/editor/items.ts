@@ -2,7 +2,7 @@
 // points from the top-left of the page as it's shown. The list is in drawing order, so later items are on top.
 import type { Annotation, Edits, Mark, Quad, Rgb, ShapeKind, StandardFont } from "~/engine/types";
 
-export { NOTE_SIZE } from "~/engine/types";
+export { NOTE_SIZE, STAMP_RATIO } from "~/engine/types";
 
 export type ItemId = string;
 
@@ -113,7 +113,38 @@ export interface NoteItem {
 
 export const NOTE_COLOUR: Rgb = [1, 0.83, 0.23];
 
-export type Item = TextItem | ImageItem | ShapeItem | WhiteoutItem | MarkupItem | InkItem | NoteItem;
+/** A rubber stamp, saved as a stamp annotation: a standard stamp name, or words of the user's own. */
+export interface StampItem {
+  id: ItemId;
+  kind: "stamp";
+  page: number;
+  x: number;
+  y: number;
+  /** Its height is always STAMP_RATIO of this. */
+  width: number;
+  name: string;
+  color: Rgb;
+}
+
+/** The standard stamps offered, by their PDF names, and how they read. */
+export const STAMPS: readonly { name: string; label: string; color: Rgb }[] = [
+  { name: "Approved", label: "APPROVED", color: [0.09, 0.55, 0.27] },
+  { name: "NotApproved", label: "NOT APPROVED", color: [0.85, 0.11, 0.18] },
+  { name: "Draft", label: "DRAFT", color: [0.15, 0.39, 0.92] },
+  { name: "Final", label: "FINAL", color: [0.09, 0.55, 0.27] },
+  { name: "Confidential", label: "CONFIDENTIAL", color: [0.85, 0.11, 0.18] },
+  { name: "ForComment", label: "FOR COMMENT", color: [0.15, 0.39, 0.92] },
+  { name: "Expired", label: "EXPIRED", color: [0.85, 0.11, 0.18] },
+];
+
+/** What a stamp says: a standard stamp's words in capitals, or the user's own as typed. */
+export const stampLabel = (name: string) => STAMPS.find((stamp) => stamp.name === name)?.label ?? name;
+
+/** A stamp placed with a click is this wide. */
+export const STAMP_WIDTH = 160;
+export const MIN_STAMP_WIDTH = 40;
+
+export type Item = TextItem | ImageItem | ShapeItem | WhiteoutItem | MarkupItem | InkItem | NoteItem | StampItem;
 
 /** How new strokes look. */
 export type InkStyle = Pick<InkItem, "color" | "width" | "opacity">;
@@ -230,7 +261,8 @@ export type Patch =
   | Partial<Omit<WhiteoutItem, "id" | "kind">>
   | Partial<Omit<MarkupItem, "id" | "kind">>
   | Partial<Omit<InkItem, "id" | "kind">>
-  | Partial<Omit<NoteItem, "id" | "kind">>;
+  | Partial<Omit<NoteItem, "id" | "kind">>
+  | Partial<Omit<StampItem, "id" | "kind">>;
 
 export function updateItem(items: readonly Item[], id: ItemId, patch: Patch): Item[] {
   return items.map((item) => (item.id === id ? ({ ...item, ...patch } as Item) : item));
@@ -257,7 +289,9 @@ export function resizeImage(item: ImageItem, width: number): { width: number; he
 }
 
 /** An item has nothing to draw (text with no characters). */
-export const isEmpty = (item: Item) => (item.kind === "text" || item.kind === "note") && item.text.trim() === "";
+export const isEmpty = (item: Item) =>
+  ((item.kind === "text" || item.kind === "note") && item.text.trim() === "") ||
+  (item.kind === "stamp" && item.name.trim() === "");
 
 /**
  * The items as the engine's edits, page by page in page order. Empty items are left out; each picture used goes into
@@ -269,7 +303,7 @@ export function toEdits(items: readonly Item[], assets: ReadonlyMap<AssetId, Ass
   const images: Uint8Array[] = [];
   const imageIndex = new Map<AssetId, number>();
 
-  function toMark(item: Exclude<Item, MarkupItem | InkItem | NoteItem>): Mark {
+  function toMark(item: Exclude<Item, MarkupItem | InkItem | NoteItem | StampItem>): Mark {
     if (item.kind === "text") {
       const { x, y, text, font, bold, italic, size, color } = item;
       return { type: "text", x, y, text, font, bold, italic, size, color };
@@ -295,19 +329,21 @@ export function toEdits(items: readonly Item[], assets: ReadonlyMap<AssetId, Ass
 
   for (const item of items) {
     if (isEmpty(item)) continue;
-    if (item.kind === "markup" || item.kind === "ink" || item.kind === "note") {
+    if (item.kind === "markup" || item.kind === "ink" || item.kind === "note" || item.kind === "stamp") {
       const annotation: Annotation =
-        item.kind === "note"
-          ? { type: "note", x: item.x, y: item.y, text: item.text, color: item.color }
-          : item.kind === "markup"
-            ? { type: item.style, quads: item.quads, color: item.color }
-            : {
-                type: "ink",
-                strokes: [item.points],
-                color: item.color,
-                width: item.width,
-                ...(item.opacity < 1 && { opacity: item.opacity }),
-              };
+        item.kind === "stamp"
+          ? { type: "stamp", x: item.x, y: item.y, width: item.width, name: item.name.trim(), color: item.color }
+          : item.kind === "note"
+            ? { type: "note", x: item.x, y: item.y, text: item.text, color: item.color }
+            : item.kind === "markup"
+              ? { type: item.style, quads: item.quads, color: item.color }
+              : {
+                  type: "ink",
+                  strokes: [item.points],
+                  color: item.color,
+                  width: item.width,
+                  ...(item.opacity < 1 && { opacity: item.opacity }),
+                };
       annotations.set(item.page, [...(annotations.get(item.page) ?? []), annotation]);
     } else {
       byPage.set(item.page, [...(byPage.get(item.page) ?? []), toMark(item)]);

@@ -8,10 +8,12 @@ import { EngineError } from "./errors";
 import {
   LINE_HEIGHT,
   NOTE_SIZE,
+  STAMP_RATIO,
   type Annotation,
   type Edits,
   type ImageMark,
   type Mark,
+  type Rgb,
   type ShapeMark,
   type StandardFont,
   type TextMark,
@@ -49,6 +51,17 @@ function annotate(pdf: mupdf.PDFDocument, index: number, annotations: Annotation
     const [x0, y0] = page.getBounds();
     const placed = (quad: readonly number[]) => quad.map((n, i) => n + (i % 2 === 0 ? x0 : y0)) as mupdf.Quad;
     for (const annotation of annotations) {
+      if (annotation.type === "stamp") {
+        if (!annotation.name.trim() || !(annotation.width > 0)) continue;
+        const [x, y] = [annotation.x + x0, annotation.y + y0];
+        const rect: mupdf.Rect = [x, y, x + annotation.width, y + annotation.width * STAMP_RATIO];
+        const annot = page.createAnnotation("Stamp");
+        annot.setRect(rect);
+        annot.setIcon(annotation.name.trim());
+        annot.setColor([...annotation.color]);
+        uprightStamp(pdf, page, annot, rect, annotation.name.trim(), annotation.color);
+        continue;
+      }
       if (annotation.type === "note") {
         if (!annotation.text.trim()) continue;
         const [x, y] = [annotation.x + x0, annotation.y + y0];
@@ -85,6 +98,48 @@ function annotate(pdf: mupdf.PDFDocument, index: number, annotations: Annotation
     }
   } finally {
     page.destroy();
+  }
+}
+
+/**
+ * Gives a stamp the appearance MuPDF draws, upright as the page is shown. MuPDF draws stamps in the page's own space,
+ * so on a turned page they'd show sideways (or squashed: it keeps its 19:5 shape in that space). So the stamp is drawn
+ * on an unturned scratch page and its appearance stream used here, its matrix taking it from the scratch page's space
+ * to this page's through the shown page they share; a reader then fits it to the rectangle.
+ */
+function uprightStamp(
+  pdf: mupdf.PDFDocument,
+  page: mupdf.PDFPage,
+  annot: mupdf.PDFAnnotation,
+  rect: mupdf.Rect,
+  name: string,
+  color: Rgb,
+) {
+  const [x0, y0, x1, y1] = page.getBounds();
+  const scratch = new mupdf.PDFDocument();
+  try {
+    scratch.insertPage(-1, scratch.addPage([0, 0, x1 - x0, y1 - y0], 0, {}, ""));
+    const sheet = scratch.loadPage(0);
+    const drawn = sheet.createAnnotation("Stamp");
+    drawn.setRect([rect[0] - x0, rect[1] - y0, rect[2] - x0, rect[3] - y0]);
+    drawn.setIcon(name);
+    drawn.setColor([...color]);
+    drawn.update();
+    const form = drawn.getObject().get("AP").get("N");
+    const box = form.get("BBox");
+    const bbox = [0, 1, 2, 3].map((i) => box.get(i).asNumber()) as mupdf.Rect;
+    const own = form.get("Matrix");
+    const matrix = own.isArray()
+      ? ([0, 1, 2, 3, 4, 5].map((i) => own.get(i).asNumber()) as mupdf.Matrix)
+      : mupdf.Matrix.identity;
+    const toPage = mupdf.Matrix.concat(
+      mupdf.Matrix.concat(matrix, sheet.getTransform()),
+      mupdf.Matrix.invert(page.getTransform()),
+    );
+    annot.setAppearance(null, null, toPage, bbox, pdf.graftObject(form.get("Resources")), form.readStream());
+    sheet.destroy();
+  } finally {
+    scratch.destroy();
   }
 }
 

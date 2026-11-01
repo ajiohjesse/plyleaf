@@ -3,7 +3,7 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M5: Editor (M0–M2 done 2026-10-31, M3 and M4 done 2026-11-01)
-- **Next action:** M5: stamps.
+- **Next action:** M5: edit existing text.
 - **Owner asked (2026-11-01):** build all of M5 in one go, one PR per item, each auto-merged when CI passes.
 - **Owner asked earlier (2026-11-01):** build all of M3 and M4 in one go, one PR per tool, each auto-merged when CI passes.
   Unlock removes owner-password restrictions only after the user confirms they have the right to; libheif-js approved.
@@ -49,7 +49,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] Compress (3 levels) · [x] Grayscale · [x] Protect · [x] Unlock · [x] Permissions · [x] Flatten · [x] Repair · [x] Metadata
 
 ### [ ] M5: Editor
-- [x] Text add · [ ] Edit existing text · [x] Images · [x] Shapes · [x] Whiteout · [x] Markup · [x] Freehand · [x] Comments · [ ] Stamps
+- [x] Text add · [ ] Edit existing text · [x] Images · [x] Shapes · [x] Whiteout · [x] Markup · [x] Freehand · [x] Comments · [x] Stamps
 - [ ] Page numbers · [ ] Watermark · [ ] Header/footer · [ ] Bates · [x] Undo/redo
 - [ ] Output verified in Acrobat Reader, Chrome, macOS Preview
 
@@ -73,6 +73,19 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-11-01: Stamps (M5)
+- Engine: stamp annotations (a standard PDF stamp name or the user's own words, colour, 19:5 box). MuPDF draws stamps
+  in the page's unturned space, so on a turned page they'd show sideways or squashed: the engine draws each on an
+  unturned scratch page and gives the real annotation that appearance through the shown page both share
+  (`uprightStamp`). Checked at /Rotate 0, 90 and 270.
+- Editor: Add stamp tool (Approved, Not approved, Draft, Final, Confidential, For comment, Expired, or "Your own…"
+  words; colour); click or Enter places a 160-point stamp, then it's selected to move, resize (handle or +/−, keeping
+  its shape) or restyle. Words the fonts can't show are flagged. The toolbar hint now stays on one line.
+- Verified: 1 new unit test (names, colour, bounds on plain and turned pages, qpdf-clean). New E2E `stamps.spec.ts`
+  (standard stamp resized, own words, positions read back with MuPDF, qpdf-clean, `watchEgress`; empty words refused,
+  restyle): 8/8 in all four projects.
+- Next: edit existing text.
 
 ### 2026-11-01: Comments (M5)
 - Engine: note annotations (a "Comment" icon, the text as its contents, a pop-up beside it). A note's icon stays
