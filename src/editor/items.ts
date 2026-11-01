@@ -50,7 +50,24 @@ export interface ShapeItem {
   lineWidth: number;
 }
 
-export type Item = TextItem | ImageItem | ShapeItem;
+/**
+ * A box in one colour (white unless the page is another colour) that covers what's under it. It hides, it doesn't
+ * remove: the text underneath is still in the file.
+ */
+export interface WhiteoutItem {
+  id: ItemId;
+  kind: "whiteout";
+  page: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  color: Rgb;
+}
+
+export type Item = TextItem | ImageItem | ShapeItem | WhiteoutItem;
+
+export const WHITE: Rgb = [1, 1, 1];
 
 /** How new shapes look, and what the shape options show. */
 export type ShapeStyle = Pick<ShapeItem, "shape" | "stroke" | "fill" | "lineWidth">;
@@ -84,7 +101,11 @@ export function clickedShape(style: ShapeStyle, x: number, y: number) {
 }
 
 /** A shape's new size: boxes keep a minimum, lines can point anywhere. */
-export function resizeShape(item: ShapeItem, width: number, height: number): { width: number; height: number } {
+export function resizeShape(
+  item: Pick<ShapeItem, "shape">,
+  width: number,
+  height: number,
+): { width: number; height: number } {
   if (item.shape === "line" || item.shape === "arrow") return { width, height };
   return { width: Math.max(MIN_SHAPE_SIDE, width), height: Math.max(MIN_SHAPE_SIDE, height) };
 }
@@ -118,7 +139,8 @@ export const newId = (): ItemId => `i${++counter}`;
 type Patch =
   | Partial<Omit<TextItem, "id" | "kind">>
   | Partial<Omit<ImageItem, "id" | "kind">>
-  | Partial<Omit<ShapeItem, "id" | "kind">>;
+  | Partial<Omit<ShapeItem, "id" | "kind">>
+  | Partial<Omit<WhiteoutItem, "id" | "kind">>;
 
 export function updateItem(items: readonly Item[], id: ItemId, patch: Patch): Item[] {
   return items.map((item) => (item.id === id ? ({ ...item, ...patch } as Item) : item));
@@ -161,6 +183,10 @@ export function toEdits(items: readonly Item[], assets: ReadonlyMap<AssetId, Ass
     if (item.kind === "text") {
       const { x, y, text, font, bold, italic, size, color } = item;
       return { type: "text", x, y, text, font, bold, italic, size, color };
+    }
+    if (item.kind === "whiteout") {
+      const { x, y, width, height, color } = item;
+      return { type: "shape", shape: "rectangle", x, y, width, height, stroke: null, fill: color, lineWidth: 0 };
     }
     if (item.kind === "shape") {
       const { shape, x, y, width, height, stroke, fill, lineWidth } = item;

@@ -254,3 +254,21 @@ export function ShapeOptions({
     </OptionsPanel>
   );
 }
+
+/** The cover colour of whiteout: white, or the colour of the page it covers. */
+export function WhiteoutOptions({
+  color,
+  onChange,
+  onRemove,
+}: {
+  color: Rgb;
+  onChange: (color: Rgb) => void;
+  onRemove: (() => void) | undefined;
+}) {
+  return (
+    <OptionsPanel legend="Whiteout options" onRemove={onRemove}>
+      <ColourField label="Cover colour" value={color} onChange={onChange} />
+      <p className="text-sm text-ink-muted">Covers what&apos;s underneath. It isn&apos;t removed from the file.</p>
+    </OptionsPanel>
+  );
+}

@@ -14,12 +14,12 @@ import {
   removeItem,
   toEdits,
   updateItem,
+  WHITE,
   type Asset,
   type AssetId,
   type ImageItem,
   type Item,
   type ItemId,
-  type ShapeItem,
   type ShapeStyle,
   type TextItem,
   type TextStyle,
@@ -31,9 +31,19 @@ import { thumbnails } from "~/thumbnails/thumbnails";
 import { NEAR, ON_SCREEN, useViewportObserver } from "~/components/thumbnails/ThumbnailGrid";
 import { ActionBar, FailureAlert, plural, primaryButton } from "~/components/workspace/parts";
 import { EditorPage, type PageHandlers, type Tool } from "./EditorPage";
-import { ImageIcon, RedoIcon, SelectIcon, ShapeIcon, TextIcon, UndoIcon, ZoomInIcon, ZoomOutIcon } from "./icons";
+import {
+  ImageIcon,
+  RedoIcon,
+  SelectIcon,
+  ShapeIcon,
+  TextIcon,
+  UndoIcon,
+  WhiteoutIcon,
+  ZoomInIcon,
+  ZoomOutIcon,
+} from "./icons";
 import { baselineRatio } from "./measure";
-import { ShapeOptions, TextOptions } from "./options";
+import { ShapeOptions, TextOptions, WhiteoutOptions } from "./options";
 import { prepareImage } from "./prepareImage";
 
 /** Zoom steps, as multiples of the size that fits the pages to the screen's width. */
@@ -62,7 +72,8 @@ export function Editor({ doc, onSaved }: Props) {
   const [textStyle, setTextStyle] = useState<TextStyle>(DEFAULT_TEXT);
   const [shapeStyle, setShapeStyle] = useState<ShapeStyle>(DEFAULT_SHAPE);
   // A shape being drawn: shown, but not an item until the pointer is let go.
-  const [sketch, setSketch] = useState<ShapeItem | null>(null);
+  const [sketch, setSketch] = useState<Item | null>(null);
+  const [coverColour, setCoverColour] = useState(WHITE);
   const [zoom, setZoom] = useState(ZOOMS.indexOf(1));
   const [working, setWorking] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -115,6 +126,10 @@ export function Editor({ doc, onSaved }: Props) {
     if (tool === "shape") {
       return add({ id: newId(), kind: "shape", page, ...shapeStyle, ...clickedShape(shapeStyle, x, y) });
     }
+    if (tool === "whiteout") {
+      const box = clickedShape({ ...shapeStyle, shape: "rectangle" }, x, y);
+      return add({ id: newId(), kind: "whiteout", page, ...box, color: coverColour });
+    }
     if (tool !== "text") return;
     // The press marks the top-left of the text box; text is stored by its baseline.
     const ascent = baselineRatio(cssFont(textStyle.font, textStyle.bold, textStyle.italic)) * textStyle.size;
@@ -128,17 +143,16 @@ export function Editor({ doc, onSaved }: Props) {
   const handlers: PageHandlers = {
     onPlace: place,
     onDraw: (page, from, to, done) => {
-      if (tool !== "shape") return;
-      const shape: ShapeItem = {
-        id: sketch?.id ?? newId(),
-        kind: "shape",
-        page,
-        ...shapeStyle,
-        ...drawnShape(shapeStyle, from, to),
-      };
-      if (!done) return setSketch(shape);
+      const id = sketch?.id ?? newId();
+      let item: Item;
+      if (tool === "shape") item = { id, kind: "shape", page, ...shapeStyle, ...drawnShape(shapeStyle, from, to) };
+      else if (tool === "whiteout") {
+        const box = drawnShape({ ...shapeStyle, shape: "rectangle" }, from, to);
+        item = { id, kind: "whiteout", page, ...box, color: coverColour };
+      } else return;
+      if (!done) return setSketch(item);
       setSketch(null);
-      add(shape);
+      add(item);
     },
     onBackground: () => {
       setSelected(null);
@@ -281,6 +295,7 @@ export function Editor({ doc, onSaved }: Props) {
   const changes = items.filter((item) => !isEmpty(item)).length;
   const textOptions = tool === "text" || selectedItem?.kind === "text";
   const shapeOptions = tool === "shape" || selectedItem?.kind === "shape";
+  const whiteoutOptions = tool === "whiteout" || selectedItem?.kind === "whiteout";
   const removeSelected = selectedItem ? () => handlers.handlersFor(selectedItem).onRemove() : undefined;
   const missing = selectedItem?.kind === "text" ? unsupportedCharacters(selectedItem.text) : [];
 
@@ -314,6 +329,16 @@ export function Editor({ doc, onSaved }: Props) {
             }}
           >
             <ShapeIcon />
+          </ToolButton>
+          <ToolButton
+            label="Whiteout"
+            pressed={tool === "whiteout"}
+            onClick={() => {
+              setTool(tool === "whiteout" ? "select" : "whiteout");
+              setSelected(null);
+            }}
+          >
+            <WhiteoutIcon />
           </ToolButton>
           <ToolButton label="Add image" onClick={() => imageInput.current?.click()}>
             <ImageIcon />
@@ -364,6 +389,18 @@ export function Editor({ doc, onSaved }: Props) {
           <TextOptions
             style={selectedItem?.kind === "text" ? selectedItem : textStyle}
             onChange={restyle}
+            onRemove={removeSelected}
+          />
+        )}
+        {whiteoutOptions && (
+          <WhiteoutOptions
+            color={selectedItem?.kind === "whiteout" ? selectedItem.color : coverColour}
+            onChange={(color) => {
+              setCoverColour(color);
+              if (selectedItem?.kind === "whiteout") {
+                update((list) => updateItem(list, selectedItem.id, { color }), `style:${selectedItem.id}:color`);
+              }
+            }}
             onRemove={removeSelected}
           />
         )}
@@ -433,8 +470,9 @@ export function Editor({ doc, onSaved }: Props) {
 function hint(tool: Tool, selected: Item | null, editing: ItemId | null) {
   if (tool === "text") return "Click the page where the text should go.";
   if (tool === "shape") return "Drag across the page to draw, or click to place one.";
+  if (tool === "whiteout") return "Drag over what to cover. It's hidden, not removed from the file.";
   if (editing) return "Type your text. Press Esc or click outside when you're done.";
-  if (selected?.kind === "image" || selected?.kind === "shape")
+  if (selected && selected.kind !== "text")
     return "Drag to move, or use the arrow keys. Drag the corner, or + and -, to resize.";
   if (selected) return "Drag to move, or use the arrow keys. Click again to change the text.";
   return "Choose a tool, then click the page.";
