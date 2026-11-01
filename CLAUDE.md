@@ -56,6 +56,9 @@ Cloudflare Pages. Package manager: pnpm.
 - `src/components/`: Astro components (static) and React islands (`.tsx`). `src/components/home/`: home page sections.
 - `src/engine/`: the PDF engine (D-016). Pages and islands import only `client.ts`; operations go in `ops.ts` (pure,
   unit-tested in Node) and are exposed by `worker.ts`.
+- Images open in the engine as PDFs (D-025): MuPDF decodes JPEG/PNG/GIF/TIFF in the worker; `src/engine/decode.ts`
+  decodes WebP/AVIF/HEIC on the page; `src/engine/heic.ts` (libheif, lazy) covers HEIC the browser can't. Convert-tool
+  logic lives in `src/convert/`; `src/components/workspace/FileOrder.tsx` is the reorderable file list (Merge, Images).
 - `src/intake/`: file checks and the open-documents store (`createIntake`); `src/components/intake/`: `useIntake`,
   `FileDrop` (picker, page-wide drop, paste) and the file list/notices that tool workspaces build on (D-017).
 - `src/thumbnails/`: the shared page-thumbnail cache (`thumbnails`, D-018); `src/components/thumbnails/ThumbnailGrid`

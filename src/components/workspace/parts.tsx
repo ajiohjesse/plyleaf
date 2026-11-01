@@ -120,9 +120,17 @@ export function FirstPage({ doc }: { doc: IntakeDocument }) {
   );
 }
 
-/** "12 pages · 1.2 MB", or "Opening…". */
+/** "12 pages · 1.2 MB", "Image · 1.2 MB", or "Opening…". */
 export function docSummary(doc: IntakeDocument) {
-  return doc.status === "opening" ? "Opening…" : `${plural(doc.info.pageCount, "page")} · ${formatSize(doc.size)}`;
+  if (doc.status === "opening") return "Opening…";
+  const { source, pageCount } = doc.info;
+  const what =
+    source === "image"
+      ? pageCount === 1
+        ? "Image"
+        : `Image, ${plural(pageCount, "page")}`
+      : plural(pageCount, "page");
+  return `${what} · ${formatSize(doc.size)}`;
 }
 
 /** The file a single-file tool is working on, with a button to remove it (and pick another). */

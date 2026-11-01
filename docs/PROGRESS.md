@@ -3,8 +3,9 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M3: Images and scanning (M0, M1 and M2 done 2026-10-31)
-- **Next action:** M3, Images → PDF first (JPG/PNG/WebP/GIF/TIFF, then HEIC): images into the engine, then let Merge
-  take images too (D-021).
+- **Next action:** M3, PDF → images (JPG/PNG/WebP per page, chosen DPI).
+- **Owner asked (2026-11-01):** build all of M3 and M4 in one go, one PR per tool, each auto-merged when CI passes.
+  Unlock removes owner-password restrictions only after the user confirms they have the right to; libheif-js approved.
 - **Live:** https://plyleaf.ajiohjesse.workers.dev (Workers Builds deploys `main`; other branches get Preview URLs).
 - **Blocked on owner:**
   - Later, at the owner's pace: register `plyleaf.com` (and optionally the `plyleaf` GitHub org). Not blocking (D-013).
@@ -41,7 +42,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] Per-tool landing pages + E2E tests
 
 ### [ ] M3: Images and scanning
-- [ ] Images → PDF (incl. HEIC) · [ ] PDF → images · [ ] Extract images · [ ] Camera scan-to-PDF
+- [x] Images → PDF (incl. HEIC) · [ ] PDF → images · [ ] Extract images · [ ] Camera scan-to-PDF
 
 ### [ ] M4: Optimize and secure
 - [ ] Compress (3 levels) · [ ] Grayscale · [ ] Protect · [ ] Unlock · [ ] Permissions · [ ] Flatten · [ ] Repair · [ ] Metadata
@@ -71,6 +72,32 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-11-01: Images to PDF, Merge takes images (M3)
+- Engine (D-025): `engine.open` takes images. The worker opens JPEG/PNG/GIF/TIFF with MuPDF and writes a PDF with a
+  page per frame (JPEG carried over unchanged, EXIF orientation applied, 96 dpi when the file doesn't say, scaled down
+  to fit 612 × 842 pt so phone photos aren't a metre wide). WebP, AVIF and HEIC are decoded on the page
+  (`src/engine/decode.ts`, `createImageBitmap` + canvas) and sent as RGBA (`openPixels`: JPEG q90 if lossy and opaque,
+  else PNG with transparency); HEIC the browser can't decode goes to the worker's libheif (`src/engine/heic.ts`,
+  libheif-js 1.23.5, LGPL-3.0, lazy). `DocInfo.source` says "pdf" or "image"; new error code `invalid-image`.
+- `assemble` specs take `fit` ({width, height, margin}): the page becomes a form XObject scaled and centred on a page of
+  that size, whatever its own /Rotate and crop.
+- `/jpg-to-pdf` (`ImagesWorkspace`): images in order (the Merge list, now `src/components/workspace/FileOrder.tsx`),
+  page size Same as image / A4 / US Letter, orientation (match each image, portrait, landscape) and margin
+  (none, ¼ in, ½ in) via `src/convert/images.ts` `fitFor`. Output `<first>.pdf`, or `<first>-images.pdf` for several.
+- Merge takes images too ("Drop PDFs or images here"), each a page its own size.
+- Fixtures: `tests/fixtures/make-images.ts` makes `photo.heic` (an x265 frame in a hand-built HEIF container),
+  `photo.webp` (lossy) and `drawing.webp` (lossless) with ffmpeg; `tests/helpers/images.ts` makes JPEG (with EXIF
+  orientation/dpi), PNG and multi-page TIFF.
+- Found on the way: Playwright's Windows WebKit has no OffscreenCanvas (nor Safari < 16.4), so decoding moved from the
+  worker to the page. Locally, port 4321 was held by a stray `astro preview` (another chat's); Playwright reuses it, so
+  rebuild `dist/` with `PLYLEAF_TEST_HARNESS=1 pnpm build` before `pnpm e2e` when that happens.
+- Verified: 22 new unit tests (image opening: sizes, dpi, EXIF, big-photo cap, PNG lossless, TIFF frames, bad bytes;
+  pixels: JPEG/PNG choice, transparency; HEIC decode; fit for every /Rotate with margins, scale up, bad margins; layout).
+  New E2E `images-to-pdf.spec.ts` (five kinds incl. HEIC and both WebPs → sizes, orientation and filters checked with
+  MuPDF; A4 + margin; all portrait; images only; unreadable image message; Merge with an image; linked from home;
+  `watchEgress` clean). Full suite 248/248 in Chromium, Firefox, WebKit and Pixel 7. Checked at 375 px and desktop.
+- Next: PDF → images.
 
 ### 2026-10-31: Crop PDF, M2 done
 - Engine: `PageSpec` takes `crop` (fractions of the page as its own rotation shows it, from the top-left); `assemble`

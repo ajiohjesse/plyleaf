@@ -1,6 +1,7 @@
 // The main-thread side of the engine. Nothing here loads MuPDF: the worker (and its 10 MB of WASM) starts on the first
 // call or on preloadEngine(), so pages that import this stay light until the user reaches for a file.
 import { transfer, wrap, type Remote } from "comlink";
+import { decodeForEngine } from "./decode";
 import { carryEngineErrors, EngineError } from "./errors";
 import type { Bitmap, DocId, DocInfo, PageSpec } from "./types";
 import type { EngineApi } from "./worker";
@@ -115,7 +116,11 @@ export const engine = {
     return call(async (running) => {
       const bytes = file instanceof Blob ? new Uint8Array(await file.arrayBuffer()) : file;
       running.bytes += bytes.byteLength;
-      const info = await running.remote.open(transfer(bytes, [bytes.buffer]));
+      // WebP, AVIF and (in Safari) HEIC are decoded here, by the browser, and go over as pixels.
+      const decoded = await decodeForEngine(bytes);
+      const info = decoded
+        ? await running.remote.openPixels(transfer(decoded.bitmap, [decoded.bitmap.pixels.buffer]), decoded.lossy)
+        : await running.remote.open(transfer(bytes, [bytes.buffer]));
       running.open.add(info.id);
       return info;
     });

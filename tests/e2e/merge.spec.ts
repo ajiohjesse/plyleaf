@@ -118,7 +118,7 @@ test("reorders files by dragging, with the keyboard or the pointer", async ({ pa
   await expect(fileNames(page)).toHaveText(["one.pdf", "two.pdf", "three.pdf"]);
 });
 
-test("waits for a second PDF, and loads no engine before a file arrives", async ({ page }) => {
+test("waits for a second file, and loads no engine before a file arrives", async ({ page }) => {
   const engineRequests: string[] = [];
   page.on("request", (request) => {
     if (/\.wasm$|\/worker-[^/]*\.js$/.test(new URL(request.url()).pathname)) engineRequests.push(request.url());
@@ -130,13 +130,13 @@ test("waits for a second PDF, and loads no engine before a file arrives", async 
 
   await page.getByLabel("Choose files").setInputFiles(asPayload(pdfFile("only.pdf")));
   await expect(fileList(page)).toHaveCount(1);
-  await expect(page.getByText("Add at least one more PDF to merge.")).toBeVisible();
+  await expect(page.getByText("Add at least one more file to merge.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Merge PDFs" })).toBeDisabled();
   // Not a PDF: said so, and nothing else changes.
   await page
     .getByLabel("Choose files")
     .setInputFiles({ name: "notes.txt", mimeType: "text/plain", buffer: Buffer.from("hello") });
-  await expect(page.getByRole("list", { name: "File messages" })).toContainText("notes.txt isn't a PDF.");
+  await expect(page.getByRole("list", { name: "File messages" })).toContainText("notes.txt isn't a PDF or an image.");
   await expect(fileList(page)).toHaveCount(1);
 });
 

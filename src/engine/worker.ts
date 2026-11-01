@@ -1,6 +1,8 @@
 // The engine worker. It holds the documents the page has opened and runs every operation off the main thread.
 import { expose, transfer } from "comlink";
 import type { PDFDocument } from "mupdf";
+import { sniffKind } from "~/intake/files";
+import { isHeif, mupdfImageType } from "./decode";
 import { carryEngineErrors, EngineError } from "./errors";
 import type { Bitmap, DocId, DocInfo, PageSpec } from "./types";
 
@@ -17,6 +19,22 @@ loading.catch(() => {});
 const docs = new Map<DocId, PDFDocument>();
 let nextId = 1;
 
+/** Intake has already checked the file; a PDF without a header (a damaged one MuPDF may repair) isn't an image. */
+const isImage = (bytes: Uint8Array) => sniffKind(bytes.subarray(0, 1024), "", "") === "image";
+
+/** Holds an opened document under a new id and describes it. */
+function keep(ops: Awaited<typeof loading>, doc: PDFDocument, source: DocInfo["source"]): DocInfo {
+  try {
+    const id = `d${nextId++}`;
+    const { pages, repaired } = ops.describe(doc);
+    docs.set(id, doc);
+    return { id, source, pageCount: pages.length, pages, repaired };
+  } catch (error) {
+    doc.destroy();
+    throw error;
+  }
+}
+
 function get(id: DocId): PDFDocument {
   const doc = docs.get(id);
   if (!doc) throw new EngineError("unknown-document", `Document ${id} isn't open`);
@@ -29,18 +47,26 @@ const api = {
     await loading;
   },
 
+  /**
+   * Opens a PDF, or an image MuPDF or libheif decodes as a PDF with a page per frame. Other images are decoded on the
+   * page and come in through openPixels.
+   */
   async open(bytes: Uint8Array): Promise<DocInfo> {
     const ops = await loading;
-    const doc = ops.openPdf(bytes);
-    try {
-      const id = `d${nextId++}`;
-      const { pages, repaired } = ops.describe(doc);
-      docs.set(id, doc);
-      return { id, pageCount: pages.length, pages, repaired };
-    } catch (error) {
-      doc.destroy();
-      throw error;
+    if (!isImage(bytes)) return keep(ops, ops.openPdf(bytes), "pdf");
+    const type = mupdfImageType(bytes);
+    if (type) return keep(ops, ops.openImage(bytes, type), "image");
+    if (isHeif(bytes)) {
+      const { decodeHeic } = await import("./heic");
+      return keep(ops, ops.openPixels(await decodeHeic(bytes), true), "image");
     }
+    throw new EngineError("invalid-image", "This image has to be decoded on the page first");
+  },
+
+  /** Opens an image decoded to RGBA (by the page) as a one-page PDF. */
+  async openPixels(bitmap: Bitmap, lossy: boolean): Promise<DocInfo> {
+    const ops = await loading;
+    return keep(ops, ops.openPixels(bitmap, lossy), "image");
   },
 
   async render(id: DocId, page: number, width: number): Promise<Bitmap> {

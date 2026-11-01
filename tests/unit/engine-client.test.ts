@@ -19,6 +19,7 @@ function FakeWorker() {
       ready: () => {},
       open: (bytes: Uint8Array): DocInfo => ({
         id: `d${nextId++}`,
+        source: "pdf",
         pageCount: bytes.length,
         pages: [],
         repaired: false,
