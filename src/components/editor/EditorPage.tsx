@@ -1,20 +1,30 @@
 import { memo, useEffect, useRef, useState } from "react";
+import type { Point } from "~/editor/shapes";
 import type { PageInfo } from "~/engine/types";
 import type { Asset, AssetId, Item, ItemId } from "~/editor/items";
 import { PageCanvas } from "~/components/thumbnails/PageCanvas";
 import type { Observe } from "~/components/thumbnails/ThumbnailGrid";
 import type { ItemHandlers } from "./gestures";
 import { ImageBox } from "./ImageBox";
+import { ShapeBox } from "./ShapeBox";
 import { TextBox } from "./TextBox";
 
 /** Pages are rendered at most this many device pixels wide; zoomed further, the image is scaled up. */
 const MAX_RENDER = 1600;
 
-export type Tool = "select" | "text";
+export type Tool = "select" | "text" | "shape";
+
+/** Tools that draw by dragging across the page (a click places something of a set size). */
+const DRAWING: ReadonlySet<Tool> = new Set(["shape"]);
+
+/** A press has to move this many CSS pixels to draw rather than click. */
+const DRAW_THRESHOLD = 4;
 
 export interface PageHandlers {
   /** The user pressed the page at (x, y) points with a tool that places something. */
   onPlace: (page: number, x: number, y: number) => void;
+  /** The user is dragging across the page from `from` to `to` (points) with a drawing tool; `done` when released. */
+  onDraw: (page: number, from: Point, to: Point, done: boolean) => void;
   /** The user pressed the page itself (not an item) with the select tool. */
   onBackground: () => void;
   handlersFor: (item: Item) => ItemHandlers & {
@@ -60,11 +70,43 @@ export const EditorPage = memo(function EditorPage(props: Props) {
   const width = Math.max(1, Math.round(page.width * scale));
   const height = Math.max(1, Math.round(page.height * scale));
   const placing = tool !== "select";
+  const drawing = DRAWING.has(tool);
+  const stroke = useRef<{ pointer: number; from: Point; screen: Point; moved: boolean } | null>(null);
 
   function point(event: React.MouseEvent) {
     const box = event.currentTarget.getBoundingClientRect();
     return { x: (event.clientX - box.left) / scale, y: (event.clientY - box.top) / scale };
   }
+
+  /** Pointer handlers for drawing tools: a drag draws, a click places. */
+  const draw = {
+    onPointerDown(event: React.PointerEvent<HTMLElement>) {
+      if (event.button !== 0) return;
+      // No focus on press: focusing the page-sized button could scroll the page in the middle of the drag.
+      event.preventDefault();
+      event.currentTarget.setPointerCapture(event.pointerId);
+      const screen = { x: event.clientX, y: event.clientY };
+      stroke.current = { pointer: event.pointerId, from: point(event), screen, moved: false };
+    },
+    onPointerMove(event: React.PointerEvent<HTMLElement>) {
+      const active = stroke.current;
+      if (active?.pointer !== event.pointerId) return;
+      const far = Math.hypot(event.clientX - active.screen.x, event.clientY - active.screen.y) >= DRAW_THRESHOLD;
+      if (!active.moved && !far) return;
+      active.moved = true;
+      props.onDraw(index, active.from, point(event), false);
+    },
+    onPointerUp(event: React.PointerEvent<HTMLElement>) {
+      const active = stroke.current;
+      if (active?.pointer !== event.pointerId) return;
+      stroke.current = null;
+      if (active.moved) props.onDraw(index, active.from, point(event), true);
+      else props.onPlace(index, active.from.x, active.from.y);
+    },
+    onPointerCancel() {
+      stroke.current = null;
+    },
+  };
 
   return (
     <li
@@ -88,9 +130,12 @@ export const EditorPage = memo(function EditorPage(props: Props) {
           type="button"
           aria-label={`Add to page ${index + 1}`}
           className="absolute inset-0 cursor-crosshair"
+          style={drawing ? { touchAction: "none" } : undefined}
+          {...(drawing ? draw : {})}
           onClick={(event) => {
             // From the keyboard (no pointer position), it goes in the middle of the page.
             if (event.detail === 0) return props.onPlace(index, page.width / 2, page.height / 2);
+            if (drawing) return;
             const { x, y } = point(event);
             props.onPlace(index, x, y);
           }}
@@ -100,6 +145,18 @@ export const EditorPage = memo(function EditorPage(props: Props) {
       )}
       {items.map((item) => {
         const { onText, onEndEdit, onResize, ...handlers } = props.handlersFor(item);
+        if (item.kind === "shape") {
+          return (
+            <ShapeBox
+              key={item.id}
+              item={item}
+              scale={scale}
+              selected={item.id === selected}
+              onResize={onResize}
+              {...handlers}
+            />
+          );
+        }
         return item.kind === "text" ? (
           <TextBox
             key={item.id}

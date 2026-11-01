@@ -1,6 +1,6 @@
 // What the user has added in the editor, and how it becomes the engine's edits. Items are measured like marks: PDF
 // points from the top-left of the page as it's shown. The list is in drawing order, so later items are on top.
-import type { Edits, Mark, Rgb, StandardFont } from "~/engine/types";
+import type { Edits, Mark, Rgb, ShapeKind, StandardFont } from "~/engine/types";
 
 export type ItemId = string;
 
@@ -34,7 +34,60 @@ export interface ImageItem {
   asset: AssetId;
 }
 
-export type Item = TextItem | ImageItem;
+export interface ShapeItem {
+  id: ItemId;
+  kind: "shape";
+  page: number;
+  shape: ShapeKind;
+  /** A rectangle's or ellipse's top-left corner, or where a line starts… */
+  x: number;
+  y: number;
+  /** …and its size, or how far the line's end is from its start (either sign). */
+  width: number;
+  height: number;
+  stroke: Rgb | null;
+  fill: Rgb | null;
+  lineWidth: number;
+}
+
+export type Item = TextItem | ImageItem | ShapeItem;
+
+/** How new shapes look, and what the shape options show. */
+export type ShapeStyle = Pick<ShapeItem, "shape" | "stroke" | "fill" | "lineWidth">;
+
+export const DEFAULT_SHAPE: ShapeStyle = { shape: "rectangle", stroke: [0.85, 0.11, 0.18], fill: null, lineWidth: 2 };
+export const MIN_LINE_WIDTH = 0.5;
+export const MAX_LINE_WIDTH = 24;
+/** A shape placed with a click rather than drawn is this big. */
+export const CLICKED_SHAPE = { width: 120, height: 80 };
+/** Rectangles and ellipses are never smaller than this many points on a side. */
+export const MIN_SHAPE_SIDE = 4;
+
+/** A shape drawn from one point to another: a box with its corners there, or a line between them. */
+export function drawnShape(style: ShapeStyle, from: { x: number; y: number }, to: { x: number; y: number }) {
+  if (style.shape === "line" || style.shape === "arrow") {
+    return { x: from.x, y: from.y, width: to.x - from.x, height: to.y - from.y };
+  }
+  return {
+    x: Math.min(from.x, to.x),
+    y: Math.min(from.y, to.y),
+    width: Math.max(MIN_SHAPE_SIDE, Math.abs(to.x - from.x)),
+    height: Math.max(MIN_SHAPE_SIDE, Math.abs(to.y - from.y)),
+  };
+}
+
+/** A shape placed with a click at (x, y): a box centred there, or a line starting there. */
+export function clickedShape(style: ShapeStyle, x: number, y: number) {
+  const { width, height } = CLICKED_SHAPE;
+  if (style.shape === "line" || style.shape === "arrow") return { x, y, width, height: 0 };
+  return { x: x - width / 2, y: y - height / 2, width, height };
+}
+
+/** A shape's new size: boxes keep a minimum, lines can point anywhere. */
+export function resizeShape(item: ShapeItem, width: number, height: number): { width: number; height: number } {
+  if (item.shape === "line" || item.shape === "arrow") return { width, height };
+  return { width: Math.max(MIN_SHAPE_SIDE, width), height: Math.max(MIN_SHAPE_SIDE, height) };
+}
 
 export type AssetId = string;
 
@@ -62,7 +115,10 @@ let counter = 0;
 /** A new id, unique on this page load. */
 export const newId = (): ItemId => `i${++counter}`;
 
-type Patch = Partial<Omit<TextItem, "id" | "kind">> | Partial<Omit<ImageItem, "id" | "kind">>;
+type Patch =
+  | Partial<Omit<TextItem, "id" | "kind">>
+  | Partial<Omit<ImageItem, "id" | "kind">>
+  | Partial<Omit<ShapeItem, "id" | "kind">>;
 
 export function updateItem(items: readonly Item[], id: ItemId, patch: Patch): Item[] {
   return items.map((item) => (item.id === id ? ({ ...item, ...patch } as Item) : item));
@@ -105,6 +161,10 @@ export function toEdits(items: readonly Item[], assets: ReadonlyMap<AssetId, Ass
     if (item.kind === "text") {
       const { x, y, text, font, bold, italic, size, color } = item;
       return { type: "text", x, y, text, font, bold, italic, size, color };
+    }
+    if (item.kind === "shape") {
+      const { shape, x, y, width, height, stroke, fill, lineWidth } = item;
+      return { type: "shape", shape, x, y, width, height, stroke, fill, lineWidth };
     }
     let index = imageIndex.get(item.asset);
     if (index === undefined) {

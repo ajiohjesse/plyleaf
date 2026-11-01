@@ -1,25 +1,26 @@
-import { useCallback, useEffect, useEffectEvent, useId, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useEffectEvent, useLayoutEffect, useRef, useState } from "react";
 import { engine } from "~/engine/client";
 import { outputName } from "~/download/download";
-import { cssFont, FONTS, unsupportedCharacters } from "~/editor/fonts";
+import { cssFont, unsupportedCharacters } from "~/editor/fonts";
 import { canRedo, canUndo, change, redo, settle, startHistory, undo, type History } from "~/editor/history";
 import {
+  clickedShape,
+  DEFAULT_SHAPE,
   DEFAULT_TEXT,
-  fromHex,
+  drawnShape,
   isEmpty,
-  MAX_TEXT_SIZE,
-  MIN_TEXT_SIZE,
   moveItem,
   newId,
   removeItem,
   toEdits,
-  toHex,
   updateItem,
   type Asset,
   type AssetId,
   type ImageItem,
   type Item,
   type ItemId,
+  type ShapeItem,
+  type ShapeStyle,
   type TextItem,
   type TextStyle,
 } from "~/editor/items";
@@ -30,8 +31,9 @@ import { thumbnails } from "~/thumbnails/thumbnails";
 import { NEAR, ON_SCREEN, useViewportObserver } from "~/components/thumbnails/ThumbnailGrid";
 import { ActionBar, FailureAlert, plural, primaryButton } from "~/components/workspace/parts";
 import { EditorPage, type PageHandlers, type Tool } from "./EditorPage";
-import { ImageIcon, RedoIcon, SelectIcon, TextIcon, TrashIcon, UndoIcon, ZoomInIcon, ZoomOutIcon } from "./icons";
+import { ImageIcon, RedoIcon, SelectIcon, ShapeIcon, TextIcon, UndoIcon, ZoomInIcon, ZoomOutIcon } from "./icons";
 import { baselineRatio } from "./measure";
+import { ShapeOptions, TextOptions } from "./options";
 import { prepareImage } from "./prepareImage";
 
 /** Zoom steps, as multiples of the size that fits the pages to the screen's width. */
@@ -58,6 +60,9 @@ export function Editor({ doc, onSaved }: Props) {
   const [selected, setSelected] = useState<ItemId | null>(null);
   const [editing, setEditing] = useState<ItemId | null>(null);
   const [textStyle, setTextStyle] = useState<TextStyle>(DEFAULT_TEXT);
+  const [shapeStyle, setShapeStyle] = useState<ShapeStyle>(DEFAULT_SHAPE);
+  // A shape being drawn: shown, but not an item until the pointer is let go.
+  const [sketch, setSketch] = useState<ShapeItem | null>(null);
   const [zoom, setZoom] = useState(ZOOMS.indexOf(1));
   const [working, setWorking] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -85,7 +90,7 @@ export function Editor({ doc, onSaved }: Props) {
     element.scrollIntoView({ block: "nearest" });
   });
 
-  const shown = draft ? [...items, draft] : items;
+  const shown = [...items, ...(draft ? [draft] : []), ...(sketch ? [sketch] : [])];
   const selectedItem = shown.find((item) => item.id === selected) ?? null;
   const update = useCallback(
     (next: (items: Item[]) => Item[], merge: string | null = null) =>
@@ -97,7 +102,19 @@ export function Editor({ doc, onSaved }: Props) {
   const fit = useFitScale(boardRef, doc);
   const scale = fit * ZOOMS[zoom]!;
 
+  /** Adds a finished item, selects it and goes back to the select tool. */
+  function add(item: Item) {
+    update((list) => [...list, item]);
+    setSelected(item.id);
+    setEditing(null);
+    setTool("select");
+    focusing.current = item.id;
+  }
+
   function place(page: number, x: number, y: number) {
+    if (tool === "shape") {
+      return add({ id: newId(), kind: "shape", page, ...shapeStyle, ...clickedShape(shapeStyle, x, y) });
+    }
     if (tool !== "text") return;
     // The press marks the top-left of the text box; text is stored by its baseline.
     const ascent = baselineRatio(cssFont(textStyle.font, textStyle.bold, textStyle.italic)) * textStyle.size;
@@ -110,6 +127,19 @@ export function Editor({ doc, onSaved }: Props) {
 
   const handlers: PageHandlers = {
     onPlace: place,
+    onDraw: (page, from, to, done) => {
+      if (tool !== "shape") return;
+      const shape: ShapeItem = {
+        id: sketch?.id ?? newId(),
+        kind: "shape",
+        page,
+        ...shapeStyle,
+        ...drawnShape(shapeStyle, from, to),
+      };
+      if (!done) return setSketch(shape);
+      setSketch(null);
+      add(shape);
+    },
     onBackground: () => {
       setSelected(null);
       setEditing(null);
@@ -181,14 +211,18 @@ export function Editor({ doc, onSaved }: Props) {
         ...size,
         asset: asset.id,
       };
-      update((list) => [...list, item]);
-      setTool("select");
-      setSelected(item.id);
-      setEditing(null);
-      focusing.current = item.id;
+      add(item);
     } catch {
       setError(`${file.name} couldn't be read as a picture here. Try a JPG or PNG.`);
     }
+  }
+
+  function restyleShape(patch: Partial<ShapeStyle>) {
+    setShapeStyle((style) => ({ ...style, ...patch }));
+    if (selectedItem?.kind !== "shape") return;
+    const { shape: _kind, ...change } = patch;
+    const key = Object.keys(change).join();
+    update((list) => updateItem(list, selectedItem.id, change), `style:${selectedItem.id}:${key}`);
   }
 
   function restyle(patch: Partial<TextStyle>) {
@@ -245,6 +279,8 @@ export function Editor({ doc, onSaved }: Props) {
 
   const changes = items.filter((item) => !isEmpty(item)).length;
   const textOptions = tool === "text" || selectedItem?.kind === "text";
+  const shapeOptions = tool === "shape" || selectedItem?.kind === "shape";
+  const removeSelected = selectedItem ? () => handlers.handlersFor(selectedItem).onRemove() : undefined;
   const missing = selectedItem?.kind === "text" ? unsupportedCharacters(selectedItem.text) : [];
 
   return (
@@ -267,6 +303,16 @@ export function Editor({ doc, onSaved }: Props) {
             }}
           >
             <TextIcon />
+          </ToolButton>
+          <ToolButton
+            label="Add shape"
+            pressed={tool === "shape"}
+            onClick={() => {
+              setTool(tool === "shape" ? "select" : "shape");
+              setSelected(null);
+            }}
+          >
+            <ShapeIcon />
           </ToolButton>
           <ToolButton label="Add image" onClick={() => imageInput.current?.click()}>
             <ImageIcon />
@@ -317,7 +363,15 @@ export function Editor({ doc, onSaved }: Props) {
           <TextOptions
             style={selectedItem?.kind === "text" ? selectedItem : textStyle}
             onChange={restyle}
-            onRemove={selectedItem ? () => handlers.handlersFor(selectedItem).onRemove() : undefined}
+            onRemove={removeSelected}
+          />
+        )}
+        {shapeOptions && (
+          <ShapeOptions
+            style={selectedItem?.kind === "shape" ? selectedItem : shapeStyle}
+            fixedKind={selectedItem?.kind === "shape"}
+            onChange={restyleShape}
+            onRemove={removeSelected}
           />
         )}
       </div>
@@ -377,8 +431,10 @@ export function Editor({ doc, onSaved }: Props) {
 
 function hint(tool: Tool, selected: Item | null, editing: ItemId | null) {
   if (tool === "text") return "Click the page where the text should go.";
+  if (tool === "shape") return "Drag across the page to draw, or click to place one.";
   if (editing) return "Type your text. Press Esc or click outside when you're done.";
-  if (selected?.kind === "image") return "Drag to move, or use the arrow keys. Drag the corner, or + and -, to resize.";
+  if (selected?.kind === "image" || selected?.kind === "shape")
+    return "Drag to move, or use the arrow keys. Drag the corner, or + and -, to resize.";
   if (selected) return "Drag to move, or use the arrow keys. Click again to change the text.";
   return "Choose a tool, then click the page.";
 }
@@ -431,120 +487,6 @@ function ToolButton({
       aria-keyshortcuts={shortcut}
       onClick={disabled ? undefined : onClick}
       className="grid size-10 place-items-center rounded-lg text-ink hover:bg-ink/10 aria-disabled:cursor-default aria-disabled:opacity-35 aria-disabled:hover:bg-transparent aria-pressed:bg-primary aria-pressed:text-on-primary aria-pressed:hover:bg-primary-hover"
-    >
-      {children}
-    </button>
-  );
-}
-
-const fieldClass =
-  "rounded-lg border-2 border-line bg-surface px-2 py-1.5 text-base focus:border-primary focus:outline-none";
-
-/** Font, size, bold, italic and colour for the selected text, or for new text. */
-function TextOptions({
-  style,
-  onChange,
-  onRemove,
-}: {
-  style: TextStyle;
-  onChange: (patch: Partial<TextStyle>) => void;
-  onRemove: (() => void) | undefined;
-}) {
-  const ids = { font: useId(), size: useId(), colour: useId() };
-  const [sizeText, setSizeText] = useState<string | null>(null);
-  return (
-    <fieldset className="absolute inset-x-0 top-full mt-2 min-w-0 rounded-card border border-line bg-surface shadow-sticky">
-      <legend className="sr-only">Text options</legend>
-      {/* One row that scrolls sideways on a phone, rather than wrapping over the page. */}
-      <div className="flex items-center gap-x-3 overflow-x-auto px-3 py-2 whitespace-nowrap">
-        <label htmlFor={ids.font} className="sr-only">
-          Font
-        </label>
-        <select
-          id={ids.font}
-          value={style.font}
-          onChange={(event) => onChange({ font: event.target.value as TextStyle["font"] })}
-          className={fieldClass}
-        >
-          {FONTS.map((font) => (
-            <option key={font.id} value={font.id}>
-              {font.label}
-            </option>
-          ))}
-        </select>
-        <span className="flex items-center gap-1">
-          <label htmlFor={ids.size} className="text-sm">
-            Size
-          </label>
-          <input
-            id={ids.size}
-            type="number"
-            inputMode="numeric"
-            min={MIN_TEXT_SIZE}
-            max={MAX_TEXT_SIZE}
-            value={sizeText ?? String(style.size)}
-            onChange={(event) => {
-              setSizeText(event.target.value);
-              const size = Number(event.target.value);
-              if (Number.isFinite(size) && size >= MIN_TEXT_SIZE && size <= MAX_TEXT_SIZE) onChange({ size });
-            }}
-            onBlur={() => setSizeText(null)}
-            className={`${fieldClass} w-18`}
-          />
-        </span>
-        <span className="flex items-center gap-1">
-          <ToggleButton label="Bold" pressed={style.bold} onClick={() => onChange({ bold: !style.bold })}>
-            <span className="font-bold">B</span>
-          </ToggleButton>
-          <ToggleButton label="Italic" pressed={style.italic} onClick={() => onChange({ italic: !style.italic })}>
-            <span className="font-serif italic">I</span>
-          </ToggleButton>
-        </span>
-        <span className="flex items-center gap-1">
-          <label htmlFor={ids.colour} className="text-sm">
-            Colour
-          </label>
-          <input
-            id={ids.colour}
-            type="color"
-            value={toHex(style.color)}
-            onChange={(event) => onChange({ color: fromHex(event.target.value) })}
-            className="h-9 w-11 cursor-pointer rounded-lg border-2 border-line bg-surface p-0.5"
-          />
-        </span>
-        {onRemove && (
-          <button
-            type="button"
-            onClick={onRemove}
-            className="ml-auto inline-flex min-h-10 shrink-0 items-center gap-1 rounded-pill px-3 text-sm font-semibold hover:bg-ink/10"
-          >
-            <TrashIcon />
-            Delete
-          </button>
-        )}
-      </div>
-    </fieldset>
-  );
-}
-
-function ToggleButton({
-  label,
-  pressed,
-  onClick,
-  children,
-}: {
-  label: string;
-  pressed: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      aria-pressed={pressed}
-      onClick={onClick}
-      className="grid size-9 place-items-center rounded-lg border-2 border-line text-lg hover:border-primary aria-pressed:border-primary aria-pressed:bg-sticky-lavender/40"
     >
       {children}
     </button>
