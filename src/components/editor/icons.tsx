@@ -77,3 +77,10 @@ export const ShapeIcon = () => (
     <circle cx={16} cy={8} r={5} />
   </Icon>
 );
+
+export const WhiteoutIcon = () => (
+  <Icon>
+    <path d="M7 21h10M5.5 14.5l7-11 6 4-7 11H8z" />
+    <path d="M9 9l6 4" />
+  </Icon>
+);

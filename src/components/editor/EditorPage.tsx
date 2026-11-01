@@ -7,15 +7,16 @@ import type { Observe } from "~/components/thumbnails/ThumbnailGrid";
 import type { ItemHandlers } from "./gestures";
 import { ImageBox } from "./ImageBox";
 import { ShapeBox } from "./ShapeBox";
+import { WhiteoutBox } from "./WhiteoutBox";
 import { TextBox } from "./TextBox";
 
 /** Pages are rendered at most this many device pixels wide; zoomed further, the image is scaled up. */
 const MAX_RENDER = 1600;
 
-export type Tool = "select" | "text" | "shape";
+export type Tool = "select" | "text" | "shape" | "whiteout";
 
 /** Tools that draw by dragging across the page (a click places something of a set size). */
-const DRAWING: ReadonlySet<Tool> = new Set(["shape"]);
+const DRAWING: ReadonlySet<Tool> = new Set(["shape", "whiteout"]);
 
 /** A press has to move this many CSS pixels to draw rather than click. */
 const DRAW_THRESHOLD = 4;
@@ -145,6 +146,18 @@ export const EditorPage = memo(function EditorPage(props: Props) {
       )}
       {items.map((item) => {
         const { onText, onEndEdit, onResize, ...handlers } = props.handlersFor(item);
+        if (item.kind === "whiteout") {
+          return (
+            <WhiteoutBox
+              key={item.id}
+              item={item}
+              scale={scale}
+              selected={item.id === selected}
+              onResize={onResize}
+              {...handlers}
+            />
+          );
+        }
         if (item.kind === "shape") {
           return (
             <ShapeBox

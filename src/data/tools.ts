@@ -181,7 +181,20 @@ export const tools: Tool[] = [
     // Says what works today; images, shapes and changing existing text join it as they ship.
     description: "Add text, images and shapes to any page.",
     category: "edit-sign",
-    keywords: ["text", "write", "type", "image", "picture", "logo", "shape", "arrow", "box"],
+    keywords: [
+      "text",
+      "write",
+      "type",
+      "image",
+      "picture",
+      "logo",
+      "shape",
+      "arrow",
+      "box",
+      "whiteout",
+      "white out",
+      "cover",
+    ],
     available: true,
   },
   {
