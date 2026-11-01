@@ -1,7 +1,7 @@
 // The list of documents a workspace has open, fed by file intake. It checks each batch of files, opens the accepted
 // ones in the engine one after another (so the list keeps the order they came in) and keeps a message for each file
 // it couldn't take. Framework-free so it can be unit-tested with a fake engine; React reads it via useIntake.
-import type { EngineError } from "~/engine/errors";
+import { EngineError } from "~/engine/errors";
 import type { DocInfo } from "~/engine/types";
 import { checkFiles, formatSize, largeInputBytes, openFailureMessage, resetMessage, type IntakeOptions } from "./files";
 
@@ -20,7 +20,18 @@ export interface ReadyDocument {
   info: DocInfo;
 }
 
-export type IntakeDocument = OpeningDocument | ReadyDocument;
+/** A PDF that needs a password to open (only with the `passwords` option). Its file is kept to try passwords on. */
+export interface LockedDocument {
+  key: string;
+  name: string;
+  size: number;
+  status: "locked";
+  file: File;
+  /** The last password tried didn't open it. */
+  wrongPassword: boolean;
+}
+
+export type IntakeDocument = OpeningDocument | ReadyDocument | LockedDocument;
 
 export interface Notice {
   id: number;
@@ -39,7 +50,7 @@ export interface IntakeState {
 
 /** The part of the engine intake needs. */
 export interface IntakeEngine {
-  open(file: Blob): Promise<DocInfo>;
+  open(file: Blob, password?: string): Promise<DocInfo>;
   close(id: string): Promise<void>;
   /** Called when the engine restarted and lost every open document. */
   onReset?(listener: (error: EngineError) => void): () => void;
@@ -56,6 +67,8 @@ export interface Intake {
   /** Moves a document to `index` in the list (clamped to the list), e.g. to set the order files are merged in. */
   move(key: string, index: number): void;
   dismiss(noticeId: number): void;
+  /** Tries a password on a locked document. Resolves once it's open, or locked again if the password was wrong. */
+  unlock(key: string, password: string): Promise<void>;
 }
 
 export function createIntake(engine: IntakeEngine, options: IntakeOptions = {}): Intake {
@@ -142,9 +155,39 @@ export function createIntake(engine: IntakeEngine, options: IntakeOptions = {}):
           documents: state.documents.map((doc) => (doc.key === key ? { ...doc, status: "ready", info } : doc)),
         });
       } catch (error) {
+        if (options.passwords && error instanceof EngineError && error.code === "password-required") {
+          replace(key, { key, name: file.name, size: file.size, status: "locked", file, wrongPassword: false });
+          continue;
+        }
         setDocuments(
           state.documents.filter((doc) => doc.key !== key),
           isListed(key) ? withNotice(state.notices, openFailureMessage(file.name, error)) : state.notices,
+        );
+      }
+    }
+  }
+
+  function replace(key: string, doc: IntakeDocument) {
+    update({ documents: state.documents.map((d) => (d.key === key ? doc : d)) });
+  }
+
+  async function unlock(key: string, password: string) {
+    const doc = state.documents.find((d) => d.key === key);
+    if (doc?.status !== "locked") return;
+    const { name, size, file } = doc;
+    replace(key, { key, name, size, status: "opening" });
+    try {
+      const info = await engine.open(file, password);
+      if (!isListed(key)) return void (await engine.close(info.id));
+      replace(key, { key, name, size, status: "ready", info });
+    } catch (error) {
+      if (!isListed(key)) return;
+      if (error instanceof EngineError && error.code === "wrong-password") {
+        replace(key, { ...doc, wrongPassword: true });
+      } else {
+        setDocuments(
+          state.documents.filter((d) => d.key !== key),
+          withNotice(state.notices, openFailureMessage(name, error)),
         );
       }
     }
@@ -194,5 +237,6 @@ export function createIntake(engine: IntakeEngine, options: IntakeOptions = {}):
     dismiss(noticeId) {
       update({ notices: state.notices.filter((n) => n.id !== noticeId) });
     },
+    unlock,
   };
 }

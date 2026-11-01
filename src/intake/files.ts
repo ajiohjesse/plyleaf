@@ -11,6 +11,8 @@ export interface IntakeOptions {
   multiple?: boolean;
   /** Warn once the open files add up to more than this many bytes. Defaults to largeInputBytes() for this device. */
   largeInputBytes?: number;
+  /** Keep PDFs that need a password, to ask for it (a "locked" document), rather than turning them away. */
+  passwords?: boolean;
 }
 
 const MB = 1024 * 1024;
@@ -133,7 +135,7 @@ export function openFailureMessage(name: string, error: unknown): string {
     case "invalid-image":
       return `${name} couldn't be opened. It may be damaged, or a kind of image this browser can't read.`;
     case "password-required":
-      return `${name} is protected with a password. Plyleaf can't open protected PDFs yet.`;
+      return `${name} is protected with a password. Remove it with Unlock PDF first (you'll need the password).`;
     case "out-of-memory":
       return `${name} is too big for the memory this browser has left. Close other files or tabs and try again.`;
     case "engine-crashed":

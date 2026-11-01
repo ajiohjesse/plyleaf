@@ -8,7 +8,8 @@ const pdf = (name: string) => new File([makePdf([A4])], name, { type: "applicati
 
 /**
  * A fake engine whose opens finish only when the test says so, so we can look at the intake in between. Files named
- * "locked…" fail with password-required, "broken…" with invalid-file and "offline…" with engine-unavailable.
+ * "locked…" fail with password-required (wrong-password with a password other than "open sesame"), "broken…" with
+ * invalid-file and "offline…" with engine-unavailable.
  */
 function fakeEngine() {
   const pending: { name: string; finish: () => void }[] = [];
@@ -21,13 +22,15 @@ function fakeEngine() {
       resetListeners.add(listener);
       return () => resetListeners.delete(listener);
     },
-    open: (file) =>
+    open: (file, password) =>
       new Promise<DocInfo>((resolve, reject) => {
         const name = (file as File).name;
         pending.push({
           name,
           finish: () => {
-            if (name.startsWith("locked")) return reject(new EngineError("password-required", "locked"));
+            if (name.startsWith("locked") && password !== "open sesame") {
+              return reject(new EngineError(password === undefined ? "password-required" : "wrong-password", "locked"));
+            }
             if (name.startsWith("broken")) return reject(new EngineError("invalid-file", "broken"));
             if (name.startsWith("offline")) return reject(new EngineError("engine-unavailable", "offline"));
             const id = `d${nextId++}`;
@@ -39,6 +42,7 @@ function fakeEngine() {
               pages: [],
               repaired: false,
               encryption: null,
+              unlockedWith: null,
               permissions: ["print", "print-hq", "copy", "edit", "annotate", "form", "assemble", "accessibility"],
             });
           },
@@ -108,7 +112,7 @@ test("drops files the engine can't open and says why", async () => {
   const state = intake.getState();
   expect(state.documents.map((d) => d.name)).toEqual(["ok.pdf"]);
   expect(state.notices.map((n) => n.message)).toEqual([
-    "locked.pdf is protected with a password. Plyleaf can't open protected PDFs yet.",
+    "locked.pdf is protected with a password. Remove it with Unlock PDF first (you'll need the password).",
     "broken.pdf couldn't be opened. It may be damaged, or not really a PDF.",
   ]);
 });
@@ -327,4 +331,25 @@ test("takes the large-input warning back when a file that pushed it over doesn't
   expect(intake.getState().notices).toMatchObject([
     { tone: "error", message: "broken.pdf couldn't be opened. It may be damaged, or not really a PDF." },
   ]);
+});
+
+test("with passwords on, a protected PDF waits for its password", async () => {
+  const { engine, finishNext } = fakeEngine();
+  const intake = createIntake(engine, { passwords: true, multiple: false });
+  const adding = intake.add([pdf("locked.pdf")]);
+  await finishNext();
+  await adding;
+  expect(intake.getState().documents).toMatchObject([{ name: "locked.pdf", status: "locked", wrongPassword: false }]);
+  expect(intake.getState().notices).toEqual([]);
+
+  const wrong = intake.unlock(intake.getState().documents[0]!.key, "guess");
+  expect(intake.getState().documents[0]!.status).toBe("opening");
+  await finishNext();
+  await wrong;
+  expect(intake.getState().documents).toMatchObject([{ status: "locked", wrongPassword: true }]);
+
+  const right = intake.unlock(intake.getState().documents[0]!.key, "open sesame");
+  await finishNext();
+  await right;
+  expect(intake.getState().documents).toMatchObject([{ name: "locked.pdf", status: "ready" }]);
 });

@@ -3,7 +3,7 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M4: Optimize and secure (M0–M2 done 2026-10-31, M3 done 2026-11-01)
-- **Next action:** M4, Unlock (open with a password; restrictions removed only after the rights check).
+- **Next action:** M4, Permissions.
 - **Owner asked (2026-11-01):** build all of M3 and M4 in one go, one PR per tool, each auto-merged when CI passes.
   Unlock removes owner-password restrictions only after the user confirms they have the right to; libheif-js approved.
 - **Live:** https://plyleaf.ajiohjesse.workers.dev (Workers Builds deploys `main`; other branches get Preview URLs).
@@ -45,7 +45,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] Images → PDF (incl. HEIC) · [x] PDF → images · [x] Extract images · [x] Camera scan-to-PDF
 
 ### [ ] M4: Optimize and secure
-- [x] Compress (3 levels) · [x] Grayscale · [x] Protect · [ ] Unlock · [ ] Permissions · [ ] Flatten · [ ] Repair · [ ] Metadata
+- [x] Compress (3 levels) · [x] Grayscale · [x] Protect · [x] Unlock · [ ] Permissions · [ ] Flatten · [ ] Repair · [ ] Metadata
 
 ### [ ] M5: Editor
 - [ ] Text add · [ ] Edit existing text · [ ] Images · [ ] Shapes · [ ] Whiteout · [ ] Markup · [ ] Freehand · [ ] Comments · [ ] Stamps
@@ -72,6 +72,23 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-11-01: Unlock PDF, and protected files open with their password (M4)
+- Engine (D-032): `openPdf(bytes, password)` authenticates (new code `wrong-password`), `DocInfo.unlockedWith`;
+  the worker keeps the password per open document for `transform`, whose copies reopen with it.
+- Intake: `passwords` option keeps a protected PDF as a "locked" document; `intake.unlock(key, password)` opens it or
+  marks the password wrong. `SingleFileTool` turns it on and shows `PasswordPrompt`, so every Optimize & secure tool
+  takes protected files. Other tools' message now says to remove the password with Unlock PDF first.
+- `/unlock-pdf` (`UnlockWorkspace`): "Remove password" for a file opened with its password; a file with
+  restrictions lists them (`src/secure/permissions.ts` labels) and needs "I own this PDF, or have the right to
+  remove its restrictions" ticked first (owner's decision), unless the owner password opened it; a file with no
+  protection says there's nothing to unlock.
+- Verified: 3 new unit tests (password required / wrong / user vs owner and their permissions; transform of a
+  password-opened document unlocks, or keeps it protected; intake's locked → wrong → open). New E2E
+  `unlock.spec.ts` (wrong then right password, unlocked output qpdf-clean and unencrypted, `watchEgress` with the
+  password as a secret; restrictions only after the box; nothing to unlock; Split says to unlock first; linked
+  from home) and `intake.spec.ts`: 48/48 in all four browser projects.
+- Next: Permissions.
 
 ### 2026-11-01: Protect PDF (M4)
 - Engine: `transform` takes `security` (D-031): AES-256 with a user password, owner password (random when not

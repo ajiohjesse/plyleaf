@@ -100,3 +100,40 @@ describe("protecting", () => {
     expect(reopen(output).hasPermission("copy")).toBe(false);
   });
 });
+
+describe("opening with a password", () => {
+  const locked = () =>
+    transform(plain(), {
+      security: { encrypt: "aes-256", userPassword: "user pw", ownerPassword: "owner pw", permissions: ["print"] },
+    });
+
+  test("asks for one, refuses a wrong one, and says which one opened it", () => {
+    const bytes = locked();
+    const code = (password?: string) => {
+      try {
+        openPdf(bytes, password).destroy();
+        return "opened";
+      } catch (error) {
+        return (error as EngineError).code;
+      }
+    };
+    expect(code()).toBe("password-required");
+    expect(code("nope")).toBe("wrong-password");
+    const asUser = openPdf(bytes, "user pw");
+    const asOwner = openPdf(bytes, "owner pw");
+    opened.push(asUser, asOwner);
+    expect(describeDoc(asUser)).toMatchObject({ unlockedWith: "user", permissions: ["print"] });
+    expect(describeDoc(asOwner).unlockedWith).toBe("owner");
+    expect(describeDoc(asOwner).permissions).toHaveLength(8);
+  });
+
+  test("a document opened with its password can be unlocked, or changed and kept protected", async () => {
+    const doc = openPdf(locked(), "user pw");
+    opened.push(doc);
+    const unlocked = transform(doc, { security: { encrypt: "none" } }, "user pw");
+    expect(await qpdfEncryption(unlocked)).toBe("none");
+    expect(await qpdfCheck(unlocked)).toBe(0);
+    const compressed = transform(doc, { compress: "low" }, "user pw");
+    expect(await qpdfEncryption(compressed, "user pw")).toBe("password");
+  });
+});

@@ -19,15 +19,18 @@ const loading = import("./ops").catch((error: unknown) => {
 loading.catch(() => {});
 
 const docs = new Map<DocId, PDFDocument>();
+/** The passwords that opened documents, for operations that reopen a copy. They stay in this worker's memory. */
+const passwords = new Map<DocId, string>();
 let nextId = 1;
 
 /** Intake has already checked the file; a PDF without a header (a damaged one MuPDF may repair) isn't an image. */
 const isImage = (bytes: Uint8Array) => sniffKind(bytes.subarray(0, 1024), "", "") === "image";
 
 /** Holds an opened document under a new id and describes it. */
-function keep(ops: Awaited<typeof loading>, doc: PDFDocument, source: DocInfo["source"]): DocInfo {
+function keep(ops: Awaited<typeof loading>, doc: PDFDocument, source: DocInfo["source"], password?: string): DocInfo {
   try {
     const id = `d${nextId++}`;
+    if (password !== undefined && ops.unlockedWith(doc)) passwords.set(id, password);
     const description = ops.describe(doc);
     docs.set(id, doc);
     return { id, source, pageCount: description.pages.length, ...description };
@@ -53,9 +56,9 @@ const api = {
    * Opens a PDF, or an image MuPDF or libheif decodes as a PDF with a page per frame. Other images are decoded on the
    * page and come in through openPixels.
    */
-  async open(bytes: Uint8Array): Promise<DocInfo> {
+  async open(bytes: Uint8Array, password?: string): Promise<DocInfo> {
     const ops = await loading;
-    if (!isImage(bytes)) return keep(ops, ops.openPdf(bytes), "pdf");
+    if (!isImage(bytes)) return keep(ops, ops.openPdf(bytes, password), "pdf", password);
     const type = mupdfImageType(bytes);
     if (type) return keep(ops, ops.openImage(bytes, type), "image");
     if (isHeif(bytes)) {
@@ -100,7 +103,7 @@ const api = {
 
   async transform(id: DocId, options: TransformOptions): Promise<Uint8Array<ArrayBuffer>> {
     const ops = await loading;
-    const bytes = ops.transform(get(id), options);
+    const bytes = ops.transform(get(id), options, passwords.get(id));
     return transfer(bytes, [bytes.buffer]);
   },
 
@@ -113,6 +116,7 @@ const api = {
   close(id: DocId): void {
     docs.get(id)?.destroy();
     docs.delete(id);
+    passwords.delete(id);
   },
 };
 

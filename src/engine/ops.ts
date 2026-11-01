@@ -30,8 +30,11 @@ export const IMAGE_PAGE = { width: 612, height: 842 };
 export type Source = { doc: mupdf.PDFDocument; page: number; rotate?: Rotation; crop?: Crop; fit?: Fit };
 export type AssembleSpec = Source | { blank: { width: number; height: number } };
 
-/** Opens PDF bytes. MuPDF copies them, so the caller can drop its copy. */
-export function openPdf(bytes: Uint8Array): mupdf.PDFDocument {
+/**
+ * Opens PDF bytes, with `password` if it needs one. MuPDF copies the bytes, so the caller can drop its copy. Which
+ * password opened it is in unlockedWith().
+ */
+export function openPdf(bytes: Uint8Array, password?: string): mupdf.PDFDocument {
   let doc: mupdf.Document;
   try {
     doc = mupdf.Document.openDocument(bytes, "application/pdf");
@@ -44,8 +47,15 @@ export function openPdf(bytes: Uint8Array): mupdf.PDFDocument {
     throw new EngineError("invalid-file", "Not a PDF");
   }
   if (pdf.needsPassword()) {
-    pdf.destroy();
-    throw new EngineError("password-required", "This PDF is protected with a password");
+    // MuPDF says which password matched: 2 the user's (to open), 4 the owner's (to change permissions), 6 both.
+    const result = password === undefined ? 0 : pdf.authenticatePassword(password);
+    if (result === 0) {
+      pdf.destroy();
+      throw password === undefined
+        ? new EngineError("password-required", "This PDF is protected with a password")
+        : new EngineError("wrong-password", "That password doesn't open this PDF");
+    }
+    unlocked.set(pdf, result & 4 ? "owner" : "user");
   }
   let pageCount = 0;
   try {
@@ -323,6 +333,13 @@ function withMask(pixmap: mupdf.Pixmap, mask: mupdf.Image | null): Uint8Array {
   }
 }
 
+const unlocked = new WeakMap<mupdf.PDFDocument, "user" | "owner">();
+
+/** Which password opened a document: null when it didn't need one. */
+export function unlockedWith(pdf: mupdf.PDFDocument): "user" | "owner" | null {
+  return unlocked.get(pdf) ?? null;
+}
+
 export function describe(pdf: mupdf.PDFDocument): Omit<DocInfo, "id" | "source" | "pageCount"> {
   const pages: PageInfo[] = [];
   for (let i = 0; i < pdf.countPages(); i++) {
@@ -336,6 +353,7 @@ export function describe(pdf: mupdf.PDFDocument): Omit<DocInfo, "id" | "source" 
     pages,
     repaired: pdf.wasRepaired(),
     encryption: method && method !== "None" ? method : null,
+    unlockedWith: unlockedWith(pdf),
     permissions: PERMISSIONS.filter((permission) => pdf.hasPermission(permission)),
   };
 }

@@ -94,7 +94,7 @@ test("openFailureMessage says what went wrong in plain words", () => {
     "a.pdf couldn't be opened. It may be damaged, or not really a PDF.",
   );
   expect(openFailureMessage("a.pdf", new EngineError("password-required", "x"))).toBe(
-    "a.pdf is protected with a password. Plyleaf can't open protected PDFs yet.",
+    "a.pdf is protected with a password. Remove it with Unlock PDF first (you'll need the password).",
   );
   const generic = "Something went wrong opening a.pdf. Try again, or try a smaller file.";
   expect(openFailureMessage("a.pdf", new EngineError("engine-failure", "x"))).toBe(generic);

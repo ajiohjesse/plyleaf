@@ -27,8 +27,10 @@ export interface DocInfo {
   repaired: boolean;
   /** How it's encrypted, as MuPDF describes it ("Standard V5 R6 256-bit AES"), or null when it isn't. */
   encryption: string | null;
-  /** What its permissions allow (everything, for a file that isn't encrypted). */
+  /** What its permissions allow (everything, for a file that isn't encrypted or was opened with its owner password). */
   permissions: Permission[];
+  /** The password that opened it: the user's (to open) or the owner's (to change permissions); null if none was needed. */
+  unlockedWith: "user" | "owner" | null;
 }
 
 /**
@@ -138,6 +140,8 @@ export type EngineErrorCode =
   | "invalid-image"
   /** The PDF is encrypted with a user password. */
   | "password-required"
+  /** The password given doesn't open the PDF. */
+  | "wrong-password"
   /** The DocId isn't open in this worker (closed, or issued by a recycled worker). */
   | "unknown-document"
   /** An argument is out of range (page index, render size, blank page size). */
