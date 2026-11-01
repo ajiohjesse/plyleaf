@@ -76,6 +76,8 @@ Cloudflare Pages. Package manager: pnpm.
 - Editor (M5, D-034): pure model in `src/editor/` (items in PDF points from the shown page's top-left, undo history);
   UI in `src/components/editor/` (`EditorWorkspace` → `Editor` → `EditorPage` + item components). Saving is
   `engine.transform(doc, { edits })` (`src/engine/edit.ts`). E2E steps: `tests/helpers/editor.ts`.
+- Page tools (page numbers, watermark, header/footer, Bates): pure placement and tokens in `src/pagetools/`, shared form
+  pieces and the live `PagePreview` in `src/components/pagetools/fields.tsx`; each is a `SingleFileTool` saving edits.
 - `src/download/`: output names, `downloadFile` and `saveAs`; `src/components/download/DownloadPanel` is the "done"
   screen. Show engine failures with `openFailureMessage` / `operationFailureMessage` from `src/intake/files.ts` (D-019).
 - `src/pages/test-harness/`: pages for E2E tests to drive internals, built only when `PLYLEAF_TEST_HARNESS=1`.

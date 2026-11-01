@@ -305,6 +305,7 @@ export const tools: Tool[] = [
     description: "Number pages, your style.",
     category: "advanced",
     keywords: ["numbering"],
+    available: true,
   },
   {
     slug: "watermark-pdf",

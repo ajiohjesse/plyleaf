@@ -1,0 +1,39 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { PageNumbersWorkspace } from "~/components/pagetools/PageNumbersWorkspace";
+---
+
+<ToolPage
+  slug="add-page-numbers"
+  title="Add page numbers to a PDF online, free"
+  description="Number the pages of a PDF in your browser: choose where, the style, the font and the first number, and skip a cover page. Free, no account, no watermark, and your file is never uploaded."
+  heading="Page numbers"
+  intro="Number your pages where you want, in the style you want, starting from any page. Free, no sign-up, no watermark, and your file never leaves this device."
+  steps={[
+    { title: "Add your PDF", text: "Choose it, drop it anywhere on the page, or paste it." },
+    { title: "Choose a style", text: "Pick where the numbers go, how they read and which pages get one." },
+    { title: "Download", text: "The numbers are written into the pages. No account, no watermark." },
+  ]}
+  faqs={[
+    {
+      question: "Is it really free?",
+      answer:
+        "Yes. There is no paid plan, no daily limit and no watermark. Plyleaf can be free because your own browser does the work.",
+    },
+    {
+      question: "Can I leave the cover page without a number?",
+      answer:
+        "Yes. Set “From page” to 2 and the cover is left as it is. “First number” sets what the first numbered page says, so page 2 can be 1.",
+    },
+    {
+      question: "Can the numbers say something like “Page 3 of 10”?",
+      answer: "Yes: choose that format, or write your own with {page} for the number and {pages} for the last one.",
+    },
+    {
+      question: "Is my PDF uploaded?",
+      answer: "No. The numbers are added right here in your browser and the file never goes over the internet.",
+    },
+  ]}
+>
+  <PageNumbersWorkspace client:load />
+</ToolPage>
