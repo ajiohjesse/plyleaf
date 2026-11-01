@@ -73,6 +73,9 @@ Cloudflare Pages. Package manager: pnpm.
   copy (compress, grayscale, flatten, metadata, security). Its tools are `src/components/secure/*Workspace.tsx` on
   `src/components/workspace/SingleFileTool.tsx`, which also asks for passwords (intake's `passwords` option, D-032).
   Every M4 test checks output with qpdf in WASM (`tests/helpers/qpdf.ts`, by exit code).
+- Editor (M5, D-034): pure model in `src/editor/` (items in PDF points from the shown page's top-left, undo history);
+  UI in `src/components/editor/` (`EditorWorkspace` → `Editor` → `EditorPage` + item components). Saving is
+  `engine.transform(doc, { edits })` (`src/engine/edit.ts`). E2E steps: `tests/helpers/editor.ts`.
 - `src/download/`: output names, `downloadFile` and `saveAs`; `src/components/download/DownloadPanel` is the "done"
   screen. Show engine failures with `openFailureMessage` / `operationFailureMessage` from `src/intake/files.ts` (D-019).
 - `src/pages/test-harness/`: pages for E2E tests to drive internals, built only when `PLYLEAF_TEST_HARNESS=1`.

@@ -178,9 +178,11 @@ export const tools: Tool[] = [
   {
     slug: "edit-pdf",
     name: "Edit PDF",
-    description: "Add and change text, images and shapes.",
+    // Says what works today; images, shapes and changing existing text join it as they ship.
+    description: "Add text to any page.",
     category: "edit-sign",
-    keywords: ["text", "write"],
+    keywords: ["text", "write", "type"],
+    available: true,
   },
   {
     slug: "annotate-pdf",

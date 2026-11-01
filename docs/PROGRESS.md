@@ -3,8 +3,9 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M5: Editor (M0–M2 done 2026-10-31, M3 and M4 done 2026-11-01)
-- **Next action:** M5, the unified editor workspace: start with adding text.
-- **Owner asked (2026-11-01):** build all of M3 and M4 in one go, one PR per tool, each auto-merged when CI passes.
+- **Next action:** M5: undo/redo buttons and shortcuts in the editor, then images.
+- **Owner asked (2026-11-01):** build all of M5 in one go, one PR per item, each auto-merged when CI passes.
+- **Owner asked earlier (2026-11-01):** build all of M3 and M4 in one go, one PR per tool, each auto-merged when CI passes.
   Unlock removes owner-password restrictions only after the user confirms they have the right to; libheif-js approved.
 - **Live:** https://plyleaf.ajiohjesse.workers.dev (Workers Builds deploys `main`; other branches get Preview URLs).
 - **Blocked on owner:**
@@ -48,7 +49,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] Compress (3 levels) · [x] Grayscale · [x] Protect · [x] Unlock · [x] Permissions · [x] Flatten · [x] Repair · [x] Metadata
 
 ### [ ] M5: Editor
-- [ ] Text add · [ ] Edit existing text · [ ] Images · [ ] Shapes · [ ] Whiteout · [ ] Markup · [ ] Freehand · [ ] Comments · [ ] Stamps
+- [x] Text add · [ ] Edit existing text · [ ] Images · [ ] Shapes · [ ] Whiteout · [ ] Markup · [ ] Freehand · [ ] Comments · [ ] Stamps
 - [ ] Page numbers · [ ] Watermark · [ ] Header/footer · [ ] Bates · [ ] Undo/redo
 - [ ] Output verified in Acrobat Reader, Chrome, macOS Preview
 
@@ -72,6 +73,25 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-11-01: Edit PDF, add text (M5)
+- Engine (D-034): `transform` takes `edits` (marks per page; text for now: standard font, bold/italic, size, colour,
+  alignment, rotation, opacity), drawn with MuPDF's PDF writer onto scratch pages and put on each page as a form
+  XObject over its content. `src/engine/content.ts` holds the shared "own resources / draw on top" helpers (Grayscale
+  uses them too).
+- Editor: pure model `src/editor/` (items, undo history with merge keys, standard-font coverage); UI
+  `src/components/editor/` (`EditorWorkspace` → `Editor`: toolbar with Select, Add text and zoom, floating text options,
+  every page with its items as DOM over the cached render, Download PDF; done screen keeps the editor for "Back to
+  editing"). Text boxes: click to place (or Enter on a page from the keyboard: the middle), type, Esc to finish; drag or
+  arrow keys to move; tap again or Enter to edit; Delete. Text is stored by its baseline, measured in the browser's
+  font. `ToolPage` takes `wide`.
+- `/edit-pdf` live ("Add text to any page." until more tools ship).
+- Verified: 12 new unit tests (text placed by baseline in each font, Unicode Latin/Cyrillic, multi-line spacing,
+  rotated 90/180/270 and offset crop boxes, alignment, rotation, opacity, missing glyphs left out, one embedded font for
+  20 pages, history and items). New E2E `edit-text.spec.ts` (styled text at the clicked point read back with MuPDF,
+  qpdf-clean, `watchEgress` clean; keyboard add/nudge/back to editing; empty text dropped and the missing-glyph
+  warning; linked from home): 16/16 in Chromium, Firefox, WebKit and Pixel 7. Checked at 375 px.
+- Next: undo/redo.
 
 ### 2026-11-01: PDF metadata, M4 done
 - Engine (D-033): `DocInfo.metadata`; `transform` `metadata` sets changed fields (empty removes) and drops XMP, or

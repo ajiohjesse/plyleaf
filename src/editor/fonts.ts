@@ -1,0 +1,50 @@
+// The standard fonts text is added in, how the editor shows them, and which characters they can show.
+import type { StandardFont } from "~/engine/types";
+
+export const FONTS: readonly { id: StandardFont; label: string; css: string }[] = [
+  // Each is listed with fonts that have the same widths, so text takes the same room on screen as in the PDF.
+  { id: "helvetica", label: "Sans serif", css: "Helvetica, Arial, 'Liberation Sans', 'Nimbus Sans', sans-serif" },
+  { id: "times", label: "Serif", css: "'Times New Roman', Times, 'Liberation Serif', 'Nimbus Roman', serif" },
+  { id: "courier", label: "Monospace", css: "'Courier New', Courier, 'Liberation Mono', 'Nimbus Mono PS', monospace" },
+];
+
+export function cssFont(font: StandardFont, bold = false, italic = false) {
+  return {
+    fontFamily: FONTS.find((f) => f.id === font)!.css,
+    fontWeight: bold ? 700 : 400,
+    fontStyle: italic ? "italic" : "normal",
+  } as const;
+}
+
+/**
+ * The characters every standard font has a glyph for (Latin, Greek, Cyrillic and common symbols), as inclusive code
+ * point ranges. Found by asking MuPDF's built-in fonts (all twelve styles) for each code point up to U+3000.
+ */
+// prettier-ignore
+const COVERED: readonly [number, number][] = [
+  [0x20, 0x7e], [0xa0, 0x17f], [0x192, 0x192], [0x1fa, 0x1ff], [0x218, 0x21b], [0x2c6, 0x2c7], [0x2c9, 0x2c9],
+  [0x2d8, 0x2dd], [0x384, 0x38a], [0x38c, 0x38c], [0x38e, 0x3a1], [0x3a3, 0x3ce], [0x400, 0x45f], [0x490, 0x493],
+  [0x496, 0x49d], [0x4a0, 0x4a3], [0x4aa, 0x4ab], [0x4ae, 0x4b3], [0x4b6, 0x4bb], [0x4c0, 0x4c0], [0x4cb, 0x4cc],
+  [0x4d8, 0x4d9], [0x4e2, 0x4e3], [0x4e8, 0x4e9], [0x4ee, 0x4ef], [0x1e80, 0x1e85], [0x1ef2, 0x1ef3],
+  [0x2013, 0x2015], [0x2017, 0x201e], [0x2020, 0x2022], [0x2026, 0x2026], [0x2030, 0x2030], [0x2032, 0x2033],
+  [0x2039, 0x203a], [0x203c, 0x203c], [0x203e, 0x203e], [0x2044, 0x2044], [0x207f, 0x207f], [0x20a3, 0x20a4],
+  [0x20a7, 0x20a7], [0x20ac, 0x20ac], [0x20af, 0x20af], [0x2105, 0x2105], [0x2113, 0x2113], [0x2116, 0x2116],
+  [0x2122, 0x2122], [0x2126, 0x2126], [0x212e, 0x212e], [0x215b, 0x215e], [0x2190, 0x2195], [0x21a8, 0x21a8],
+  [0x2200, 0x2200], [0x2202, 0x2203], [0x2206, 0x2206], [0x2208, 0x2209], [0x220f, 0x220f], [0x2211, 0x2212],
+  [0x2215, 0x2215], [0x2219, 0x221a], [0x221e, 0x221f], [0x2227, 0x222b], [0x2248, 0x2248], [0x2260, 0x2261],
+  [0x2264, 0x2265], [0x2282, 0x2283], [0x2295, 0x2295], [0x2297, 0x2297], [0x2302, 0x2302], [0x2310, 0x2310],
+  [0x2320, 0x2321], [0x2329, 0x232a], [0x25a1, 0x25a1], [0x263a, 0x263c], [0x2640, 0x2640], [0x2642, 0x2642],
+  [0x2660, 0x2660], [0x2663, 0x2663], [0x2665, 0x2666], [0x266a, 0x266b],
+];
+
+const covered = (code: number) => COVERED.some(([from, to]) => code >= from && code <= to);
+
+/** The characters in `text` the standard fonts can't show (they're left out of the PDF), each once. */
+export function unsupportedCharacters(text: string): string[] {
+  const missing = new Set<string>();
+  for (const char of text) {
+    if (char === "\n" || char === "\t") continue;
+    if (!covered(char.codePointAt(0)!)) missing.add(char);
+  }
+  return [...missing];
+}
