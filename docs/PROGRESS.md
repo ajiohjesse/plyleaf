@@ -3,7 +3,7 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M4: Optimize and secure (M0–M2 done 2026-10-31, M3 done 2026-11-01)
-- **Next action:** M4, Protect (AES-256).
+- **Next action:** M4, Unlock (open with a password; restrictions removed only after the rights check).
 - **Owner asked (2026-11-01):** build all of M3 and M4 in one go, one PR per tool, each auto-merged when CI passes.
   Unlock removes owner-password restrictions only after the user confirms they have the right to; libheif-js approved.
 - **Live:** https://plyleaf.ajiohjesse.workers.dev (Workers Builds deploys `main`; other branches get Preview URLs).
@@ -45,7 +45,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] Images → PDF (incl. HEIC) · [x] PDF → images · [x] Extract images · [x] Camera scan-to-PDF
 
 ### [ ] M4: Optimize and secure
-- [x] Compress (3 levels) · [x] Grayscale · [ ] Protect · [ ] Unlock · [ ] Permissions · [ ] Flatten · [ ] Repair · [ ] Metadata
+- [x] Compress (3 levels) · [x] Grayscale · [x] Protect · [ ] Unlock · [ ] Permissions · [ ] Flatten · [ ] Repair · [ ] Metadata
 
 ### [ ] M5: Editor
 - [ ] Text add · [ ] Edit existing text · [ ] Images · [ ] Shapes · [ ] Whiteout · [ ] Markup · [ ] Freehand · [ ] Comments · [ ] Stamps
@@ -72,6 +72,21 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-11-01: Protect PDF (M4)
+- Engine: `transform` takes `security` (D-031): AES-256 with a user password, owner password (random when not
+  given) and permissions (`permissionValue` → /P), or `encrypt=none`; default keeps the file's own encryption.
+  `DocInfo` now has `encryption` and `permissions`.
+- `/protect-pdf` (`ProtectWorkspace`): password typed twice, show passwords, errors for empty, comma and mismatch
+  (shown once tried, or once the second is as long as the first), Enter submits; a file with restrictions keeps them.
+  `src/components/secure/PasswordField.tsx` is shared with the tools to come.
+- qpdf helper: this build can't inspect a password file without its password, so `qpdfEncryption(pdf, password)`.
+- Verified: 8 new unit tests (permission values; AES-256 that qpdf opens with the password and not without, R6
+  user-not-owner; non-Latin passwords; permissions only; random owner password; comma refused; none removes;
+  other tools keep restrictions). New E2E `protect.spec.ts` (encrypt → qpdf: password-protected, opens with it,
+  not with a guess, `--check` clean; `watchEgress` with the password as a secret; validation and show passwords;
+  linked from home): 12/12 in all four browser projects.
+- Next: Unlock.
 
 ### 2026-11-01: Grayscale PDF (M4)
 - Engine: `transform` takes `grayscale` (D-030): images to DeviceGray in place, a Saturation-blend black overlay on

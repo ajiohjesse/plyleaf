@@ -25,6 +25,8 @@ const info = (sizes: [number, number][]): DocInfo => ({
   pageCount: sizes.length,
   pages: sizes.map(([width, height]) => ({ width, height, rotation: 0 })),
   repaired: false,
+  encryption: null,
+  permissions: ["print", "print-hq", "copy", "edit", "annotate", "form", "assemble", "accessibility"],
 });
 const FOUR = info([
   [100, 200],

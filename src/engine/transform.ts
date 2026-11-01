@@ -2,7 +2,8 @@
 // the open document as the user gave it, so going back and choosing differently starts from the original.
 import * as mupdf from "mupdf";
 import { message, pageImages, toDisplayColours } from "./ops";
-import type { CompressLevel, TransformOptions } from "./types";
+import { EngineError } from "./errors";
+import type { CompressLevel, Permission, Security, TransformOptions } from "./types";
 
 /** Image settings per Compress level: the resolution images are brought down to (for their page) and JPEG quality. */
 const IMAGE_LEVELS: Record<Exclude<CompressLevel, "low">, { dpi: number; quality: number }> = {
@@ -18,12 +19,54 @@ export function transform(pdf: mupdf.PDFDocument, options: TransformOptions): Ui
   try {
     if (options.grayscale) toGrey(copy);
     if (options.compress && options.compress !== "low") recompressImages(copy, IMAGE_LEVELS[options.compress]);
-    const save = ["garbage=deduplicate", "compress", "encrypt=keep"];
+    const save = ["garbage=deduplicate", "compress", encryption(options.security)];
     if (options.compress) save.push("compress-fonts", "compress-images", "objstms");
     return repacked(saved(copy, "garbage,encrypt=keep"), save.join(","));
   } finally {
     copy.destroy();
   }
+}
+
+/** PDF permission bits (ISO 32000-2, table 22), counted from 1. */
+const PERMISSION_BITS: Record<Permission, number> = {
+  print: 3,
+  edit: 4,
+  copy: 5,
+  annotate: 6,
+  form: 9,
+  accessibility: 10,
+  assemble: 11,
+  "print-hq": 12,
+};
+
+/** The /P value allowing `permissions`: the reserved bits set (7, 8, 13–32), 1–2 clear. */
+export function permissionValue(permissions: readonly Permission[]): number {
+  let value = -3904;
+  for (const permission of permissions) value |= 1 << (PERMISSION_BITS[permission] - 1);
+  return value;
+}
+
+/** The save option for `security`. */
+function encryption(security: Security | undefined): string {
+  if (!security) return "encrypt=keep";
+  if (security.encrypt === "none") return "encrypt=none";
+  const { userPassword = "", permissions = Object.keys(PERMISSION_BITS) as Permission[] } = security;
+  const ownerPassword = security.ownerPassword || randomPassword();
+  for (const password of [userPassword, ownerPassword]) {
+    if (password.includes(",")) throw new EngineError("invalid-argument", "Passwords can't contain a comma");
+  }
+  return [
+    "encrypt=aes-256",
+    `user-password=${userPassword}`,
+    `owner-password=${ownerPassword}`,
+    `permissions=${permissionValue(permissions)}`,
+  ].join(",");
+}
+
+/** 128 random bits as hex: an owner password nobody knows, when the user doesn't set one. */
+function randomPassword() {
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 /**

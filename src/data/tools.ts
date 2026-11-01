@@ -233,6 +233,7 @@ export const tools: Tool[] = [
     description: "Add a password (AES-256).",
     category: "optimize-secure",
     keywords: ["password", "encrypt", "lock"],
+    available: true,
   },
   {
     slug: "unlock-pdf",

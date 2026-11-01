@@ -23,6 +23,8 @@ function FakeWorker() {
         pageCount: bytes.length,
         pages: [],
         repaired: false,
+        encryption: null,
+        permissions: ["print", "print-hq", "copy", "edit", "annotate", "form", "assemble", "accessibility"],
       }),
       // Page 0 hangs (for a worker that dies mid-call); page 1 fails to allocate; page 2 aborts the WASM.
       render: (_id: string, page: number) => {

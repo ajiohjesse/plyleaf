@@ -28,9 +28,9 @@ const isImage = (bytes: Uint8Array) => sniffKind(bytes.subarray(0, 1024), "", ""
 function keep(ops: Awaited<typeof loading>, doc: PDFDocument, source: DocInfo["source"]): DocInfo {
   try {
     const id = `d${nextId++}`;
-    const { pages, repaired } = ops.describe(doc);
+    const description = ops.describe(doc);
     docs.set(id, doc);
-    return { id, source, pageCount: pages.length, pages, repaired };
+    return { id, source, pageCount: description.pages.length, ...description };
   } catch (error) {
     doc.destroy();
     throw error;
