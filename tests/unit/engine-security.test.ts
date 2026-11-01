@@ -137,3 +137,19 @@ describe("opening with a password", () => {
     expect(await qpdfEncryption(compressed, "user pw")).toBe("password");
   });
 });
+
+test("changing permissions can keep the password that opens the file", async () => {
+  const locked = transform(plain(), { security: { encrypt: "aes-256", userPassword: "keep me", ownerPassword: "o" } });
+  const doc = openPdf(locked, "keep me");
+  opened.push(doc);
+  const output = transform(
+    doc,
+    { security: { encrypt: "aes-256", keepUserPassword: true, ownerPassword: "new owner", permissions: ["print"] } },
+    "keep me",
+  );
+  expect(await qpdfEncryption(output, "keep me")).toBe("password");
+  const reopened = reopen(output);
+  expect(reopened.authenticatePassword("keep me")).toBe(2);
+  expect(reopened.hasPermission("copy")).toBe(false);
+  expect(reopen(output).authenticatePassword("new owner")).toBe(4);
+});

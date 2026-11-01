@@ -114,7 +114,14 @@ export const PERMISSIONS: readonly Permission[] = [
  * Passwords can't contain commas (MuPDF's save options are comma-separated).
  */
 export type Security =
-  | { encrypt: "aes-256"; userPassword?: string; ownerPassword?: string; permissions?: readonly Permission[] }
+  | {
+      encrypt: "aes-256";
+      userPassword?: string;
+      /** Instead of userPassword: the password that opened the document stays its password to open. */
+      keepUserPassword?: boolean;
+      ownerPassword?: string;
+      permissions?: readonly Permission[];
+    }
   | { encrypt: "none" };
 
 /** What to change in a copy of an open document before saving it (Optimize & secure tools). */

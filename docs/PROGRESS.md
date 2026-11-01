@@ -3,7 +3,7 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M4: Optimize and secure (M0–M2 done 2026-10-31, M3 done 2026-11-01)
-- **Next action:** M4, Permissions.
+- **Next action:** M4, Flatten.
 - **Owner asked (2026-11-01):** build all of M3 and M4 in one go, one PR per tool, each auto-merged when CI passes.
   Unlock removes owner-password restrictions only after the user confirms they have the right to; libheif-js approved.
 - **Live:** https://plyleaf.ajiohjesse.workers.dev (Workers Builds deploys `main`; other branches get Preview URLs).
@@ -45,7 +45,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] Images → PDF (incl. HEIC) · [x] PDF → images · [x] Extract images · [x] Camera scan-to-PDF
 
 ### [ ] M4: Optimize and secure
-- [x] Compress (3 levels) · [x] Grayscale · [x] Protect · [x] Unlock · [ ] Permissions · [ ] Flatten · [ ] Repair · [ ] Metadata
+- [x] Compress (3 levels) · [x] Grayscale · [x] Protect · [x] Unlock · [x] Permissions · [ ] Flatten · [ ] Repair · [ ] Metadata
 
 ### [ ] M5: Editor
 - [ ] Text add · [ ] Edit existing text · [ ] Images · [ ] Shapes · [ ] Whiteout · [ ] Markup · [ ] Freehand · [ ] Comments · [ ] Stamps
@@ -72,6 +72,18 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-11-01: Edit permissions (M4)
+- `/pdf-permissions` (`PermissionsWorkspace`): a checkbox per permission, starting from what the file allows
+  (full-quality printing needs printing), an optional permissions (owner) password typed twice, otherwise a random
+  one; a file opened with its user password keeps it (`security.keepUserPassword`, new). Allowing something the file
+  didn't allow needs the same rights box as Unlock (D-032), unless the owner password opened it. The page says
+  permissions are a request most apps follow, not a lock.
+- Verified: 1 new unit test (keeping the open password while changing permissions and owner password). New E2E
+  `permissions.spec.ts` (no copying/changing/commenting, printing kept, owner password works, qpdf: restrictions
+  only, `--check` clean, `watchEgress` with the password as a secret; print → full-quality print; rights box when
+  lifting a restriction; linked from home): 16/16 in all four browser projects.
+- Next: Flatten.
 
 ### 2026-11-01: Unlock PDF, and protected files open with their password (M4)
 - Engine (D-032): `openPdf(bytes, password)` authenticates (new code `wrong-password`), `DocInfo.unlockedWith`;
