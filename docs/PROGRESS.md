@@ -3,7 +3,7 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M5: Editor (M0–M2 done 2026-10-31, M3 and M4 done 2026-11-01)
-- **Next action:** M5: header and footer.
+- **Next action:** M5: Bates numbering.
 - **Owner asked (2026-11-01):** build all of M5 in one go, one PR per item, each auto-merged when CI passes.
 - **Owner asked earlier (2026-11-01):** build all of M3 and M4 in one go, one PR per tool, each auto-merged when CI passes.
   Unlock removes owner-password restrictions only after the user confirms they have the right to; libheif-js approved.
@@ -50,7 +50,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 
 ### [ ] M5: Editor
 - [x] Text add · [x] Edit existing text · [x] Images · [x] Shapes · [x] Whiteout · [x] Markup · [x] Freehand · [x] Comments · [x] Stamps
-- [x] Page numbers · [x] Watermark · [ ] Header/footer · [ ] Bates · [x] Undo/redo
+- [x] Page numbers · [x] Watermark · [x] Header/footer · [ ] Bates · [x] Undo/redo
 - [ ] Output verified in Acrobat Reader, Chrome, macOS Preview
 
 ### [ ] M6: Sign and forms
@@ -73,6 +73,16 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-11-01: Header & footer (M5)
+- `src/pagetools/headers.ts`: six places (header and footer, left/centre/right), each any text with {page}, {pages},
+  {date} (the user's locale) and {file}; empty places left out; from a page on with a first page number.
+- `/header-footer` (`HeaderFooterWorkspace`): starts with the file's name top left and "Page {page} of {pages}" bottom
+  right in small grey; style, from page, first page number, margin, live preview. Output `<name>-header-footer.pdf`.
+- Verified: 1 new unit test (filled tokens, alignment, empty places). New E2E `header-footer.spec.ts` (file name top
+  left, a title top right, "- N -" centred at the bottom on both pages at the margin, qpdf-clean, `watchEgress`; linked
+  from home): 8/8 in all four projects.
+- Next: Bates numbering.
 
 ### 2026-11-01: Watermark (M5)
 - `src/pagetools/watermark.ts`: words (turned about their own middle, so an angle doesn't move them off their place) or

@@ -1,0 +1,40 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { HeaderFooterWorkspace } from "~/components/pagetools/HeaderFooterWorkspace";
+---
+
+<ToolPage
+  slug="header-footer"
+  title="Add a header and footer to a PDF online, free"
+  description="Add text to the top and bottom of every page of a PDF in your browser, with page numbers, the date and the file name. Free, no account, no watermark, and your file is never uploaded."
+  heading="Header & footer"
+  intro="Put text at the top and bottom of every page: a title, the date, page numbers. Free, no sign-up, no watermark, and your file never leaves this device."
+  steps={[
+    { title: "Add your PDF", text: "Choose it, drop it anywhere on the page, or paste it." },
+    { title: "Write them", text: "Fill in any of the six places, with page numbers, date or file name if you like." },
+    { title: "Download", text: "They're written into the pages. No account, no watermark." },
+  ]}
+  faqs={[
+    {
+      question: "Is it really free?",
+      answer:
+        "Yes. There is no paid plan, no daily limit and no watermark. Plyleaf can be free because your own browser does the work.",
+    },
+    {
+      question: "What can a header or footer say?",
+      answer:
+        "Anything you type, plus {page} for the page number, {pages} for the last page number, {date} for today's date and {file} for the file's name.",
+    },
+    {
+      question: "Can I skip the first page?",
+      answer:
+        "Yes. Set “From page” to 2, and “First page number” to choose what {page} says on the first page that gets them.",
+    },
+    {
+      question: "Is my PDF uploaded?",
+      answer: "No. Everything happens right here in your browser and the file never goes over the internet.",
+    },
+  ]}
+>
+  <HeaderFooterWorkspace client:load />
+</ToolPage>

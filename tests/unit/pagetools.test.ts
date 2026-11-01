@@ -1,4 +1,5 @@
 import { expect, test } from "vitest";
+import { EMPTY_SLOTS, headerFooterEdits } from "~/pagetools/headers";
 import { pageNumberEdits, DEFAULT_NUMBERS } from "~/pagetools/numbers";
 import { DEFAULT_STYLE, fillTokens, marksOnPages, placedText } from "~/pagetools/stamping";
 import { DEFAULT_WATERMARK, watermarkEdits } from "~/pagetools/watermark";
@@ -81,4 +82,28 @@ test("a turned watermark turns about its own middle, and pictures sit in their p
   expect(
     watermarkEdits([PAGE], { ...DEFAULT_WATERMARK, content: { kind: "text", text: " ", style } }).pages[0]!.marks,
   ).toEqual([]);
+});
+
+test("header and footer fill their places with the page's details, skipping empty ones", () => {
+  const edits = headerFooterEdits([PAGE, PAGE], {
+    text: { ...EMPTY_SLOTS, "top-left": "{file}", "bottom-right": "{page}/{pages} · {date}", "top-center": "  " },
+    style: DEFAULT_STYLE,
+    margin: 20,
+    from: 1,
+    startAt: 1,
+    file: "report.pdf",
+    date: "1 Nov",
+  });
+  expect(
+    edits.pages.map(({ marks }) => marks.map((mark) => (mark.type === "text" ? [mark.text, mark.align] : null))),
+  ).toEqual([
+    [
+      ["report.pdf", "left"],
+      ["1/2 · 1 Nov", "right"],
+    ],
+    [
+      ["report.pdf", "left"],
+      ["2/2 · 1 Nov", "right"],
+    ],
+  ]);
 });
