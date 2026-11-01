@@ -6,6 +6,7 @@ import { isConvex, outputSize, type Quad } from "~/scan/quad";
 import { EngineError } from "./errors";
 import {
   MAX_RENDER_SIDE,
+  METADATA_FIELDS,
   PERMISSIONS,
   type DocInfo,
   type Bitmap,
@@ -360,6 +361,12 @@ export function describe(pdf: mupdf.PDFDocument): Omit<DocInfo, "id" | "source" 
     unlockedWith: unlockedWith(pdf),
     annotations,
     formFields,
+    metadata: Object.fromEntries(
+      METADATA_FIELDS.flatMap((field) => {
+        const value = pdf.getMetaData(`info:${field}`);
+        return value ? [[field, value]] : [];
+      }),
+    ),
     permissions: PERMISSIONS.filter((permission) => pdf.hasPermission(permission)),
   };
 }

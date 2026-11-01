@@ -35,7 +35,26 @@ export interface DocInfo {
   annotations: number;
   /** Form fields (widgets) on its pages. */
   formFields: number;
+  /** Its document information (title, author…), the fields it has. */
+  metadata: Metadata;
 }
+
+/** Document information fields, as PDF names them. */
+export type MetadataField =
+  "Title" | "Author" | "Subject" | "Keywords" | "Creator" | "Producer" | "CreationDate" | "ModDate";
+
+export const METADATA_FIELDS: readonly MetadataField[] = [
+  "Title",
+  "Author",
+  "Subject",
+  "Keywords",
+  "Creator",
+  "Producer",
+  "CreationDate",
+  "ModDate",
+];
+
+export type Metadata = Partial<Record<MetadataField, string>>;
 
 /**
  * Part of a page to keep, as fractions (0 to 1) of the page as it's shown with its own rotation, measured from the
@@ -140,6 +159,11 @@ export interface TransformOptions {
    * changed and look the same everywhere. Links stay links.
    */
   flatten?: "forms" | "all";
+  /**
+   * Document information. `set`: fields to change (an empty string removes one); the XMP copy is dropped so readers
+   * don't show the old values. "remove": no document information, XMP or applications' private data at all.
+   */
+  metadata?: { set: Metadata } | "remove";
 }
 
 /** An RGBA bitmap, 4 bytes per pixel, not premultiplied. */

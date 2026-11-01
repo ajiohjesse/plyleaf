@@ -29,6 +29,7 @@ const info = (sizes: [number, number][]): DocInfo => ({
   unlockedWith: null,
   annotations: 0,
   formFields: 0,
+  metadata: {},
   permissions: ["print", "print-hq", "copy", "edit", "annotate", "form", "assemble", "accessibility"],
 });
 const FOUR = info([

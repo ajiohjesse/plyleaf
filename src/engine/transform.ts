@@ -3,7 +3,7 @@
 import * as mupdf from "mupdf";
 import { message, pageImages, toDisplayColours, unlockedWith } from "./ops";
 import { EngineError } from "./errors";
-import type { CompressLevel, Permission, Security, TransformOptions } from "./types";
+import type { CompressLevel, Metadata, MetadataField, Permission, Security, TransformOptions } from "./types";
 
 /** Image settings per Compress level: the resolution images are brought down to (for their page) and JPEG quality. */
 const IMAGE_LEVELS: Record<Exclude<CompressLevel, "low">, { dpi: number; quality: number }> = {
@@ -24,6 +24,7 @@ export function transform(
   try {
     // First, so form fields and annotations are greyed and compressed with the rest of the page.
     if (options.flatten) copy.bake(options.flatten === "all", true);
+    if (options.metadata) changeMetadata(copy, options.metadata);
     if (options.grayscale) toGrey(copy);
     if (options.compress && options.compress !== "low") recompressImages(copy, IMAGE_LEVELS[options.compress]);
     const save = [
@@ -35,6 +36,39 @@ export function transform(
     return repacked(saved(copy, "garbage,encrypt=keep"), save.join(","), password);
   } finally {
     copy.destroy();
+  }
+}
+
+/** Sets or removes document information (see TransformOptions.metadata). */
+function changeMetadata(pdf: mupdf.PDFDocument, change: { set: Metadata } | "remove") {
+  const trailer = pdf.getTrailer();
+  const root = trailer.get("Root");
+  // The XMP copy would otherwise show the old values in readers that prefer it.
+  root.delete("Metadata");
+  if (change === "remove") {
+    // Emptied as well as unlinked: MuPDF can write the trailer it opened with, Info and all.
+    const info = trailer.get("Info");
+    if (info.isDictionary()) {
+      const keys: string[] = [];
+      info.forEach((_, key) => keys.push(String(key)));
+      for (const key of keys) info.delete(key);
+    }
+    trailer.delete("Info");
+    root.delete("PieceInfo");
+    for (let i = 0; i < pdf.countPages(); i++) {
+      const page = pdf.findPage(i);
+      page.delete("Metadata");
+      page.delete("PieceInfo");
+    }
+    return;
+  }
+  for (const [field, value] of Object.entries(change.set) as [MetadataField, string][]) {
+    if (value === "") {
+      const info = trailer.get("Info");
+      if (info.isDictionary()) info.delete(field);
+    } else {
+      pdf.setMetaData(`info:${field}`, value);
+    }
   }
 }
 

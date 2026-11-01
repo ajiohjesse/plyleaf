@@ -69,6 +69,10 @@ Cloudflare Pages. Package manager: pnpm.
   radio cards); `src/components/split/SplitWorkspace.tsx` is the single-file tool pattern.
 - Page-level Organize tools are modes of `src/components/organize/OrganizeWorkspace.tsx` (specs in `tools.tsx`) on the pure
   page board `src/organize/board.ts` (D-023); `PageBoard` renders it. E2E steps they share: `tests/helpers/organize.ts`.
+- Optimize & secure (M4): one engine call, `engine.transform(doc, options)` (`src/engine/transform.ts`, D-029), changes a
+  copy (compress, grayscale, flatten, metadata, security). Its tools are `src/components/secure/*Workspace.tsx` on
+  `src/components/workspace/SingleFileTool.tsx`, which also asks for passwords (intake's `passwords` option, D-032).
+  Every M4 test checks output with qpdf in WASM (`tests/helpers/qpdf.ts`, by exit code).
 - `src/download/`: output names, `downloadFile` and `saveAs`; `src/components/download/DownloadPanel` is the "done"
   screen. Show engine failures with `openFailureMessage` / `operationFailureMessage` from `src/intake/files.ts` (D-019).
 - `src/pages/test-harness/`: pages for E2E tests to drive internals, built only when `PLYLEAF_TEST_HARNESS=1`.
