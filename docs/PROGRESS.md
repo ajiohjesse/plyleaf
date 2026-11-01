@@ -2,8 +2,8 @@
 
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
-- **Current milestone:** M3: Images and scanning (M0, M1 and M2 done 2026-10-31)
-- **Next action:** M3, Camera scan-to-PDF (edge detection + perspective correction).
+- **Current milestone:** M4: Optimize and secure (M0–M2 done 2026-10-31, M3 done 2026-11-01)
+- **Next action:** M4, Compress (3 levels, before/after sizes).
 - **Owner asked (2026-11-01):** build all of M3 and M4 in one go, one PR per tool, each auto-merged when CI passes.
   Unlock removes owner-password restrictions only after the user confirms they have the right to; libheif-js approved.
 - **Live:** https://plyleaf.ajiohjesse.workers.dev (Workers Builds deploys `main`; other branches get Preview URLs).
@@ -41,8 +41,8 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] Shared Organize workspace
 - [x] Per-tool landing pages + E2E tests
 
-### [ ] M3: Images and scanning
-- [x] Images → PDF (incl. HEIC) · [x] PDF → images · [x] Extract images · [ ] Camera scan-to-PDF
+### [x] M3: Images and scanning
+- [x] Images → PDF (incl. HEIC) · [x] PDF → images · [x] Extract images · [x] Camera scan-to-PDF
 
 ### [ ] M4: Optimize and secure
 - [ ] Compress (3 levels) · [ ] Grayscale · [ ] Protect · [ ] Unlock · [ ] Permissions · [ ] Flatten · [ ] Repair · [ ] Metadata
@@ -72,6 +72,28 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-11-01: Scan to PDF, M3 done
+- `/scan-to-pdf` (`ScanWorkspace`, D-028): "Use camera" (live `getUserMedia`, back camera, a shutter that adds page
+  after page) or photos picked, dropped or pasted. Each photo: decoded on the page (`src/scan/photo.ts`, ≤ 3000 px),
+  the page found (`src/scan/detect.ts`), straightened in the engine (`engine.openScan`: MuPDF `Pixmap.warp`, then
+  colour / greyscale / black and white from `src/scan/filters.ts`). Pages show as thumbnails with adjust corners,
+  move earlier/later and remove; `CornerEditor` drags corners (pointer capture, 44 px targets) or moves them with
+  arrow keys, with "Back to detected" and "Whole photo". Look and page size (Images to PDF's `LayoutOptions`) apply to
+  all pages; changing the look re-straightens every page. Output `scan.pdf`.
+- `src/scan/quad.ts` (corner order, convexity, area, output size, moving a corner).
+- Fixed before shipping: a tall photo pushed the corner editor wider than a phone screen.
+- Verified: 11 new unit tests (quads; detection within 2.5% of each true corner on a made-up angled page, nothing in a
+  plain or full-frame photo; Otsu; black and white under uneven light; straightened output has the red block top-left
+  and paper in every corner; black and white is grey; crossed corners refused). New E2E `scan.spec.ts` (two photos →
+  straightened pages checked by colour with MuPDF, `watchEgress` clean; corners by keyboard, back to detected, whole
+  photo; black and white on A4; not a photo; linked from home) 20/20 in all four projects, and `scan-camera.spec.ts`
+  (Chromium's fake camera: two shots → two pages, no camera before the button) in Chromium and Pixel 7. Checked at
+  375 px (no horizontal scroll) with a made-up receipt photo: found and straightened.
+- Real phone photos weren't tried from here (no device); the detector relies on paper being lighter than its
+  background, and says nothing when it isn't (the corners start at the whole photo).
+- All four M3 items work, so M3 is done.
+- Next: M4, Compress.
 
 ### 2026-11-01: Extract images (M3)
 - Engine: `extractImages(doc, page, skip)` (D-027): a page's image XObjects, inside forms too, once each across pages

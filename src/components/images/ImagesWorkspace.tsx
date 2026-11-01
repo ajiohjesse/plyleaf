@@ -104,7 +104,7 @@ export function ImagesWorkspace() {
   );
 }
 
-function LayoutOptions({ layout, onChange }: { layout: Layout; onChange: (layout: Layout) => void }) {
+export function LayoutOptions({ layout, onChange }: { layout: Layout; onChange: (layout: Layout) => void }) {
   const name = useId();
   const ids = { orientation: useId(), margin: useId() };
   const set = (change: Partial<Layout>) => onChange({ ...layout, ...change });
