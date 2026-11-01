@@ -3,7 +3,7 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M3: Images and scanning (M0, M1 and M2 done 2026-10-31)
-- **Next action:** M3, PDF → images (JPG/PNG/WebP per page, chosen DPI).
+- **Next action:** M3, Extract images.
 - **Owner asked (2026-11-01):** build all of M3 and M4 in one go, one PR per tool, each auto-merged when CI passes.
   Unlock removes owner-password restrictions only after the user confirms they have the right to; libheif-js approved.
 - **Live:** https://plyleaf.ajiohjesse.workers.dev (Workers Builds deploys `main`; other branches get Preview URLs).
@@ -42,7 +42,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] Per-tool landing pages + E2E tests
 
 ### [ ] M3: Images and scanning
-- [x] Images → PDF (incl. HEIC) · [ ] PDF → images · [ ] Extract images · [ ] Camera scan-to-PDF
+- [x] Images → PDF (incl. HEIC) · [x] PDF → images · [ ] Extract images · [ ] Camera scan-to-PDF
 
 ### [ ] M4: Optimize and secure
 - [ ] Compress (3 levels) · [ ] Grayscale · [ ] Protect · [ ] Unlock · [ ] Permissions · [ ] Flatten · [ ] Repair · [ ] Metadata
@@ -72,6 +72,19 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-11-01: PDF to images (M3)
+- Engine: `pageImage(doc, page, {dpi, format: "jpeg" | "png", quality})` renders on white and encodes with MuPDF,
+  recording the resolution; sides are capped at 8192 px (`MAX_RENDER_SIDE` now lives in `types.ts`). D-026.
+- `/pdf-to-jpg` (`PdfToImagesWorkspace`, single file): format JPG / PNG / WebP (WebP via the page's canvas, shown as
+  unavailable where the browser can't encode it), resolution 72/150/300/600 dpi with the first image's pixel size,
+  all or typed pages. One image downloads as itself, several as `<name>-images.zip` of `<name>-page-NN.<ext>`.
+- `src/convert/pdf-images.ts` (`imageSize` rounds partial pixels up like MuPDF, `pageImageName`, WebP helpers) and
+  `pagesInRanges` in `ranges.ts`, unit-tested.
+- Verified: 8 new unit tests. New E2E `pdf-to-images.spec.ts` (zip of JPGs at 150 dpi incl. a rotated page, sizes and
+  dpi read back with MuPDF, `watchEgress` clean; one PNG at 300 dpi; WebP where supported; typed-page errors; linked
+  from home): 20/20 in all four browser projects. Checked at 375 px.
+- Next: Extract images.
 
 ### 2026-11-01: Images to PDF, Merge takes images (M3)
 - Engine (D-025): `engine.open` takes images. The worker opens JPEG/PNG/GIF/TIFF with MuPDF and writes a PDF with a

@@ -2,10 +2,17 @@
 // the worker. They hold no state: the worker owns the open documents and passes them in.
 import * as mupdf from "mupdf";
 import { EngineError } from "./errors";
-import type { Bitmap, Crop, Fit, PageInfo, Rotation } from "./types";
+import {
+  MAX_RENDER_SIDE,
+  type Bitmap,
+  type Crop,
+  type Fit,
+  type ImageOptions,
+  type PageInfo,
+  type Rotation,
+} from "./types";
 
-/** Largest bitmap side we render, in pixels. Bigger requests would need hundreds of MB of WASM memory. */
-export const MAX_RENDER_SIDE = 8192;
+export { MAX_RENDER_SIDE } from "./types";
 /** Largest page side in PDF points (200 in), the limit in the PDF spec. */
 export const MAX_PAGE_SIDE = 14_400;
 /**
@@ -168,6 +175,36 @@ export function renderPage(pdf: mupdf.PDFDocument, index: number, width: number)
     const pixmap = page.toPixmap(mupdf.Matrix.scale(scale, scale), mupdf.ColorSpace.DeviceRGB, false, true);
     try {
       return toRgba(pixmap);
+    } finally {
+      pixmap.destroy();
+    }
+  } finally {
+    page.destroy();
+  }
+}
+
+/**
+ * Renders a page at `dpi` (on white) and encodes it as JPEG (quality 0–100) or PNG, with the resolution recorded in
+ * the file. The page is scaled down if that would make a side longer than MAX_RENDER_SIDE.
+ */
+export function pageImage(
+  pdf: mupdf.PDFDocument,
+  index: number,
+  { dpi, format, quality = 90 }: ImageOptions,
+): Uint8Array<ArrayBuffer> {
+  checkPageIndex(pdf, index);
+  if (!(Number.isFinite(dpi) && dpi >= 1 && dpi <= 2400 && quality >= 1 && quality <= 100)) {
+    throw new EngineError("invalid-argument", `Can't make an image at ${dpi} dpi, quality ${quality}`);
+  }
+  const page = pdf.loadPage(index);
+  try {
+    const [x0, y0, x1, y1] = page.getBounds();
+    const scale = Math.min(dpi / 72, MAX_RENDER_SIDE / (x1 - x0), MAX_RENDER_SIDE / (y1 - y0));
+    const pixmap = page.toPixmap(mupdf.Matrix.scale(scale, scale), mupdf.ColorSpace.DeviceRGB, false, true);
+    try {
+      const actual = Math.round(scale * 72);
+      pixmap.setResolution(actual, actual);
+      return (format === "png" ? pixmap.asPNG() : pixmap.asJPEG(quality)).slice() as Uint8Array<ArrayBuffer>;
     } finally {
       pixmap.destroy();
     }

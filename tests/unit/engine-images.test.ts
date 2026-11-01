@@ -3,7 +3,7 @@ import { afterEach, describe, expect, test } from "vitest";
 import { EngineError } from "~/engine/errors";
 import { mupdfImageType } from "~/engine/decode";
 import { decodeHeic } from "~/engine/heic";
-import { assemble, describe as describeDoc, openImage, openPdf, openPixels, renderPage } from "~/engine/ops";
+import { assemble, describe as describeDoc, openImage, openPdf, openPixels, pageImage, renderPage } from "~/engine/ops";
 import type { Bitmap, EngineErrorCode, Fit, Rotation } from "~/engine/types";
 import { fixture, makeJpeg, makePng, makeTiff } from "../helpers/images";
 import { A4, makePdf } from "../helpers/pdf";
@@ -206,5 +206,46 @@ describe("fitting pages onto a page size", () => {
   test("refuses margins that leave no room", () => {
     const source = keep(openPdf(makePdf([A4])));
     expect(errorCode(() => assemble([{ doc: source, page: 0, fit: { ...A4, margin: 300 } }]))).toBe("invalid-argument");
+  });
+});
+
+describe("saving pages as images", () => {
+  const decoded = (bytes: Uint8Array) => {
+    const result = new mupdf.Image(bytes);
+    const info = [result.getWidth(), result.getHeight(), result.getXResolution()];
+    result.destroy();
+    return info;
+  };
+
+  test("a JPEG at the resolution asked, the right way up", () => {
+    const source = keep(openPdf(makePdf([A4, { width: 400, height: 200, rotate: 90 }])));
+    const jpeg = pageImage(source, 0, { dpi: 144, format: "jpeg" });
+    expect(mupdfImageType(jpeg)).toBe("image/jpeg");
+    expect(decoded(jpeg)).toEqual([1190, 1684, 144]);
+    // A rotated page comes out as it's shown.
+    const turned = keep(openImage(pageImage(source, 1, { dpi: 72, format: "png" }), "image/png"));
+    const bitmap = renderPage(turned, 0, 200);
+    expect([bitmap.width, bitmap.height]).toEqual([200, 400]);
+    expect(colourAt(bitmap, 0.75, 0.25)).toBe("red");
+  });
+
+  test("a PNG, losslessly", () => {
+    const source = keep(openPdf(makePdf([A4])));
+    const png = pageImage(source, 0, { dpi: 72, format: "png" });
+    expect(mupdfImageType(png)).toBe("image/png");
+    expect(decoded(png)).toEqual([595, 842, 72]);
+  });
+
+  test("scales a page down rather than make a side over 8192 px", () => {
+    const source = keep(openPdf(makePdf([{ width: 5669, height: 2835 }])));
+    const [width, height] = decoded(pageImage(source, 0, { dpi: 300, format: "jpeg" }));
+    expect(width).toBe(8192);
+    expect(height).toBeCloseTo(4097, -1);
+  });
+
+  test("refuses a bad resolution or page", () => {
+    const source = keep(openPdf(makePdf([A4])));
+    expect(errorCode(() => pageImage(source, 0, { dpi: 0, format: "png" }))).toBe("invalid-argument");
+    expect(errorCode(() => pageImage(source, 3, { dpi: 72, format: "png" }))).toBe("invalid-argument");
   });
 });

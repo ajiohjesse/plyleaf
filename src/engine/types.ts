@@ -1,6 +1,9 @@
 // Types shared by the engine worker and the main thread. Keep this file free of runtime imports so that pages can
 // import it without pulling in the engine.
 
+/** Largest bitmap side we render, in pixels. Bigger requests would need hundreds of MB of WASM memory. */
+export const MAX_RENDER_SIDE = 8192;
+
 /** Identifies a document the worker holds open. Only valid for the worker that issued it. */
 export type DocId = string;
 
@@ -58,6 +61,15 @@ export type PageSpec =
       fit?: Fit;
     }
   | { blank: { width: number; height: number } };
+
+/** How to save a page as an image. */
+export interface ImageOptions {
+  /** Pixels per inch. */
+  dpi: number;
+  format: "jpeg" | "png";
+  /** JPEG quality, 1–100. Defaults to 90. */
+  quality?: number;
+}
 
 /** An RGBA bitmap, 4 bytes per pixel, not premultiplied. */
 export interface Bitmap {

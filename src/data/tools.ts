@@ -127,6 +127,7 @@ export const tools: Tool[] = [
     description: "Save pages as JPG, PNG or WebP.",
     category: "convert",
     keywords: ["jpg", "png", "picture"],
+    available: true,
   },
   {
     slug: "extract-images",
