@@ -2,6 +2,7 @@ import * as mupdf from "mupdf";
 import { afterEach, expect, test } from "vitest";
 import { openPdf, transform } from "~/engine/ops";
 import type { TextMark } from "~/engine/types";
+import { makeJpeg, makePng } from "../helpers/images";
 import { A4, makePdf } from "../helpers/pdf";
 import { qpdfCheck } from "../helpers/qpdf";
 
@@ -145,4 +146,76 @@ test("refuses a page that isn't there", () => {
   expect(() => transform(openPdf(makePdf([A4])), { edits: { pages: [{ page: 3, marks: [text({})] }] } })).toThrow(
     /no page 3/,
   );
+});
+
+/** The colour at (x, y) points on a rendered page. */
+function colourAt(doc: mupdf.PDFDocument, index: number, x: number, y: number) {
+  const pixmap = doc.loadPage(index).toPixmap(mupdf.Matrix.identity, mupdf.ColorSpace.DeviceRGB, false);
+  const i = Math.round(y) * pixmap.getStride() + Math.round(x) * 3;
+  const rgb = Array.from(pixmap.getPixels().subarray(i, i + 3));
+  pixmap.destroy();
+  return rgb;
+}
+
+const isRed = ([r, g, b]: number[]) => r! > 200 && g! < 60 && b! < 60;
+const isWhite = (rgb: number[]) => rgb.every((c) => c > 230);
+
+test("images fill their box the right way up, once in the file however often they're used", async () => {
+  const jpeg = makeJpeg(200, 100);
+  const blank = { width: 400, height: 400 };
+  const output = transform(openPdf(makePdf([blank, { ...blank, rotate: 90 }])), {
+    edits: {
+      images: [jpeg],
+      pages: [0, 1].map((page) => ({
+        page,
+        marks: [{ type: "image", image: 0, x: 150, y: 50, width: 200, height: 100 }],
+      })),
+    },
+  });
+  const doc = open(output);
+  for (const page of [0, 1]) {
+    // The picture's red quarter is its top-left.
+    expect(isRed(colourAt(doc, page, 200, 75)), `page ${page}`).toBe(true);
+    expect(isWhite(colourAt(doc, page, 300, 125)), `page ${page}`).toBe(true);
+  }
+  const saved = new TextDecoder("latin1").decode(doc.saveToBuffer("").asUint8Array());
+  expect(saved.match(/\/Subtype\s*\/Image/g)).toHaveLength(1);
+  expect(saved).toMatch(/DCTDecode/);
+  expect(await qpdfCheck(output)).toBe(0);
+});
+
+test("images turn about their centre and can be see-through", () => {
+  const output = transform(openPdf(makePdf([{ width: 400, height: 400 }])), {
+    edits: {
+      images: [makePng(100, 100)],
+      // Turned 180°: the red quarter ends up bottom-right.
+      pages: [{ page: 0, marks: [{ type: "image", image: 0, x: 250, y: 250, width: 100, height: 100, rotate: 180 }] }],
+    },
+  });
+  const doc = open(output);
+  expect(isRed(colourAt(doc, 0, 325, 325))).toBe(true);
+  expect(isWhite(colourAt(doc, 0, 275, 275))).toBe(true);
+
+  const faint = transform(openPdf(makePdf([{ width: 400, height: 400 }])), {
+    edits: {
+      images: [makePng(100, 100)],
+      pages: [{ page: 0, marks: [{ type: "image", image: 0, x: 250, y: 250, width: 100, height: 100, opacity: 0.5 }] }],
+    },
+  });
+  const [r, g] = colourAt(open(faint), 0, 275, 275);
+  expect(r).toBeGreaterThan(240);
+  expect(g).toBeGreaterThan(100);
+  expect(g).toBeLessThan(160);
+});
+
+test("refuses an image index that isn't there, or bytes that aren't an image", () => {
+  const mark = { type: "image", image: 0, x: 0, y: 0, width: 10, height: 10 } as const;
+  expect(() => transform(openPdf(makePdf([A4])), { edits: { pages: [{ page: 0, marks: [mark] }] } })).toThrow(
+    /no image 0/,
+  );
+  expect(() =>
+    transform(openPdf(makePdf([A4])), {
+      edits: { images: [new Uint8Array([1, 2, 3])], pages: [{ page: 0, marks: [mark] }] },
+    }),
+  ).toThrow(/JPEG or PNG/);
 });

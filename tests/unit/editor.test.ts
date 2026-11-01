@@ -1,7 +1,19 @@
 import { expect, test } from "vitest";
 import { unsupportedCharacters } from "~/editor/fonts";
 import { canRedo, canUndo, change, redo, settle, startHistory, undo, UNDO_LIMIT } from "~/editor/history";
-import { fromHex, moveItem, removeItem, toEdits, toHex, updateItem, type TextItem } from "~/editor/items";
+import { jpegOrientation, startingSize, usableAsIs } from "~/editor/images";
+import {
+  fromHex,
+  moveItem,
+  removeItem,
+  resizeImage,
+  toEdits,
+  toHex,
+  updateItem,
+  type ImageItem,
+  type TextItem,
+} from "~/editor/items";
+import { makeJpeg, makePng } from "../helpers/images";
 
 test("undo and redo step through changes, and a new change drops what was undone", () => {
   let history = startHistory(0);
@@ -80,7 +92,7 @@ test("items become edits page by page, without empty text", () => {
 
 test("items update, move within the page and go", () => {
   const items = [text({ id: "a" }), text({ id: "b" })];
-  expect(updateItem(items, "b", { text: "New" })[1]!.text).toBe("New");
+  expect((updateItem(items, "b", { text: "New" })[1] as TextItem).text).toBe("New");
   expect(updateItem(items, "b", { text: "New" })[0]).toBe(items[0]);
   expect(removeItem(items, "a").map((item) => item.id)).toEqual(["b"]);
   expect(moveItem(items[0]!, -50, 5, { width: 100, height: 100 })).toEqual({ x: 0, y: 25 });
@@ -96,4 +108,42 @@ test("colours go to and from hex", () => {
 test("characters the standard fonts can't show are found", () => {
   expect(unsupportedCharacters("Héllo Жук ΩΣ €–“”\n\t")).toEqual([]);
   expect(unsupportedCharacters("中文 and 中 😀")).toEqual(["中", "文", "😀"]);
+});
+
+test("JPEG orientation is read from EXIF, and only upright JPEGs and PNGs go in as they are", () => {
+  expect(jpegOrientation(makeJpeg(4, 4))).toBe(1);
+  expect(jpegOrientation(makeJpeg(4, 4, { orientation: 6 }))).toBe(6);
+  expect(usableAsIs(makeJpeg(4, 4))).toBe("jpeg");
+  expect(usableAsIs(makeJpeg(4, 4, { orientation: 6 }))).toBeNull();
+  expect(usableAsIs(makePng(4, 4))).toBe("png");
+  expect(usableAsIs(new TextEncoder().encode("RIFF....WEBP"))).toBeNull();
+});
+
+test("images start at 96 dpi, no bigger than half the page, and resize keeping their shape", () => {
+  expect(startingSize({ width: 200, height: 100 }, { width: 600, height: 800 })).toEqual({ width: 150, height: 75 });
+  expect(startingSize({ width: 4000, height: 2000 }, { width: 600, height: 800 })).toEqual({ width: 300, height: 150 });
+  const image: ImageItem = { id: "p", kind: "image", page: 0, x: 0, y: 0, width: 200, height: 100, asset: "a" };
+  expect(resizeImage(image, 100)).toEqual({ width: 100, height: 50 });
+  expect(resizeImage(image, 1)).toEqual({ width: 16, height: 8 });
+});
+
+test("each picture goes into the edits once, however many items use it", () => {
+  const asset = { id: "a", name: "a.png", bytes: new Uint8Array([1]), url: "" };
+  const image = (id: string, page: number): ImageItem => ({
+    id,
+    kind: "image",
+    page,
+    x: 1,
+    y: 2,
+    width: 3,
+    height: 4,
+    asset: "a",
+  });
+  const edits = toEdits([image("x", 0), image("y", 1)], new Map([["a", asset]]));
+  expect(edits.images).toEqual([asset.bytes]);
+  expect(edits.pages.map((page) => page.marks)).toEqual([
+    [{ type: "image", image: 0, x: 1, y: 2, width: 3, height: 4 }],
+    [{ type: "image", image: 0, x: 1, y: 2, width: 3, height: 4 }],
+  ]);
+  expect(() => toEdits([image("x", 0)])).toThrow(/no picture/);
 });
