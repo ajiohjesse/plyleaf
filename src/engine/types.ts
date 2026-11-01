@@ -16,6 +16,8 @@ export interface PageInfo {
 
 export interface DocInfo {
   id: DocId;
+  /** What the file was. An image opens as a PDF with one page per frame (a multi-page TIFF has several). */
+  source: "pdf" | "image";
   pageCount: number;
   pages: PageInfo[];
   /** MuPDF had to repair the file's structure to open it. The output of any operation is a clean file. */
@@ -33,6 +35,16 @@ export interface Crop {
   height: number;
 }
 
+/**
+ * A page size to put a page on, in PDF points, with a margin on every side. The page is scaled to fit inside the
+ * margins (up or down, keeping its shape) and centred.
+ */
+export interface Fit {
+  width: number;
+  height: number;
+  margin: number;
+}
+
 /** One page of an assembled document: a page of an open document, or a new blank page. */
 export type PageSpec =
   | {
@@ -42,6 +54,8 @@ export type PageSpec =
       rotate?: Rotation;
       /** Sets the page's crop box, so only this part shows. */
       crop?: Crop;
+      /** Puts the page (as it's shown, after crop and rotation) on a page of this size. Its annotations are left out. */
+      fit?: Fit;
     }
   | { blank: { width: number; height: number } };
 
@@ -55,6 +69,8 @@ export interface Bitmap {
 export type EngineErrorCode =
   /** The bytes aren't a PDF MuPDF can open, even with repair. */
   | "invalid-file"
+  /** The bytes are an image this browser and MuPDF can't decode (damaged, or a format variant we can't read). */
+  | "invalid-image"
   /** The PDF is encrypted with a user password. */
   | "password-required"
   /** The DocId isn't open in this worker (closed, or issued by a recycled worker). */

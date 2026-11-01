@@ -21,6 +21,7 @@ import {
 
 const info = (sizes: [number, number][]): DocInfo => ({
   id: "d1",
+  source: "pdf",
   pageCount: sizes.length,
   pages: sizes.map(([width, height]) => ({ width, height, rotation: 0 })),
   repaired: false,

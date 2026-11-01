@@ -130,6 +130,8 @@ export function openFailureMessage(name: string, error: unknown): string {
   switch (code) {
     case "invalid-file":
       return `${name} couldn't be opened. It may be damaged, or not really a PDF.`;
+    case "invalid-image":
+      return `${name} couldn't be opened. It may be damaged, or a kind of image this browser can't read.`;
     case "password-required":
       return `${name} is protected with a password. Plyleaf can't open protected PDFs yet.`;
     case "out-of-memory":

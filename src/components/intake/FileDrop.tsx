@@ -81,14 +81,15 @@ export function FileDrop({ onFiles, accept = ["pdf"], multiple = true, compact =
     };
   }, []);
 
-  const noun = accept.includes("image") ? (accept.includes("pdf") ? "files" : "images") : "PDFs";
-  const one = noun === "PDFs" ? "PDF" : "file";
+  const both = accept.includes("image") && accept.includes("pdf");
+  const noun = accept.includes("image") ? (both ? "files" : "images") : "PDFs";
+  const one = accept.includes("image") ? (both ? "file" : "image") : "PDF";
   const title = compact
     ? multiple
       ? `Add more ${noun}`
       : `Use a different ${one}`
     : multiple
-      ? `Drop ${noun} here`
+      ? `Drop ${both ? "PDFs or images" : noun} here`
       : `Drop a ${one} here`;
   const pick = multiple ? "Choose files" : "Choose a file";
 

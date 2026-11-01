@@ -1,0 +1,57 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { ImagesWorkspace } from "~/components/images/ImagesWorkspace";
+---
+
+<ToolPage
+  slug="jpg-to-pdf"
+  title="JPG to PDF: convert images to PDF free, no sign-up"
+  description="Turn JPG, PNG, WebP, HEIC, GIF and TIFF images into one PDF in your browser. Free with no limits, no watermark and no account, and your photos are never uploaded."
+  heading="Images to PDF"
+  intro="Turn photos and pictures into one PDF, a page per image. JPG, PNG, WebP, HEIC (iPhone), GIF and TIFF. Free, no sign-up, and your images never leave this device."
+  steps={[
+    { title: "Add your images", text: "Choose them, drop them anywhere on the page, or paste a screenshot." },
+    {
+      title: "Order and lay out",
+      text: "Drag images into order, then keep each page its image's size or fit them onto A4 or Letter with a margin.",
+    },
+    {
+      title: "Convert and download",
+      text: "Plyleaf makes the PDF on your device. Download it straight away, no account needed.",
+    },
+  ]}
+  faqs={[
+    {
+      question: "Is it really free?",
+      answer:
+        "Yes. There is no paid plan, no daily limit and no watermark. Plyleaf can be free because your own browser does the work, so there are no servers to pay for.",
+    },
+    {
+      question: "Are my photos uploaded?",
+      answer:
+        "No. Your images are read and turned into a PDF right here in your browser. They never go over the internet.",
+    },
+    {
+      question: "Will my photos lose quality?",
+      answer:
+        "JPG photos go into the PDF exactly as they are, without being compressed again. PNG, GIF and TIFF images are stored losslessly. WebP and HEIC photos are converted to high-quality JPEG, because PDF can't hold those formats; drawings and images with transparency stay lossless.",
+    },
+    {
+      question: "Can I convert iPhone HEIC photos?",
+      answer:
+        "Yes, in every browser. Safari reads them itself; elsewhere Plyleaf loads a HEIC decoder the first time you add one, and it runs on your device like everything else.",
+    },
+    {
+      question: "Are photos turned the right way up?",
+      answer:
+        "Yes. Plyleaf follows the orientation your camera saved with the photo, so a picture taken holding the phone sideways comes out the way you saw it.",
+    },
+    {
+      question: "How big are the pages?",
+      answer:
+        "With “Same as image”, each page is the image's size at its resolution, scaled down to fit A4 or US Letter if it's bigger. Choose A4 or US Letter to put every image on the same size page, turned to match each image or all one way, with an optional margin.",
+    },
+  ]}
+>
+  <ImagesWorkspace client:load />
+</ToolPage>
