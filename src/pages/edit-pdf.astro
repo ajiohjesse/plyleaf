@@ -6,14 +6,14 @@ import { EditorWorkspace } from "~/components/editor/EditorWorkspace";
 <ToolPage
   slug="edit-pdf"
   wide
-  title="Edit PDF: add text to a PDF online, free"
-  description="Add text to any page of a PDF in your browser: choose the font, size and colour, move it into place, and download. Free, no account, no watermark, and your file is never uploaded."
+  title="Edit PDF: add text and images to a PDF online, free"
+  description="Add text and images to any page of a PDF in your browser: choose the font, size and colour, move and resize, and download. Free, no account, no watermark, and your file is never uploaded."
   heading="Edit PDF"
-  intro="Add text anywhere on your pages, in the font, size and colour you want. Free, no sign-up, no watermark, and your file never leaves this device."
+  intro="Add text and pictures anywhere on your pages, in the font, size and colour you want. Free, no sign-up, no watermark, and your file never leaves this device."
   steps={[
     { title: "Add your PDF", text: "Choose it, drop it anywhere on the page, or paste it." },
-    { title: "Add your text", text: "Pick Add text, click the page and type. Drag it into place and style it." },
-    { title: "Download", text: "Your text is written into the pages. No account, no watermark." },
+    { title: "Add text and images", text: "Click the page and type, or pick a picture. Drag them into place." },
+    { title: "Download", text: "What you added is written into the pages. No account, no watermark." },
   ]}
   faqs={[
     {
@@ -30,6 +30,11 @@ import { EditorWorkspace } from "~/components/editor/EditorWorkspace";
       question: "Can the text be changed later?",
       answer:
         "Until you download, yes: click it to edit, drag it to move it, or delete it. In the downloaded PDF it's part of the page, so it looks the same in every app and stays searchable and copyable.",
+    },
+    {
+      question: "Which images can I add?",
+      answer:
+        "JPG and PNG go in exactly as they are, transparency included. Other pictures your browser can open (WebP, GIF, AVIF, and HEIC on Apple devices) are converted first, and phone photos are turned the right way up.",
     },
     {
       question: "Is my PDF uploaded?",

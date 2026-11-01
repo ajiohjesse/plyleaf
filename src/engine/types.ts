@@ -160,7 +160,7 @@ export type StandardFont = "helvetica" | "times" | "courier";
  * Something drawn onto a page, in PDF points measured from the top-left corner of the page as it's shown (after its
  * own rotation and crop). Marks become part of the page's content, drawn over what's there in the order given.
  */
-export type Mark = TextMark;
+export type Mark = TextMark | ImageMark;
 
 export interface TextMark {
   type: "text";
@@ -185,9 +185,26 @@ export interface TextMark {
   opacity?: number;
 }
 
+/** An image, stretched to fill a box. */
+export interface ImageMark {
+  type: "image";
+  /** Index into Edits.images. */
+  image: number;
+  /** The box's top-left corner and size, before any rotation. */
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  /** Degrees anticlockwise, about the box's centre. */
+  rotate?: number;
+  opacity?: number;
+}
+
 /** Marks to draw on pages, by page index. */
 export interface Edits {
   pages: { page: number; marks: Mark[] }[];
+  /** JPEG or PNG files that image marks draw. An image used by many marks is stored once in the PDF. */
+  images?: Uint8Array[];
 }
 
 /** What to change in a copy of an open document before saving it (Optimize & secure tools). */

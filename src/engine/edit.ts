@@ -1,10 +1,10 @@
-// Edit PDF and the page tools: marks (text, and more to come) drawn onto pages. They're drawn with MuPDF's PDF writer on
+// Edit PDF and the page tools: marks (text, images…) drawn onto pages. They're drawn with MuPDF's PDF writer on
 // pages of a scratch document, which embeds fonts and images and encodes text for us, and each of those pages then
 // goes onto its page as a form XObject drawn over the existing content.
 import * as mupdf from "mupdf";
 import { drawOnTop, freeName, ownResources, subDictionary } from "./content";
 import { EngineError } from "./errors";
-import { LINE_HEIGHT, type Edits, type Mark, type StandardFont, type TextMark } from "./types";
+import { LINE_HEIGHT, type Edits, type ImageMark, type Mark, type StandardFont, type TextMark } from "./types";
 
 const FONT_NAMES: Record<StandardFont, [regular: string, bold: string, italic: string, boldItalic: string]> = {
   helvetica: ["Helvetica", "Helvetica-Bold", "Helvetica-Oblique", "Helvetica-BoldOblique"],
@@ -26,7 +26,7 @@ export function applyEdits(pdf: mupdf.PDFDocument, edits: Edits) {
   if (byPage.size === 0) return;
 
   const targets = [...byPage.keys()];
-  const scratch = drawScratch(pdf, targets, byPage);
+  const scratch = drawScratch(pdf, targets, byPage, edits.images ?? []);
   try {
     // One graft map, so a font or image used on many pages is copied once.
     const map = pdf.newGraftMap();
@@ -65,9 +65,14 @@ export function applyEdits(pdf: mupdf.PDFDocument, edits: Edits) {
 }
 
 /** A document with a page per target page, the same size as it's shown, with its marks drawn on it. */
-function drawScratch(pdf: mupdf.PDFDocument, targets: number[], byPage: Map<number, Mark[]>): mupdf.PDFDocument {
+function drawScratch(
+  pdf: mupdf.PDFDocument,
+  targets: number[],
+  byPage: Map<number, Mark[]>,
+  images: Uint8Array[],
+): mupdf.PDFDocument {
   const buffer = new mupdf.Buffer();
-  const fonts = new Map<string, mupdf.Font>();
+  const resources: Resources = { fonts: new Map(), images: new Map(), sources: images };
   try {
     const writer = new mupdf.DocumentWriter(buffer, "pdf", "");
     try {
@@ -79,7 +84,7 @@ function drawScratch(pdf: mupdf.PDFDocument, targets: number[], byPage: Map<numb
         // Marks are measured from the shown page's top-left corner, which is (x0, y0) in MuPDF's page space.
         const origin = mupdf.Matrix.translate(-x0, -y0);
         try {
-          for (const mark of byPage.get(index)!) drawMark(device, mark, origin, fonts);
+          for (const mark of byPage.get(index)!) drawMark(device, mark, origin, resources);
         } finally {
           writer.endPage();
           device.destroy();
@@ -95,16 +100,52 @@ function drawScratch(pdf: mupdf.PDFDocument, targets: number[], byPage: Map<numb
     return scratch;
   } finally {
     buffer.destroy();
-    for (const font of fonts.values()) font.destroy();
+    for (const font of resources.fonts.values()) font.destroy();
+    for (const image of resources.images.values()) image.destroy();
   }
 }
 
-function drawMark(device: mupdf.Device, mark: Mark, origin: mupdf.Matrix, fonts: Map<string, mupdf.Font>) {
+/** Fonts and images loaded while drawing, shared by every page so each is written to the scratch document once. */
+interface Resources {
+  fonts: Map<string, mupdf.Font>;
+  images: Map<number, mupdf.Image>;
+  sources: Uint8Array[];
+}
+
+function drawMark(device: mupdf.Device, mark: Mark, origin: mupdf.Matrix, resources: Resources) {
   switch (mark.type) {
     case "text":
-      drawText(device, mark, origin, fonts);
+      drawText(device, mark, origin, resources.fonts);
+      break;
+    case "image":
+      drawImage(device, mark, origin, resources);
       break;
   }
+}
+
+function drawImage(device: mupdf.Device, mark: ImageMark, origin: mupdf.Matrix, resources: Resources) {
+  const { x, y, width, height, rotate = 0, opacity = 1 } = mark;
+  if (!(width > 0 && height > 0)) return;
+  let image = resources.images.get(mark.image);
+  if (!image) {
+    const bytes = resources.sources[mark.image];
+    if (!bytes) throw new EngineError("invalid-argument", `There's no image ${mark.image}`);
+    try {
+      image = new mupdf.Image(bytes.slice());
+    } catch (error) {
+      throw new EngineError("invalid-image", `Not a JPEG or PNG MuPDF can read: ${String(error)}`);
+    }
+    resources.images.set(mark.image, image);
+  }
+  // An image fills the unit square; this stretches it over the box, turned about the box's centre.
+  const matrix = [
+    mupdf.Matrix.scale(width, height),
+    mupdf.Matrix.translate(-width / 2, -height / 2),
+    mupdf.Matrix.rotate(-rotate),
+    mupdf.Matrix.translate(x + width / 2, y + height / 2),
+    origin,
+  ].reduce((a, b) => mupdf.Matrix.concat(a, b));
+  device.fillImage(image, matrix, opacity);
 }
 
 function fontFor(mark: TextMark, fonts: Map<string, mupdf.Font>): mupdf.Font {

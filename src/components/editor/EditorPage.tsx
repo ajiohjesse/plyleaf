@@ -1,9 +1,10 @@
 import { memo, useEffect, useRef, useState } from "react";
 import type { PageInfo } from "~/engine/types";
-import type { Item, ItemId } from "~/editor/items";
+import type { Asset, AssetId, Item, ItemId } from "~/editor/items";
 import { PageCanvas } from "~/components/thumbnails/PageCanvas";
 import type { Observe } from "~/components/thumbnails/ThumbnailGrid";
 import type { ItemHandlers } from "./gestures";
+import { ImageBox } from "./ImageBox";
 import { TextBox } from "./TextBox";
 
 /** Pages are rendered at most this many device pixels wide; zoomed further, the image is scaled up. */
@@ -16,7 +17,11 @@ export interface PageHandlers {
   onPlace: (page: number, x: number, y: number) => void;
   /** The user pressed the page itself (not an item) with the select tool. */
   onBackground: () => void;
-  handlersFor: (item: Item) => ItemHandlers & { onText: (text: string) => void; onEndEdit: () => void };
+  handlersFor: (item: Item) => ItemHandlers & {
+    onText: (text: string) => void;
+    onEndEdit: () => void;
+    onResize: (width: number, height: number) => void;
+  };
 }
 
 interface Props extends PageHandlers {
@@ -32,6 +37,9 @@ interface Props extends PageHandlers {
   editing: ItemId | null;
   observeNear: Observe;
   observeOnScreen: Observe;
+  assets: ReadonlyMap<AssetId, Asset>;
+  /** Says when the page comes on screen or goes off it. */
+  onVisible: (visible: boolean) => void;
 }
 
 /**
@@ -46,6 +54,8 @@ export const EditorPage = memo(function EditorPage(props: Props) {
   const { observeNear, observeOnScreen } = props;
   useEffect(() => observeNear(ref.current!, setNear), [observeNear]);
   useEffect(() => observeOnScreen(ref.current!, setOnScreen), [observeOnScreen]);
+  const { onVisible } = props;
+  useEffect(() => onVisible(onScreen), [onScreen, onVisible]);
 
   const width = Math.max(1, Math.round(page.width * scale));
   const height = Math.max(1, Math.round(page.height * scale));
@@ -88,16 +98,31 @@ export const EditorPage = memo(function EditorPage(props: Props) {
       ) : (
         <div className="absolute inset-0" onPointerDown={() => props.onBackground()} />
       )}
-      {items.map((item) => (
-        <TextBox
-          key={item.id}
-          item={item}
-          scale={scale}
-          selected={item.id === selected}
-          editing={item.id === editing}
-          {...props.handlersFor(item)}
-        />
-      ))}
+      {items.map((item) => {
+        const { onText, onEndEdit, onResize, ...handlers } = props.handlersFor(item);
+        return item.kind === "text" ? (
+          <TextBox
+            key={item.id}
+            item={item}
+            scale={scale}
+            selected={item.id === selected}
+            editing={item.id === editing}
+            onText={onText}
+            onEndEdit={onEndEdit}
+            {...handlers}
+          />
+        ) : (
+          <ImageBox
+            key={item.id}
+            item={item}
+            asset={props.assets.get(item.asset)}
+            scale={scale}
+            selected={item.id === selected}
+            onResize={onResize}
+            {...handlers}
+          />
+        );
+      })}
     </li>
   );
 });

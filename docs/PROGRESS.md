@@ -3,7 +3,7 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M5: Editor (M0–M2 done 2026-10-31, M3 and M4 done 2026-11-01)
-- **Next action:** M5: images in the editor.
+- **Next action:** M5: shapes in the editor.
 - **Owner asked (2026-11-01):** build all of M5 in one go, one PR per item, each auto-merged when CI passes.
 - **Owner asked earlier (2026-11-01):** build all of M3 and M4 in one go, one PR per tool, each auto-merged when CI passes.
   Unlock removes owner-password restrictions only after the user confirms they have the right to; libheif-js approved.
@@ -49,7 +49,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] Compress (3 levels) · [x] Grayscale · [x] Protect · [x] Unlock · [x] Permissions · [x] Flatten · [x] Repair · [x] Metadata
 
 ### [ ] M5: Editor
-- [x] Text add · [ ] Edit existing text · [ ] Images · [ ] Shapes · [ ] Whiteout · [ ] Markup · [ ] Freehand · [ ] Comments · [ ] Stamps
+- [x] Text add · [ ] Edit existing text · [x] Images · [ ] Shapes · [ ] Whiteout · [ ] Markup · [ ] Freehand · [ ] Comments · [ ] Stamps
 - [ ] Page numbers · [ ] Watermark · [ ] Header/footer · [ ] Bates · [x] Undo/redo
 - [ ] Output verified in Acrobat Reader, Chrome, macOS Preview
 
@@ -73,6 +73,21 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-11-01: Images in the editor (M5)
+- Engine: image marks (a box, optional rotation about its centre and opacity) drawing from `Edits.images` (JPEG/PNG),
+  each stored once in the PDF however many marks use it.
+- Editor: Add image (file picker) puts the picture in the middle of the page on screen at 96 dpi, no bigger than half
+  the page, selected and focused; drag to move, corner handle or +/− to resize (keeping its shape), Delete.
+  `src/editor/images.ts` reads EXIF orientation: PNGs and upright JPEGs go in byte for byte, anything else (turned
+  phone photos, WebP, GIF, AVIF, HEIC where the browser reads it) is redrawn by the browser
+  (`components/editor/prepareImage.ts`). Pictures are editor assets, so undo never copies bytes.
+- Verified: 6 new unit tests (placement on plain and rotated pages, one image object for two pages, JPEG passed
+  through, rotation, opacity, bad input; orientation, starting size, resize, edits with shared images). New E2E
+  `edit-images.spec.ts` (PNG resized by keyboard and dragged, checked by colour in the output, qpdf-clean,
+  `watchEgress`; EXIF-turned JPEG shown and saved turned, corner handle; unreadable picture message): 12/12 in all four
+  projects; `edit-text` and `undo-redo` still pass.
+- Next: shapes.
 
 ### 2026-11-01: Undo and redo in the editor (M5)
 - Toolbar Undo / Redo (aria-disabled when there's nothing, so focus stays; `aria-keyshortcuts`), Ctrl/⌘+Z,

@@ -15,19 +15,24 @@ import {
   toEdits,
   toHex,
   updateItem,
+  type Asset,
+  type AssetId,
+  type ImageItem,
   type Item,
   type ItemId,
   type TextItem,
   type TextStyle,
 } from "~/editor/items";
+import { startingSize } from "~/editor/images";
 import { operationFailureMessage } from "~/intake/files";
 import type { ReadyDocument } from "~/intake/intake";
 import { thumbnails } from "~/thumbnails/thumbnails";
 import { NEAR, ON_SCREEN, useViewportObserver } from "~/components/thumbnails/ThumbnailGrid";
 import { ActionBar, FailureAlert, plural, primaryButton } from "~/components/workspace/parts";
 import { EditorPage, type PageHandlers, type Tool } from "./EditorPage";
-import { RedoIcon, SelectIcon, TextIcon, TrashIcon, UndoIcon, ZoomInIcon, ZoomOutIcon } from "./icons";
+import { ImageIcon, RedoIcon, SelectIcon, TextIcon, TrashIcon, UndoIcon, ZoomInIcon, ZoomOutIcon } from "./icons";
 import { baselineRatio } from "./measure";
+import { prepareImage } from "./prepareImage";
 
 /** Zoom steps, as multiples of the size that fits the pages to the screen's width. */
 const ZOOMS = [0.5, 0.75, 1, 1.25, 1.5, 2, 3];
@@ -59,6 +64,26 @@ export function Editor({ doc, onSaved }: Props) {
   const observeNear = useViewportObserver(NEAR);
   const observeOnScreen = useViewportObserver(ON_SCREEN);
   useEffect(() => () => thumbnails.forget(doc.info.id), [doc.info.id]);
+  // Pictures added, by id. Kept while the editor is open: undo can bring back an item that uses one.
+  const [assets, setAssets] = useState<ReadonlyMap<AssetId, Asset>>(new Map());
+  const assetsRef = useRef(assets);
+  useEffect(() => {
+    assetsRef.current = assets;
+  }, [assets]);
+  useEffect(() => () => assetsRef.current.forEach((asset) => URL.revokeObjectURL(asset.url)), []);
+  // Pages on screen now, so a new image goes on the page the user is looking at.
+  const onScreenPages = useRef(new Set<number>());
+  const imageInput = useRef<HTMLInputElement>(null);
+  // An item just added, to take keyboard focus (and come into view) once it's on the page.
+  const focusing = useRef<ItemId | null>(null);
+  useEffect(() => {
+    if (!focusing.current) return;
+    const element = boardRef.current?.querySelector<HTMLElement>(`[data-item="${focusing.current}"]`);
+    if (!element) return;
+    focusing.current = null;
+    element.focus({ preventScroll: true });
+    element.scrollIntoView({ block: "nearest" });
+  });
 
   const shown = draft ? [...items, draft] : items;
   const selectedItem = shown.find((item) => item.id === selected) ?? null;
@@ -97,11 +122,13 @@ export function Editor({ doc, onSaved }: Props) {
         onDeselect: () => setSelected(null),
         onMoveTo: (x, y) => {
           const moved = moveItem(item, x - item.x, y - item.y, page);
-          if (isDraft) setDraft({ ...item, ...moved });
+          if (isDraft) setDraft({ ...draft, ...moved });
           else update((list) => updateItem(list, item.id, moved), `move:${item.id}`);
         },
         onMoveEnd: () => setHistory(settle),
-        onActivate: () => setEditing(item.id),
+        onActivate: () => {
+          if (item.kind === "text") setEditing(item.id);
+        },
         onRemove: () => {
           if (isDraft) setDraft(null);
           else update((list) => removeItem(list, item.id));
@@ -109,8 +136,8 @@ export function Editor({ doc, onSaved }: Props) {
         },
         onText: (text) => {
           if (!isDraft) return update((list) => updateItem(list, item.id, { text }), `text:${item.id}`);
-          if (text === "") return setDraft({ ...item, text });
-          update((list) => [...list, { ...item, text }], `text:${item.id}`);
+          if (text === "") return setDraft({ ...draft, text });
+          update((list) => [...list, { ...draft, text }], `text:${item.id}`);
           setDraft(null);
         },
         onEndEdit: () => {
@@ -125,9 +152,44 @@ export function Editor({ doc, onSaved }: Props) {
           }
           setHistory(settle);
         },
+        onResize: (width, height) => update((list) => updateItem(list, item.id, { width, height }), `size:${item.id}`),
       };
     },
   };
+
+  /** Adds a picked picture to the page on screen, in its middle, and selects it. */
+  async function addImage(file: File) {
+    setError(null);
+    try {
+      const prepared = await prepareImage(file);
+      const asset: Asset = {
+        id: newId(),
+        name: file.name,
+        bytes: prepared.bytes,
+        url: URL.createObjectURL(new Blob([prepared.bytes])),
+      };
+      setAssets((current) => new Map(current).set(asset.id, asset));
+      const page = Math.min(...onScreenPages.current, doc.info.pageCount - 1);
+      const info = doc.info.pages[page]!;
+      const size = startingSize(prepared, info);
+      const item: ImageItem = {
+        id: newId(),
+        kind: "image",
+        page,
+        x: (info.width - size.width) / 2,
+        y: (info.height - size.height) / 2,
+        ...size,
+        asset: asset.id,
+      };
+      update((list) => [...list, item]);
+      setTool("select");
+      setSelected(item.id);
+      setEditing(null);
+      focusing.current = item.id;
+    } catch {
+      setError(`${file.name} couldn't be read as a picture here. Try a JPG or PNG.`);
+    }
+  }
 
   function restyle(patch: Partial<TextStyle>) {
     setTextStyle((style) => ({ ...style, ...patch }));
@@ -172,7 +234,7 @@ export function Editor({ doc, onSaved }: Props) {
     setWorking(true);
     setError(null);
     try {
-      const bytes = await engine.transform(doc.info.id, { edits: toEdits(items) });
+      const bytes = await engine.transform(doc.info.id, { edits: toEdits(items, assets) });
       onSaved(new Blob([bytes], { type: "application/pdf" }), outputName(doc.name, "edited"));
     } catch (failure) {
       setError(operationFailureMessage(failure));
@@ -206,6 +268,21 @@ export function Editor({ doc, onSaved }: Props) {
           >
             <TextIcon />
           </ToolButton>
+          <ToolButton label="Add image" onClick={() => imageInput.current?.click()}>
+            <ImageIcon />
+          </ToolButton>
+          <input
+            ref={imageInput}
+            type="file"
+            accept="image/*"
+            hidden
+            aria-label="Image to add"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              event.target.value = "";
+              if (file) void addImage(file);
+            }}
+          />
           <span className="mx-1 h-6 w-px bg-line" aria-hidden="true" />
           <ToolButton label="Undo" shortcut="Control+Z" disabled={!canUndo(history)} onClick={() => travel("undo")}>
             <UndoIcon />
@@ -274,6 +351,11 @@ export function Editor({ doc, onSaved }: Props) {
               editing={editing}
               observeNear={observeNear}
               observeOnScreen={observeOnScreen}
+              assets={assets}
+              onVisible={(visible) => {
+                if (visible) onScreenPages.current.add(index);
+                else onScreenPages.current.delete(index);
+              }}
               {...handlers}
             />
           ))}
@@ -296,6 +378,7 @@ export function Editor({ doc, onSaved }: Props) {
 function hint(tool: Tool, selected: Item | null, editing: ItemId | null) {
   if (tool === "text") return "Click the page where the text should go.";
   if (editing) return "Type your text. Press Esc or click outside when you're done.";
+  if (selected?.kind === "image") return "Drag to move, or use the arrow keys. Drag the corner, or + and -, to resize.";
   if (selected) return "Drag to move, or use the arrow keys. Click again to change the text.";
   return "Choose a tool, then click the page.";
 }
