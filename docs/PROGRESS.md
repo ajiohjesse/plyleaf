@@ -3,7 +3,7 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M5: Editor (M0–M2 done 2026-10-31, M3 and M4 done 2026-11-01)
-- **Next action:** M5: Bates numbering.
+- **Next action:** M5: check the editor's output in other readers (pdf.js, PDFium), then M5's last item.
 - **Owner asked (2026-11-01):** build all of M5 in one go, one PR per item, each auto-merged when CI passes.
 - **Owner asked earlier (2026-11-01):** build all of M3 and M4 in one go, one PR per tool, each auto-merged when CI passes.
   Unlock removes owner-password restrictions only after the user confirms they have the right to; libheif-js approved.
@@ -50,7 +50,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 
 ### [ ] M5: Editor
 - [x] Text add · [x] Edit existing text · [x] Images · [x] Shapes · [x] Whiteout · [x] Markup · [x] Freehand · [x] Comments · [x] Stamps
-- [x] Page numbers · [x] Watermark · [x] Header/footer · [ ] Bates · [x] Undo/redo
+- [x] Page numbers · [x] Watermark · [x] Header/footer · [x] Bates · [x] Undo/redo
 - [ ] Output verified in Acrobat Reader, Chrome, macOS Preview
 
 ### [ ] M6: Sign and forms
@@ -73,6 +73,15 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-11-01: Bates numbering (M5)
+- `src/pagetools/bates.ts`: prefix, a number counted up page by page and padded to a number of digits, suffix.
+- `/bates-numbering` (`BatesWorkspace`): prefix, first number, digits, suffix, style, from page, margin, position
+  (bottom right by default), live preview; the bar shows the run ("ACME00120 to ACME00122") and the done screen the
+  number the next file starts at, for numbering a set one file after another. Output `<name>-bates.pdf`.
+- Verified: 1 new unit test. New E2E `bates.spec.ts` (three pages ACME00120–122 bottom right at the margin, next number
+  shown, qpdf-clean, `watchEgress`; linked from home): 8/8 in all four projects.
+- Next: checking output in other readers.
 
 ### 2026-11-01: Header & footer (M5)
 - `src/pagetools/headers.ts`: six places (header and footer, left/centre/right), each any text with {page}, {pages},

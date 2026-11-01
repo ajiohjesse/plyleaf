@@ -328,7 +328,8 @@ export const tools: Tool[] = [
     name: "Bates numbering",
     description: "Legal-style page identifiers.",
     category: "advanced",
-    keywords: ["legal"],
+    keywords: ["legal", "discovery"],
+    available: true,
   },
 ];
 

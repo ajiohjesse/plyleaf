@@ -1,4 +1,5 @@
 import { expect, test } from "vitest";
+import { batesEdits, batesLabel, DEFAULT_BATES } from "~/pagetools/bates";
 import { EMPTY_SLOTS, headerFooterEdits } from "~/pagetools/headers";
 import { pageNumberEdits, DEFAULT_NUMBERS } from "~/pagetools/numbers";
 import { DEFAULT_STYLE, fillTokens, marksOnPages, placedText } from "~/pagetools/stamping";
@@ -105,5 +106,16 @@ test("header and footer fill their places with the page's details, skipping empt
       ["report.pdf", "left"],
       ["2/2 · 1 Nov", "right"],
     ],
+  ]);
+});
+
+test("Bates numbers count up page by page, padded, with prefix and suffix", () => {
+  expect(batesLabel({ prefix: "ACME", suffix: "-C", digits: 6 }, 42)).toBe("ACME000042-C");
+  expect(batesLabel({ prefix: "", suffix: "", digits: 2 }, 1234)).toBe("1234");
+  const edits = batesEdits([PAGE, PAGE, PAGE], { ...DEFAULT_BATES, style: DEFAULT_STYLE, prefix: "X", startAt: 99 });
+  expect(edits.pages.map(({ marks }) => (marks[0]!.type === "text" ? marks[0]!.text : ""))).toEqual([
+    "X000099",
+    "X000100",
+    "X000101",
   ]);
 });

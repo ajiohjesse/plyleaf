@@ -1,0 +1,40 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { BatesWorkspace } from "~/components/pagetools/BatesWorkspace";
+---
+
+<ToolPage
+  slug="bates-numbering"
+  title="Bates numbering for PDFs online, free"
+  description="Add Bates numbers to every page of a PDF in your browser: your prefix, a zero-padded number and suffix, where you want them. Free, no account, and your file is never uploaded."
+  heading="Bates numbering"
+  intro="Give every page a unique identifier, like ACME000001, for legal and discovery documents. Free, no sign-up, and your file never leaves this device."
+  steps={[
+    { title: "Add your PDF", text: "Choose it, drop it anywhere on the page, or paste it." },
+    { title: "Set the number", text: "Choose a prefix, the first number, how many digits and where it goes." },
+    { title: "Download", text: "Every page carries its number. The done screen says where the next file starts." },
+  ]}
+  faqs={[
+    {
+      question: "Is it really free?",
+      answer:
+        "Yes. There is no paid plan, no daily limit and no watermark. Plyleaf can be free because your own browser does the work.",
+    },
+    {
+      question: "What's Bates numbering?",
+      answer:
+        "A unique number on every page of a set of documents, usually with a prefix such as a case or client code, so any page can be referred to exactly. It's standard in legal discovery.",
+    },
+    {
+      question: "How do I number several files in one run?",
+      answer:
+        "Number them one at a time: when a file is done, the done screen says which number the next file starts at, so type that as its first number.",
+    },
+    {
+      question: "Are my documents uploaded?",
+      answer: "No. The numbers are added right here in your browser and the files never go over the internet.",
+    },
+  ]}
+>
+  <BatesWorkspace client:load />
+</ToolPage>
