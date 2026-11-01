@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useEffectEvent, useId, useLayoutEffect, useRef, useState } from "react";
 import { engine } from "~/engine/client";
 import { outputName } from "~/download/download";
 import { cssFont, FONTS, unsupportedCharacters } from "~/editor/fonts";
-import { change, settle, startHistory, type History } from "~/editor/history";
+import { canRedo, canUndo, change, redo, settle, startHistory, undo, type History } from "~/editor/history";
 import {
   DEFAULT_TEXT,
   fromHex,
@@ -26,7 +26,7 @@ import { thumbnails } from "~/thumbnails/thumbnails";
 import { NEAR, ON_SCREEN, useViewportObserver } from "~/components/thumbnails/ThumbnailGrid";
 import { ActionBar, FailureAlert, plural, primaryButton } from "~/components/workspace/parts";
 import { EditorPage, type PageHandlers, type Tool } from "./EditorPage";
-import { SelectIcon, TextIcon, TrashIcon, ZoomInIcon, ZoomOutIcon } from "./icons";
+import { RedoIcon, SelectIcon, TextIcon, TrashIcon, UndoIcon, ZoomInIcon, ZoomOutIcon } from "./icons";
 import { baselineRatio } from "./measure";
 
 /** Zoom steps, as multiples of the size that fits the pages to the screen's width. */
@@ -139,6 +139,35 @@ export function Editor({ doc, onSaved }: Props) {
     }
   }
 
+  const [announcement, setAnnouncement] = useState("");
+  /** Undoes or redoes a step. What was being typed or placed is finished first, and a selection that's gone clears. */
+  function travel(direction: "undo" | "redo") {
+    const next = direction === "undo" ? undo(history) : redo(history);
+    if (next === history) return;
+    setHistory(next);
+    setDraft(null);
+    setEditing(null);
+    if (!next.present.some((item) => item.id === selected)) setSelected(null);
+    setAnnouncement(direction === "undo" ? "Undone" : "Redone");
+  }
+
+  // Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y (⌘ on a Mac). A text field keeps them for its own typing.
+  const travelByKey = useEffectEvent(travel);
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
+      const target = event.target as HTMLElement;
+      if (target.closest("input, textarea, select, [contenteditable=true]")) return;
+      const key = event.key.toLowerCase();
+      if (key === "z") travelByKey(event.shiftKey ? "redo" : "undo");
+      else if (key === "y" && !event.shiftKey) travelByKey("redo");
+      else return;
+      event.preventDefault();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   async function save() {
     setWorking(true);
     setError(null);
@@ -177,6 +206,21 @@ export function Editor({ doc, onSaved }: Props) {
           >
             <TextIcon />
           </ToolButton>
+          <span className="mx-1 h-6 w-px bg-line" aria-hidden="true" />
+          <ToolButton label="Undo" shortcut="Control+Z" disabled={!canUndo(history)} onClick={() => travel("undo")}>
+            <UndoIcon />
+          </ToolButton>
+          <ToolButton
+            label="Redo"
+            shortcut="Control+Shift+Z Control+Y"
+            disabled={!canRedo(history)}
+            onClick={() => travel("redo")}
+          >
+            <RedoIcon />
+          </ToolButton>
+          <span className="sr-only" aria-live="polite">
+            {announcement}
+          </span>
           <span className="mx-1 h-6 w-px bg-line" aria-hidden="true" />
           <ToolButton label="Zoom out" disabled={zoom === 0} onClick={() => setZoom(zoom - 1)}>
             <ZoomOutIcon />
@@ -274,16 +318,23 @@ function useFitScale(ref: React.RefObject<HTMLDivElement | null>, doc: ReadyDocu
   return Math.min(MAX_FIT, available / widest);
 }
 
+/**
+ * A toolbar button. A disabled one is aria-disabled rather than disabled, so it keeps focus (undoing until there's
+ * nothing left, say).
+ */
 function ToolButton({
   label,
   pressed,
   disabled = false,
+  shortcut,
   onClick,
   children,
 }: {
   label: string;
   pressed?: boolean;
   disabled?: boolean;
+  /** For aria-keyshortcuts. */
+  shortcut?: string;
   onClick: () => void;
   children: React.ReactNode;
 }) {
@@ -293,9 +344,10 @@ function ToolButton({
       aria-label={label}
       title={label}
       aria-pressed={pressed}
-      disabled={disabled}
-      onClick={onClick}
-      className="grid size-10 place-items-center rounded-lg text-ink hover:bg-ink/10 disabled:cursor-default disabled:opacity-35 disabled:hover:bg-transparent aria-pressed:bg-primary aria-pressed:text-on-primary aria-pressed:hover:bg-primary-hover"
+      aria-disabled={disabled || undefined}
+      aria-keyshortcuts={shortcut}
+      onClick={disabled ? undefined : onClick}
+      className="grid size-10 place-items-center rounded-lg text-ink hover:bg-ink/10 aria-disabled:cursor-default aria-disabled:opacity-35 aria-disabled:hover:bg-transparent aria-pressed:bg-primary aria-pressed:text-on-primary aria-pressed:hover:bg-primary-hover"
     >
       {children}
     </button>
