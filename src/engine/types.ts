@@ -221,9 +221,30 @@ export interface ShapeMark {
   opacity?: number;
 }
 
-/** Marks to draw on pages, by page index. */
+/**
+ * A four-cornered area of a page, in points from the shown page's top-left: upper-left, upper-right, lower-left and
+ * lower-right corners as x, y pairs (the order PDF quad points use).
+ */
+export type Quad = [number, number, number, number, number, number, number, number];
+
+/** Text on a page between two points, in reading order: where it is, line by line, and what it says. */
+export interface TextSelection {
+  quads: Quad[];
+  text: string;
+}
+
+/** Text marked up with a standard PDF annotation, which readers list as a comment and can change or remove. */
+export interface MarkupAnnotation {
+  type: "highlight" | "underline" | "strikeout";
+  quads: Quad[];
+  color: Rgb;
+}
+
+export type Annotation = MarkupAnnotation;
+
+/** Marks to draw on pages and annotations to add to them, by page index. */
 export interface Edits {
-  pages: { page: number; marks: Mark[] }[];
+  pages: { page: number; marks: Mark[]; annotations?: Annotation[] }[];
   /** JPEG or PNG files that image marks draw. An image used by many marks is stored once in the PDF. */
   images?: Uint8Array[];
 }

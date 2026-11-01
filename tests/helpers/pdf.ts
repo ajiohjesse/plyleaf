@@ -159,3 +159,19 @@ export function metadataPdf(): Uint8Array<ArrayBuffer> {
   doc.destroy();
   return bytes;
 }
+
+/** An A4 page of lines of 12 pt Helvetica from 72 points in, with baselines 100, 120, 140… points from the top. */
+export function textPdf(lines: string[]): Uint8Array<ArrayBuffer> {
+  const doc = new mupdf.PDFDocument();
+  const font = doc.addSimpleFont(new mupdf.Font("Helvetica"));
+  const escape = (text: string) => text.replace(/[\\()]/g, (c) => `\\${c}`);
+  const contents = lines
+    .map((line, i) => `BT /F1 12 Tf 72 ${A4.height - 100 - i * 20} Td (${escape(line)}) Tj ET`)
+    .join("\n");
+  doc.insertPage(-1, doc.addPage([0, 0, A4.width, A4.height], 0, { Font: { F1: font } }, contents));
+  const buffer = doc.saveToBuffer("compress");
+  const bytes = new Uint8Array(buffer.asUint8Array());
+  buffer.destroy();
+  doc.destroy();
+  return bytes;
+}

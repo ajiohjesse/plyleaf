@@ -6,7 +6,17 @@ import type { ScanFilter } from "~/scan/filters";
 import type { Quad } from "~/scan/quad";
 import { isHeif, mupdfImageType } from "./decode";
 import { carryEngineErrors, EngineError } from "./errors";
-import type { Bitmap, DocId, DocInfo, ExtractedImage, ImageOptions, PageSpec, TransformOptions } from "./types";
+import type { PageText } from "./text";
+import type {
+  Bitmap,
+  DocId,
+  DocInfo,
+  ExtractedImage,
+  ImageOptions,
+  PageSpec,
+  TextSelection,
+  TransformOptions,
+} from "./types";
 
 carryEngineErrors();
 
@@ -22,6 +32,12 @@ const docs = new Map<DocId, PDFDocument>();
 /** The passwords that opened documents, for operations that reopen a copy. They stay in this worker's memory. */
 const passwords = new Map<DocId, string>();
 let nextId = 1;
+/**
+ * Pages' text, kept while the user selects text on them (a drag asks again at every move), a few pages at most. Keyed
+ * by document id and page.
+ */
+const texts = new Map<string, PageText>();
+const TEXTS_KEPT = 4;
 
 /** Intake has already checked the file; a PDF without a header (a damaged one MuPDF may repair) isn't an image. */
 const isImage = (bytes: Uint8Array) => sniffKind(bytes.subarray(0, 1024), "", "") === "image";
@@ -107,6 +123,28 @@ const api = {
     return transfer(bytes, [bytes.buffer]);
   },
 
+  async selectText(
+    id: DocId,
+    page: number,
+    from: { x: number; y: number },
+    to: { x: number; y: number },
+    words: boolean,
+  ): Promise<TextSelection> {
+    const ops = await loading;
+    const key = `${id}:${page}`;
+    let text = texts.get(key);
+    if (text) texts.delete(key);
+    else text = ops.pageText(get(id), page);
+    // Most recently used last.
+    texts.set(key, text);
+    for (const [old, stale] of texts) {
+      if (texts.size <= TEXTS_KEPT) break;
+      stale.text.destroy();
+      texts.delete(old);
+    }
+    return ops.selectText(text, from, to, words);
+  },
+
   async assemble(pages: PageSpec[]): Promise<Uint8Array<ArrayBuffer>> {
     const ops = await loading;
     const bytes = ops.assemble(pages.map((spec) => ("blank" in spec ? spec : { ...spec, doc: get(spec.doc) })));
@@ -114,6 +152,11 @@ const api = {
   },
 
   close(id: DocId): void {
+    for (const [key, text] of texts) {
+      if (!key.startsWith(`${id}:`)) continue;
+      text.text.destroy();
+      texts.delete(key);
+    }
     docs.get(id)?.destroy();
     docs.delete(id);
     passwords.delete(id);

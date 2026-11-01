@@ -13,6 +13,8 @@ import {
   newId,
   removeItem,
   toEdits,
+  MARKUP_COLOURS,
+  quadBounds,
   updateItem,
   WHITE,
   type Asset,
@@ -20,11 +22,14 @@ import {
   type ImageItem,
   type Item,
   type ItemId,
+  type MarkupItem,
+  type MarkupStyle,
   type ShapeStyle,
   type TextItem,
   type TextStyle,
 } from "~/editor/items";
 import { startingSize } from "~/editor/images";
+import type { Point } from "~/editor/shapes";
 import { operationFailureMessage } from "~/intake/files";
 import type { ReadyDocument } from "~/intake/intake";
 import { thumbnails } from "~/thumbnails/thumbnails";
@@ -32,6 +37,7 @@ import { NEAR, ON_SCREEN, useViewportObserver } from "~/components/thumbnails/Th
 import { ActionBar, FailureAlert, plural, primaryButton } from "~/components/workspace/parts";
 import { EditorPage, type PageHandlers, type Tool } from "./EditorPage";
 import {
+  HighlightIcon,
   ImageIcon,
   RedoIcon,
   SelectIcon,
@@ -43,7 +49,7 @@ import {
   ZoomOutIcon,
 } from "./icons";
 import { baselineRatio } from "./measure";
-import { ShapeOptions, TextOptions, WhiteoutOptions } from "./options";
+import { MarkupOptions, ShapeOptions, TextOptions, WhiteoutOptions } from "./options";
 import { prepareImage } from "./prepareImage";
 
 /** Zoom steps, as multiples of the size that fits the pages to the screen's width. */
@@ -54,6 +60,10 @@ const MAX_FIT = 1.5;
 interface Props {
   doc: ReadyDocument;
   onSaved: (file: Blob, name: string) => void;
+  /** The tool chosen when the file opens. */
+  initialTool?: Tool;
+  /** Added to the output's name: "report-edited.pdf". */
+  suffix?: string;
 }
 
 /**
@@ -61,12 +71,12 @@ interface Props {
  * that saves a copy with the additions written into the pages. Everything added can be selected, moved and changed
  * until then.
  */
-export function Editor({ doc, onSaved }: Props) {
+export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited" }: Props) {
   const [history, setHistory] = useState<History<Item[]>>(() => startHistory([]));
   const items = history.present;
   // A text box that hasn't had anything typed yet. It joins the items (and the history) with its first character.
   const [draft, setDraft] = useState<TextItem | null>(null);
-  const [tool, setTool] = useState<Tool>("select");
+  const [tool, setTool] = useState<Tool>(initialTool);
   const [selected, setSelected] = useState<ItemId | null>(null);
   const [editing, setEditing] = useState<ItemId | null>(null);
   const [textStyle, setTextStyle] = useState<TextStyle>(DEFAULT_TEXT);
@@ -74,6 +84,11 @@ export function Editor({ doc, onSaved }: Props) {
   // A shape being drawn: shown, but not an item until the pointer is let go.
   const [sketch, setSketch] = useState<Item | null>(null);
   const [coverColour, setCoverColour] = useState(WHITE);
+  const [markupStyle, setMarkupStyle] = useState<MarkupStyle>("highlight");
+  const [markupColours, setMarkupColours] = useState(MARKUP_COLOURS);
+  const [notice, setNotice] = useState<string | null>(null);
+  // Text selection asks the engine at every move; only the latest answer counts.
+  const selecting = useRef(0);
   const [zoom, setZoom] = useState(ZOOMS.indexOf(1));
   const [working, setWorking] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -122,7 +137,48 @@ export function Editor({ doc, onSaved }: Props) {
     focusing.current = item.id;
   }
 
+  /** Marks up the text between two points (or, from a click, the word there); says so when there's none. */
+  async function markUp(page: number, from: Point, to: Point, done: boolean, words: boolean) {
+    const request = ++selecting.current;
+    let selection;
+    try {
+      selection = await engine.selectText(doc.info.id, page, from, to, words);
+    } catch (failure) {
+      if (done) setError(operationFailureMessage(failure));
+      return;
+    }
+    if (request !== selecting.current) return;
+    const id = sketch?.id ?? newId();
+    if (selection.quads.length === 0) {
+      setSketch(null);
+      if (done) {
+        setNotice(
+          "There's no text there to mark. Drag across the words, or click one. Scanned pages are pictures of text, so there's nothing to select on them.",
+        );
+      }
+      return;
+    }
+    const [x, y] = quadBounds(selection.quads);
+    const item: MarkupItem = {
+      id,
+      kind: "markup",
+      page,
+      style: markupStyle,
+      quads: selection.quads,
+      text: selection.text,
+      color: markupColours[markupStyle],
+      x,
+      y,
+    };
+    if (!done) return setSketch(item);
+    setSketch(null);
+    setNotice(null);
+    // Several in a row are usual, so the tool stays on.
+    update((list) => [...list, item]);
+  }
+
   function place(page: number, x: number, y: number) {
+    if (tool === "markup") return void markUp(page, { x, y }, { x, y }, true, true);
     if (tool === "shape") {
       return add({ id: newId(), kind: "shape", page, ...shapeStyle, ...clickedShape(shapeStyle, x, y) });
     }
@@ -143,6 +199,7 @@ export function Editor({ doc, onSaved }: Props) {
   const handlers: PageHandlers = {
     onPlace: place,
     onDraw: (page, from, to, done) => {
+      if (tool === "markup") return void markUp(page, from, to, done, false);
       const id = sketch?.id ?? newId();
       let item: Item;
       if (tool === "shape") item = { id, kind: "shape", page, ...shapeStyle, ...drawnShape(shapeStyle, from, to) };
@@ -165,6 +222,8 @@ export function Editor({ doc, onSaved }: Props) {
         onSelect: () => setSelected(item.id),
         onDeselect: () => setSelected(null),
         onMoveTo: (x, y) => {
+          // Markup belongs to its text.
+          if (item.kind === "markup") return;
           const moved = moveItem(item, x - item.x, y - item.y, page);
           if (isDraft) setDraft({ ...draft, ...moved });
           else update((list) => updateItem(list, item.id, moved), `move:${item.id}`);
@@ -284,7 +343,7 @@ export function Editor({ doc, onSaved }: Props) {
     setError(null);
     try {
       const bytes = await engine.transform(doc.info.id, { edits: toEdits(items, assets) });
-      onSaved(new Blob([bytes], { type: "application/pdf" }), outputName(doc.name, "edited"));
+      onSaved(new Blob([bytes], { type: "application/pdf" }), outputName(doc.name, suffix));
     } catch (failure) {
       setError(operationFailureMessage(failure));
     } finally {
@@ -296,6 +355,7 @@ export function Editor({ doc, onSaved }: Props) {
   const textOptions = tool === "text" || selectedItem?.kind === "text";
   const shapeOptions = tool === "shape" || selectedItem?.kind === "shape";
   const whiteoutOptions = tool === "whiteout" || selectedItem?.kind === "whiteout";
+  const markupOptions = tool === "markup" || selectedItem?.kind === "markup";
   const removeSelected = selectedItem ? () => handlers.handlersFor(selectedItem).onRemove() : undefined;
   const missing = selectedItem?.kind === "text" ? unsupportedCharacters(selectedItem.text) : [];
 
@@ -319,6 +379,16 @@ export function Editor({ doc, onSaved }: Props) {
             }}
           >
             <TextIcon />
+          </ToolButton>
+          <ToolButton
+            label="Highlight text"
+            pressed={tool === "markup"}
+            onClick={() => {
+              setTool(tool === "markup" ? "select" : "markup");
+              setSelected(null);
+            }}
+          >
+            <HighlightIcon />
           </ToolButton>
           <ToolButton
             label="Add shape"
@@ -392,6 +462,27 @@ export function Editor({ doc, onSaved }: Props) {
             onRemove={removeSelected}
           />
         )}
+        {markupOptions && (
+          <MarkupOptions
+            style={selectedItem?.kind === "markup" ? selectedItem.style : markupStyle}
+            color={selectedItem?.kind === "markup" ? selectedItem.color : markupColours[markupStyle]}
+            onStyle={(style) => {
+              setMarkupStyle(style);
+              // A mark keeps its colour when it changes kind.
+              if (selectedItem?.kind === "markup") {
+                update((list) => updateItem(list, selectedItem.id, { style }), `style:${selectedItem.id}:kind`);
+              }
+            }}
+            onColour={(color) => {
+              const style = selectedItem?.kind === "markup" ? selectedItem.style : markupStyle;
+              setMarkupColours((colours) => ({ ...colours, [style]: color }));
+              if (selectedItem?.kind === "markup") {
+                update((list) => updateItem(list, selectedItem.id, { color }), `style:${selectedItem.id}:color`);
+              }
+            }}
+            onRemove={removeSelected}
+          />
+        )}
         {whiteoutOptions && (
           <WhiteoutOptions
             color={selectedItem?.kind === "whiteout" ? selectedItem.color : coverColour}
@@ -421,6 +512,11 @@ export function Editor({ doc, onSaved }: Props) {
         </output>
       )}
       {error && <FailureAlert message={error} />}
+      {notice && (
+        <output className="block rounded-card border-2 border-sticky-yellow bg-sticky-yellow/30 px-4 py-3">
+          {notice}
+        </output>
+      )}
 
       {/* Room at the top for the tool options that float under the toolbar. */}
       <div
@@ -469,9 +565,11 @@ export function Editor({ doc, onSaved }: Props) {
 
 function hint(tool: Tool, selected: Item | null, editing: ItemId | null) {
   if (tool === "text") return "Click the page where the text should go.";
+  if (tool === "markup") return "Drag across the text to mark, or click a word.";
   if (tool === "shape") return "Drag across the page to draw, or click to place one.";
   if (tool === "whiteout") return "Drag over what to cover. It's hidden, not removed from the file.";
   if (editing) return "Type your text. Press Esc or click outside when you're done.";
+  if (selected?.kind === "markup") return "Change its kind or colour, or delete it.";
   if (selected && selected.kind !== "text")
     return "Drag to move, or use the arrow keys. Drag the corner, or + and -, to resize.";
   if (selected) return "Drag to move, or use the arrow keys. Click again to change the text.";

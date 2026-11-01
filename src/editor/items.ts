@@ -1,6 +1,6 @@
 // What the user has added in the editor, and how it becomes the engine's edits. Items are measured like marks: PDF
 // points from the top-left of the page as it's shown. The list is in drawing order, so later items are on top.
-import type { Edits, Mark, Rgb, ShapeKind, StandardFont } from "~/engine/types";
+import type { Annotation, Edits, Mark, Quad, Rgb, ShapeKind, StandardFont } from "~/engine/types";
 
 export type ItemId = string;
 
@@ -65,7 +65,40 @@ export interface WhiteoutItem {
   color: Rgb;
 }
 
-export type Item = TextItem | ImageItem | ShapeItem | WhiteoutItem;
+export type MarkupStyle = "highlight" | "underline" | "strikeout";
+
+/**
+ * Text on the page marked up: saved as a PDF annotation (a highlight, underline or strike-out), which readers list as
+ * a comment. It's where the text is, so it doesn't move; x and y are its top-left, for the selection frame.
+ */
+export interface MarkupItem {
+  id: ItemId;
+  kind: "markup";
+  page: number;
+  style: MarkupStyle;
+  quads: Quad[];
+  /** The text it marks, for its label. */
+  text: string;
+  color: Rgb;
+  x: number;
+  y: number;
+}
+
+export type Item = TextItem | ImageItem | ShapeItem | WhiteoutItem | MarkupItem;
+
+/** The usual colour for each kind of markup. */
+export const MARKUP_COLOURS: Record<MarkupStyle, Rgb> = {
+  highlight: [1, 0.89, 0.2],
+  underline: [0.15, 0.39, 0.92],
+  strikeout: [0.85, 0.11, 0.18],
+};
+
+/** The box (x0, y0, x1, y1) round some quads. */
+export function quadBounds(quads: readonly Quad[]): [number, number, number, number] {
+  const xs = quads.flatMap((quad) => [quad[0], quad[2], quad[4], quad[6]]);
+  const ys = quads.flatMap((quad) => [quad[1], quad[3], quad[5], quad[7]]);
+  return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
+}
 
 export const WHITE: Rgb = [1, 1, 1];
 
@@ -140,7 +173,8 @@ type Patch =
   | Partial<Omit<TextItem, "id" | "kind">>
   | Partial<Omit<ImageItem, "id" | "kind">>
   | Partial<Omit<ShapeItem, "id" | "kind">>
-  | Partial<Omit<WhiteoutItem, "id" | "kind">>;
+  | Partial<Omit<WhiteoutItem, "id" | "kind">>
+  | Partial<Omit<MarkupItem, "id" | "kind">>;
 
 export function updateItem(items: readonly Item[], id: ItemId, patch: Patch): Item[] {
   return items.map((item) => (item.id === id ? ({ ...item, ...patch } as Item) : item));
@@ -176,10 +210,11 @@ export const isEmpty = (item: Item) => item.kind === "text" && item.text.trim() 
  */
 export function toEdits(items: readonly Item[], assets: ReadonlyMap<AssetId, Asset> = new Map()): Edits {
   const byPage = new Map<number, Mark[]>();
+  const annotations = new Map<number, Annotation[]>();
   const images: Uint8Array[] = [];
   const imageIndex = new Map<AssetId, number>();
 
-  function toMark(item: Item): Mark {
+  function toMark(item: Exclude<Item, MarkupItem>): Mark {
     if (item.kind === "text") {
       const { x, y, text, font, bold, italic, size, color } = item;
       return { type: "text", x, y, text, font, bold, italic, size, color };
@@ -205,10 +240,20 @@ export function toEdits(items: readonly Item[], assets: ReadonlyMap<AssetId, Ass
 
   for (const item of items) {
     if (isEmpty(item)) continue;
-    byPage.set(item.page, [...(byPage.get(item.page) ?? []), toMark(item)]);
+    if (item.kind === "markup") {
+      const annotation: Annotation = { type: item.style, quads: item.quads, color: item.color };
+      annotations.set(item.page, [...(annotations.get(item.page) ?? []), annotation]);
+    } else {
+      byPage.set(item.page, [...(byPage.get(item.page) ?? []), toMark(item)]);
+    }
   }
+  const pages = [...new Set([...byPage.keys(), ...annotations.keys()])].sort((a, b) => a - b);
   return {
-    pages: [...byPage.entries()].sort(([a], [b]) => a - b).map(([page, marks]) => ({ page, marks })),
+    pages: pages.map((page) => ({
+      page,
+      marks: byPage.get(page) ?? [],
+      ...(annotations.has(page) && { annotations: annotations.get(page)! }),
+    })),
     ...(images.length > 0 && { images }),
   };
 }
