@@ -1,0 +1,50 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { PdfToImagesWorkspace } from "~/components/images/PdfToImagesWorkspace";
+---
+
+<ToolPage
+  slug="pdf-to-jpg"
+  title="PDF to JPG: convert PDF pages to images free, no sign-up"
+  description="Save PDF pages as JPG, PNG or WebP images at the resolution you choose, in your browser. Free with no limits, no watermark and no account, and your file is never uploaded."
+  heading="PDF to images"
+  intro="Save every page, or just the ones you choose, as a JPG, PNG or WebP image. Free, no sign-up, no watermark, and your PDF never leaves this device."
+  steps={[
+    { title: "Add your PDF", text: "Choose it, drop it anywhere on the page, or paste it." },
+    {
+      title: "Pick format and sharpness",
+      text: "JPG for photos and scans, PNG for crisp text, WebP for the web, at 72 to 600 dpi.",
+    },
+    {
+      title: "Convert and download",
+      text: "One page downloads as an image; several come in one zip file. No account needed.",
+    },
+  ]}
+  faqs={[
+    {
+      question: "Is it really free?",
+      answer:
+        "Yes. There is no paid plan, no daily limit and no watermark on the images. Plyleaf can be free because your own browser does the work.",
+    },
+    {
+      question: "Is my PDF uploaded?",
+      answer: "No. Pages are turned into images right here in your browser. Your file never goes over the internet.",
+    },
+    {
+      question: "Which resolution should I pick?",
+      answer:
+        "150 dpi is sharp on any screen and keeps files small. Choose 300 dpi to print the images, and 72 dpi for small previews. Very large pages are kept to 8192 pixels on their longest side so the browser doesn't run out of memory.",
+    },
+    {
+      question: "Why can't I choose WebP?",
+      answer:
+        "WebP images are made by your browser, and Safari can't make them yet. JPG and PNG work in every browser.",
+    },
+    {
+      question: "Can I get the pictures inside the PDF instead of whole pages?",
+      answer: "That's what Extract images is for: it saves each image embedded in the PDF at its original quality.",
+    },
+  ]}
+>
+  <PdfToImagesWorkspace client:load />
+</ToolPage>

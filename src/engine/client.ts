@@ -3,7 +3,7 @@
 import { transfer, wrap, type Remote } from "comlink";
 import { decodeForEngine } from "./decode";
 import { carryEngineErrors, EngineError } from "./errors";
-import type { Bitmap, DocId, DocInfo, PageSpec } from "./types";
+import type { Bitmap, DocId, DocInfo, ImageOptions, PageSpec } from "./types";
 import type { EngineApi } from "./worker";
 
 export { EngineError } from "./errors";
@@ -129,6 +129,11 @@ export const engine = {
   /** Renders a page `width` device pixels wide on white. Paint it with `new ImageData(pixels, width, height)`. */
   render(id: DocId, page: number, width: number): Promise<Bitmap> {
     return call(({ remote }) => remote.render(id, page, width));
+  },
+
+  /** Saves a page as a JPEG or PNG at a resolution, rendered on white. */
+  pageImage(id: DocId, page: number, options: ImageOptions): Promise<Uint8Array<ArrayBuffer>> {
+    return call(({ remote }) => remote.pageImage(id, page, options));
   },
 
   /** Builds a new PDF from pages of open documents and blank pages, in order. */

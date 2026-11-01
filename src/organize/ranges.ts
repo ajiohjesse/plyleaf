@@ -53,3 +53,10 @@ export function describeRange({ first, last }: PageRange): string {
 }
 
 export const rangeLength = ({ first, last }: PageRange) => last - first + 1;
+
+/** The pages the ranges cover, as 0-based indexes in page order, each once. */
+export function pagesInRanges(ranges: readonly PageRange[]): number[] {
+  const pages = new Set<number>();
+  for (const { first, last } of ranges) for (let page = first; page <= last; page++) pages.add(page - 1);
+  return [...pages].sort((a, b) => a - b);
+}

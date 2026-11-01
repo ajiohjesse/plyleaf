@@ -4,7 +4,7 @@ import type { PDFDocument } from "mupdf";
 import { sniffKind } from "~/intake/files";
 import { isHeif, mupdfImageType } from "./decode";
 import { carryEngineErrors, EngineError } from "./errors";
-import type { Bitmap, DocId, DocInfo, PageSpec } from "./types";
+import type { Bitmap, DocId, DocInfo, ImageOptions, PageSpec } from "./types";
 
 carryEngineErrors();
 
@@ -73,6 +73,12 @@ const api = {
     const ops = await loading;
     const bitmap = ops.renderPage(get(id), page, width);
     return transfer(bitmap, [bitmap.pixels.buffer]);
+  },
+
+  async pageImage(id: DocId, page: number, options: ImageOptions): Promise<Uint8Array<ArrayBuffer>> {
+    const ops = await loading;
+    const bytes = ops.pageImage(get(id), page, options);
+    return transfer(bytes, [bytes.buffer]);
   },
 
   async assemble(pages: PageSpec[]): Promise<Uint8Array<ArrayBuffer>> {
