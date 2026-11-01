@@ -66,3 +66,18 @@ export function photoPdf(width = 1600, height = 2200): Uint8Array<ArrayBuffer> {
   doc.destroy();
   return bytes;
 }
+
+/** An AES-256 encrypted copy of `bytes`: with `user` it needs that password to open; `permissions` is the /P value. */
+export function encryptedPdf(
+  bytes: Uint8Array,
+  { user = "", owner, permissions = -4 }: { user?: string; owner: string; permissions?: number },
+): Uint8Array<ArrayBuffer> {
+  const doc = new mupdf.PDFDocument(bytes);
+  const buffer = doc.saveToBuffer(
+    `encrypt=aes-256,user-password=${user},owner-password=${owner},permissions=${permissions}`,
+  );
+  const encrypted = new Uint8Array(buffer.asUint8Array());
+  buffer.destroy();
+  doc.destroy();
+  return encrypted;
+}

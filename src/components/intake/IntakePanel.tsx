@@ -69,7 +69,9 @@ export function DocumentList({ state, intake }: { state: IntakeState; intake: In
             <span className="block text-sm text-ink-muted">
               {doc.status === "opening"
                 ? "Opening…"
-                : `${doc.info.pageCount} ${doc.info.pageCount === 1 ? "page" : "pages"} · ${formatSize(doc.size)}`}
+                : doc.status === "locked"
+                  ? `Needs a password · ${formatSize(doc.size)}`
+                  : `${doc.info.pageCount} ${doc.info.pageCount === 1 ? "page" : "pages"} · ${formatSize(doc.size)}`}
             </span>
           </span>
           <button

@@ -111,10 +111,10 @@ export function preloadEngine(): void {
 
 export const engine = {
   /**
-   * Opens a PDF and keeps it open in the worker until close(). A Uint8Array's buffer is transferred to the worker,
+   * Opens a PDF (with `password` if it needs one) and keeps it open in the worker until close(). A Uint8Array's buffer is transferred to the worker,
    * which leaves it empty here; pass a copy if you still need the bytes.
    */
-  open(file: Blob | Uint8Array): Promise<DocInfo> {
+  open(file: Blob | Uint8Array, password?: string): Promise<DocInfo> {
     return call(async (running) => {
       const bytes = file instanceof Blob ? new Uint8Array(await file.arrayBuffer()) : file;
       running.bytes += bytes.byteLength;
@@ -122,7 +122,7 @@ export const engine = {
       const decoded = await decodeForEngine(bytes);
       const info = decoded
         ? await running.remote.openPixels(transfer(decoded.bitmap, [decoded.bitmap.pixels.buffer]), decoded.lossy)
-        : await running.remote.open(transfer(bytes, [bytes.buffer]));
+        : await running.remote.open(transfer(bytes, [bytes.buffer]), password);
       running.open.add(info.id);
       return info;
     });

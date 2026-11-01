@@ -1,0 +1,41 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { UnlockWorkspace } from "~/components/secure/UnlockWorkspace";
+---
+
+<ToolPage
+  slug="unlock-pdf"
+  title="Unlock PDF: remove a PDF password you know, free"
+  description="Remove the password from a PDF you can open, in your browser. Free with no limits and no account, and neither your file nor your password ever leaves your device."
+  heading="Unlock PDF"
+  intro="Remove the password from a PDF you can open, so you don't have to type it every time. Free, no sign-up, and your file and password never leave this device."
+  steps={[
+    { title: "Add your PDF", text: "Choose it, drop it anywhere on the page, or paste it." },
+    { title: "Type its password", text: "The one you use to open it. Plyleaf checks it on your device." },
+    { title: "Download", text: "Your copy opens without a password. The original stays as it was." },
+  ]}
+  faqs={[
+    {
+      question: "Is it really free?",
+      answer:
+        "Yes. There is no paid plan, no daily limit and no watermark. Plyleaf can be free because your own browser does the work.",
+    },
+    {
+      question: "Can it unlock a PDF without the password?",
+      answer:
+        "No. Plyleaf removes a password you know; it doesn't guess or crack passwords. A file encrypted with AES-256 can't be opened without its password.",
+    },
+    {
+      question: "What about restrictions on printing or copying?",
+      answer:
+        "Some PDFs open without a password but don't allow printing, copying or editing. Plyleaf can remove those restrictions after you confirm you own the file or have the right to, because whoever made it set them on purpose.",
+    },
+    {
+      question: "Are my file and password sent anywhere?",
+      answer:
+        "No. Both stay in your browser, and the password is never stored. Plyleaf has no server that could receive them.",
+    },
+  ]}
+>
+  <UnlockWorkspace client:load />
+</ToolPage>

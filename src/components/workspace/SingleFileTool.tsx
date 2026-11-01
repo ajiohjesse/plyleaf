@@ -5,6 +5,7 @@ import { DownloadPanel } from "~/components/download/DownloadPanel";
 import { FileDrop } from "~/components/intake/FileDrop";
 import { IntakeNotices } from "~/components/intake/IntakePanel";
 import { useIntake } from "~/components/intake/useIntake";
+import { PasswordPrompt } from "~/components/secure/PasswordPrompt";
 import { FailureAlert, FileCard, type Result } from "./parts";
 
 /** What a tool's action comes to: a file, a failure, or something to tell the user instead of a file. */
@@ -31,7 +32,8 @@ interface Props {
  * and the done screen. "Back to your file" keeps the file open and the options as they were.
  */
 export function SingleFileTool({ intake: options, Options }: Props) {
-  const [state, intake] = useIntake({ ...options, multiple: false });
+  // Protected PDFs ask for their password here rather than being turned away.
+  const [state, intake] = useIntake({ passwords: true, ...options, multiple: false });
   const doc = state.documents[0];
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [working, setWorking] = useState(false);
@@ -83,6 +85,9 @@ export function SingleFileTool({ intake: options, Options }: Props) {
         <output className="block rounded-card border-2 border-sticky-yellow bg-sticky-yellow/30 px-4 py-3">
           {outcome.info}
         </output>
+      )}
+      {doc?.status === "locked" && (
+        <PasswordPrompt doc={doc} onUnlock={(password) => void intake.unlock(doc.key, password)} />
       )}
       {doc?.status === "ready" && (
         <div key={doc.key} className="space-y-4">

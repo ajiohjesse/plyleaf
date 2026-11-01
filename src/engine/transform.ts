@@ -14,14 +14,19 @@ const IMAGE_LEVELS: Record<Exclude<CompressLevel, "low">, { dpi: number; quality
 /** Images smaller than this many pixels aren't worth re-encoding. */
 const SMALL_IMAGE = 64 * 64;
 
-export function transform(pdf: mupdf.PDFDocument, options: TransformOptions): Uint8Array<ArrayBuffer> {
-  const copy = copyOf(pdf);
+/** `password` is the one that opened `pdf`, if it needed one: the copies are reopened with it. */
+export function transform(
+  pdf: mupdf.PDFDocument,
+  options: TransformOptions,
+  password?: string,
+): Uint8Array<ArrayBuffer> {
+  const copy = copyOf(pdf, password);
   try {
     if (options.grayscale) toGrey(copy);
     if (options.compress && options.compress !== "low") recompressImages(copy, IMAGE_LEVELS[options.compress]);
     const save = ["garbage=deduplicate", "compress", encryption(options.security)];
     if (options.compress) save.push("compress-fonts", "compress-images", "objstms");
-    return repacked(saved(copy, "garbage,encrypt=keep"), save.join(","));
+    return repacked(saved(copy, "garbage,encrypt=keep"), save.join(","), password);
   } finally {
     copy.destroy();
   }
@@ -74,8 +79,8 @@ function randomPassword() {
  * document we changed loses streams in MuPDF 1.28 when we hold objects we looked at and then added streams, so changes
  * are saved without renumbering first and the final save is done on a freshly opened copy.
  */
-function repacked(bytes: Uint8Array, options: string): Uint8Array<ArrayBuffer> {
-  const fresh = new mupdf.PDFDocument(bytes);
+function repacked(bytes: Uint8Array, options: string, password?: string): Uint8Array<ArrayBuffer> {
+  const fresh = reopen(bytes, password);
   try {
     return saved(fresh, options);
   } finally {
@@ -83,14 +88,23 @@ function repacked(bytes: Uint8Array, options: string): Uint8Array<ArrayBuffer> {
   }
 }
 
-/** A separate copy of an open document, encryption and all. */
-function copyOf(pdf: mupdf.PDFDocument): mupdf.PDFDocument {
+/** A separate copy of an open document, encryption and all, opened with the password that opened the original. */
+function copyOf(pdf: mupdf.PDFDocument, password?: string): mupdf.PDFDocument {
   const buffer = pdf.saveToBuffer("encrypt=keep");
   try {
-    return new mupdf.PDFDocument(buffer.asUint8Array().slice());
+    return reopen(buffer.asUint8Array(), password);
   } finally {
     buffer.destroy();
   }
+}
+
+function reopen(bytes: Uint8Array, password?: string): mupdf.PDFDocument {
+  const doc = new mupdf.PDFDocument(bytes.slice());
+  if (doc.needsPassword() && (password === undefined || doc.authenticatePassword(password) === 0)) {
+    doc.destroy();
+    throw new EngineError("password-required", "The copy needs the password that opened the original");
+  }
+  return doc;
 }
 
 function saved(pdf: mupdf.PDFDocument, options: string): Uint8Array<ArrayBuffer> {

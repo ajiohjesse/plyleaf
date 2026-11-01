@@ -82,7 +82,7 @@ test("says why damaged, protected and empty files weren't added", async ({ page 
   await expect(notices(page)).toHaveText([
     "empty.pdf is empty.",
     "damaged.pdf couldn't be opened. It may be damaged, or not really a PDF.",
-    "locked.pdf is protected with a password. Plyleaf can't open protected PDFs yet.",
+    "locked.pdf is protected with a password. Remove it with Unlock PDF first (you'll need the password).",
   ]);
   await expect(fileList(page)).toHaveCount(0);
 });

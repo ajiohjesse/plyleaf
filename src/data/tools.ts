@@ -241,6 +241,7 @@ export const tools: Tool[] = [
     description: "Remove a password you know.",
     category: "optimize-secure",
     keywords: ["password", "decrypt"],
+    available: true,
   },
   {
     slug: "pdf-permissions",

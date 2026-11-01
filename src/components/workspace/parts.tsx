@@ -123,6 +123,7 @@ export function FirstPage({ doc }: { doc: IntakeDocument }) {
 /** "12 pages · 1.2 MB", "Image · 1.2 MB", or "Opening…". */
 export function docSummary(doc: IntakeDocument) {
   if (doc.status === "opening") return "Opening…";
+  if (doc.status === "locked") return `Needs a password · ${formatSize(doc.size)}`;
   const { source, pageCount } = doc.info;
   const what =
     source === "image"

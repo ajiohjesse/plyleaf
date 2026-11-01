@@ -47,6 +47,7 @@ describe("openPdf and describe", () => {
       ],
       repaired: false,
       encryption: null,
+      unlockedWith: null,
       permissions: ["print", "print-hq", "copy", "edit", "annotate", "form", "assemble", "accessibility"],
     });
   });
