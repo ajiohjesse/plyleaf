@@ -3,7 +3,7 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M3: Images and scanning (M0, M1 and M2 done 2026-10-31)
-- **Next action:** M3, Extract images.
+- **Next action:** M3, Camera scan-to-PDF (edge detection + perspective correction).
 - **Owner asked (2026-11-01):** build all of M3 and M4 in one go, one PR per tool, each auto-merged when CI passes.
   Unlock removes owner-password restrictions only after the user confirms they have the right to; libheif-js approved.
 - **Live:** https://plyleaf.ajiohjesse.workers.dev (Workers Builds deploys `main`; other branches get Preview URLs).
@@ -42,7 +42,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] Per-tool landing pages + E2E tests
 
 ### [ ] M3: Images and scanning
-- [x] Images → PDF (incl. HEIC) · [x] PDF → images · [ ] Extract images · [ ] Camera scan-to-PDF
+- [x] Images → PDF (incl. HEIC) · [x] PDF → images · [x] Extract images · [ ] Camera scan-to-PDF
 
 ### [ ] M4: Optimize and secure
 - [ ] Compress (3 levels) · [ ] Grayscale · [ ] Protect · [ ] Unlock · [ ] Permissions · [ ] Flatten · [ ] Repair · [ ] Metadata
@@ -72,6 +72,19 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-11-01: Extract images (M3)
+- Engine: `extractImages(doc, page, skip)` (D-027): a page's image XObjects, inside forms too, once each across pages
+  (the caller passes the object numbers already found), no stencil masks; plain JPEGs byte for byte, the rest decoded
+  to PNG with CMYK → RGB and soft masks as alpha.
+- `/extract-images` (`ExtractImagesWorkspace`, single file): "Leave out tiny images" (under 32 × 32 px, on by default),
+  progress by page, a message when there are none. One image downloads as itself, several as `<name>-images.zip` of
+  `<name>-page-NN-image-N.<ext>`.
+- `tests/helpers/images.ts` `imagesPdf()` builds a PDF with a JPEG, an RGB image with a soft mask, a CMYK image, a
+  stencil mask, the JPEG again on page 2 and a form holding another image.
+- Verified: 4 new unit tests. New E2E `extract-images.spec.ts` (zip of four, names, the JPEG byte for byte,
+  `watchEgress` clean; tiny images left out → one JPG; no images; linked from home): 16/16 in all four browser projects.
+- Next: Scan to PDF.
 
 ### 2026-11-01: PDF to images (M3)
 - Engine: `pageImage(doc, page, {dpi, format: "jpeg" | "png", quality})` renders on white and encodes with MuPDF,

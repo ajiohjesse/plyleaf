@@ -1,0 +1,51 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { ExtractImagesWorkspace } from "~/components/images/ExtractImagesWorkspace";
+---
+
+<ToolPage
+  slug="extract-images"
+  title="Extract images from PDF free, no sign-up"
+  description="Save every photo and picture inside a PDF at its original quality, in your browser. Free with no limits and no account, and your file is never uploaded."
+  heading="Extract images"
+  intro="Save every picture inside a PDF at its original quality. Free, no sign-up, and your file never leaves this device."
+  steps={[
+    { title: "Add your PDF", text: "Choose it, drop it anywhere on the page, or paste it." },
+    {
+      title: "Extract",
+      text: "Plyleaf looks through every page and takes out each image once, even if it's used on many pages.",
+    },
+    {
+      title: "Download",
+      text: "One image downloads as itself; several come in one zip file, named by page. No account needed.",
+    },
+  ]}
+  faqs={[
+    {
+      question: "Is it really free?",
+      answer:
+        "Yes. There is no paid plan, no daily limit and no watermark. Plyleaf can be free because your own browser does the work.",
+    },
+    {
+      question: "Is my PDF uploaded?",
+      answer: "No. The images are taken out right here in your browser. Your file never goes over the internet.",
+    },
+    {
+      question: "Do the images lose quality?",
+      answer:
+        "No. JPEG photos are saved exactly as they're stored in the PDF, byte for byte. Other images are saved as lossless PNG, keeping any transparency; colours stored for printing (CMYK) are turned into screen colours.",
+    },
+    {
+      question: "Why are some pictures missing?",
+      answer:
+        "Only real images are extracted. Charts, logos and text drawn with lines and shapes aren't images; to save how a page looks, use PDF to images. Tiny images such as icons are left out unless you untick that option, and very small images written straight into a page's content (rare) aren't found yet.",
+    },
+    {
+      question: "Why is an image smaller or a different shape than on the page?",
+      answer:
+        "You get the image as it's stored. A PDF can show it stretched, cropped or turned; the extracted file is the original underneath.",
+    },
+  ]}
+>
+  <ExtractImagesWorkspace client:load />
+</ToolPage>

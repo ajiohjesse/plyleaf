@@ -6,6 +6,7 @@ import {
   MAX_RENDER_SIDE,
   type Bitmap,
   type Crop,
+  type ExtractedImage,
   type Fit,
   type ImageOptions,
   type PageInfo,
@@ -146,6 +147,124 @@ export function openPixels({ width, height, pixels }: Bitmap, lossy: boolean): m
     return openImage(jpeg ? pixmap.asJPEG(90) : pixmap.asPNG(), jpeg ? "image/jpeg" : "image/png");
   } finally {
     pixmap.destroy();
+  }
+}
+
+/**
+ * The images a page draws (its image XObjects, and those of the forms it draws), leaving out ones whose object number
+ * is in `skip` (found on earlier pages) and stencil masks. A plain JPEG comes out byte for byte; anything else, or an
+ * image with transparency, is decoded and saved as PNG. Inline images aren't included.
+ */
+export function extractImages(pdf: mupdf.PDFDocument, index: number, skip: readonly number[] = []): ExtractedImage[] {
+  checkPageIndex(pdf, index);
+  const skipped = new Set(skip);
+  const found: { id: number; ref: mupdf.PDFObject }[] = [];
+  const formsSeen = new Set<number>();
+  const visit = (resources: mupdf.PDFObject) => {
+    const xobjects = resources.get("XObject");
+    if (!xobjects.isDictionary()) return;
+    xobjects.forEach((ref) => {
+      const object = ref.resolve();
+      const id = ref.isIndirect() ? ref.asIndirect() : -1;
+      const subtype = object.get("Subtype");
+      if (subtype.isName() && subtype.asName() === "Image") {
+        if (id === -1 || skipped.has(id) || found.some((f) => f.id === id)) return;
+        if (object.get("ImageMask").isBoolean() && object.get("ImageMask").asBoolean()) return;
+        found.push({ id, ref });
+      } else if (subtype.isName() && subtype.asName() === "Form" && !formsSeen.has(id)) {
+        formsSeen.add(id);
+        visit(object.get("Resources"));
+      }
+    });
+  };
+  visit(pdf.findPage(index).getInheritable("Resources"));
+  return found.flatMap(({ id, ref }) => {
+    try {
+      return [extractImage(pdf, id, ref)];
+    } catch {
+      // An image MuPDF can't decode is left out rather than failing the whole page.
+      return [];
+    }
+  });
+}
+
+function extractImage(pdf: mupdf.PDFDocument, id: number, ref: mupdf.PDFObject): ExtractedImage {
+  const object = ref.resolve();
+  const width = object.get("Width").asNumber();
+  const height = object.get("Height").asNumber();
+  if (isPlainJpeg(object)) {
+    return { id, format: "jpeg", width, height, bytes: ref.readRawStream().asUint8Array().slice() };
+  }
+  const image = pdf.loadImage(ref);
+  try {
+    const mask = image.getMask();
+    const pixmap = image.toPixmap();
+    try {
+      const rgb = toDisplayColours(pixmap);
+      try {
+        return { id, format: "png", width, height, bytes: withMask(rgb, mask).slice() as Uint8Array<ArrayBuffer> };
+      } finally {
+        if (rgb !== pixmap) rgb.destroy();
+      }
+    } finally {
+      pixmap.destroy();
+      mask?.destroy();
+    }
+  } finally {
+    image.destroy();
+  }
+}
+
+/** A JPEG any viewer shows as the PDF does: DCT only, 8-bit grey or RGB, no decode array and no soft mask. */
+function isPlainJpeg(image: mupdf.PDFObject) {
+  const filter = image.get("Filter");
+  const filters = filter.isArray() ? Array.from({ length: filter.length }, (_, i) => filter.get(i)) : [filter];
+  if (filters.length !== 1 || !filters[0]!.isName() || filters[0]!.asName() !== "DCTDecode") return false;
+  if (!image.get("SMask").isNull() || !image.get("Mask").isNull() || !image.get("Decode").isNull()) return false;
+  const space = image.get("ColorSpace");
+  if (space.isName()) return space.asName() === "DeviceRGB" || space.asName() === "DeviceGray";
+  // An ICC profile with 1 or 3 components (grey or RGB); CMYK JPEGs are often stored inverted.
+  if (space.isArray() && space.get(0).asName() === "ICCBased") {
+    const components = space.get(1).get("N").asNumber();
+    return components === 1 || components === 3;
+  }
+  return false;
+}
+
+/** Grey and RGB stay as they are; anything else (CMYK, Lab, separations) becomes RGB. */
+function toDisplayColours(pixmap: mupdf.Pixmap): mupdf.Pixmap {
+  const type = pixmap.getColorSpace()?.getType();
+  if (type === "Gray" || type === "RGB") return pixmap;
+  return pixmap.convertToColorSpace(mupdf.ColorSpace.DeviceRGB, false);
+}
+
+/** PNG bytes of `pixmap`, with `mask` (a soft mask the same size) as its transparency. */
+function withMask(pixmap: mupdf.Pixmap, mask: mupdf.Image | null): Uint8Array {
+  if (!mask || mask.getWidth() !== pixmap.getWidth() || mask.getHeight() !== pixmap.getHeight()) {
+    return pixmap.asPNG();
+  }
+  const alpha = mask.toPixmap();
+  const colours = pixmap.getNumberOfComponents() - pixmap.getAlpha();
+  const out = new mupdf.Pixmap(pixmap.getColorSpace()!, [0, 0, pixmap.getWidth(), pixmap.getHeight()], true);
+  try {
+    const from = pixmap.getPixels();
+    const a = alpha.getPixels();
+    const to = out.getPixels();
+    const n = pixmap.getNumberOfComponents();
+    for (let y = 0; y < pixmap.getHeight(); y++) {
+      for (let x = 0; x < pixmap.getWidth(); x++) {
+        const source = y * pixmap.getStride() + x * n;
+        const target = y * out.getStride() + x * (colours + 1);
+        const opacity = a[y * alpha.getStride() + x * alpha.getNumberOfComponents()]!;
+        // MuPDF's pixmaps with alpha are premultiplied.
+        for (let c = 0; c < colours; c++) to[target + c] = Math.round((from[source + c]! * opacity) / 255);
+        to[target + colours] = opacity;
+      }
+    }
+    return out.asPNG();
+  } finally {
+    out.destroy();
+    alpha.destroy();
   }
 }
 

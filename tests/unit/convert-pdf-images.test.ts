@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { imageSize, pageImageName } from "~/convert/pdf-images";
+import { extractedImageName, imageSize, pageImageName } from "~/convert/pdf-images";
 import { pagesInRanges } from "~/organize/ranges";
 
 test("image sizes follow the resolution", () => {
@@ -27,4 +27,9 @@ test("pages in ranges come out once each, in page order", () => {
       { first: 2, last: 3 },
     ]),
   ).toEqual([0, 1, 2, 4, 5]);
+});
+
+test("extracted images are named by page and order", () => {
+  expect(extractedImageName("report.pdf", 2, 12, 1, "jpeg")).toBe("report-page-03-image-2.jpg");
+  expect(extractedImageName("scan.pdf", 0, 1, 0, "png")).toBe("scan-page-1-image-1.png");
 });

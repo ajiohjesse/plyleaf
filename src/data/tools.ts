@@ -135,6 +135,7 @@ export const tools: Tool[] = [
     description: "Save every image inside a PDF.",
     category: "convert",
     keywords: ["pictures"],
+    available: true,
   },
   {
     slug: "word-to-pdf",

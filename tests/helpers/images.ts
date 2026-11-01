@@ -99,3 +99,60 @@ export function makeTiff(frames: { width: number; height: number }[]): Uint8Arra
 export function fixture(name: string): Uint8Array<ArrayBuffer> {
   return new Uint8Array(readFileSync(join(import.meta.dirname, "..", "fixtures", name)));
 }
+
+/**
+ * A two-page PDF with images. Page 1: a 40 × 20 JPEG, a 16 × 16 RGB image whose right half is transparent (a soft
+ * mask), an 8 × 8 CMYK image and a stencil mask. Page 2: the JPEG again and a form XObject holding a 4 × 4 grey image.
+ */
+export function imagesPdf(): { bytes: Uint8Array<ArrayBuffer>; jpeg: Uint8Array } {
+  const doc = new mupdf.PDFDocument();
+  const jpeg = makeJpeg(40, 20);
+  const photo = doc.addImage(new mupdf.Image(jpeg));
+
+  const rgb = new mupdf.Pixmap(mupdf.ColorSpace.DeviceRGB, [0, 0, 16, 16], false);
+  rgb.clear(200);
+  const alpha = new mupdf.Pixmap(mupdf.ColorSpace.DeviceGray, [0, 0, 16, 16], false);
+  const a = alpha.getPixels();
+  for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) a[y * alpha.getStride() + x] = x < 8 ? 255 : 0;
+  const transparent = doc.addImage(new mupdf.Image(rgb, new mupdf.Image(alpha)));
+
+  const cmyk = new mupdf.Pixmap(mupdf.ColorSpace.DeviceCMYK, [0, 0, 8, 8], false);
+  cmyk.clear(100);
+  const cmykImage = doc.addImage(new mupdf.Image(cmyk));
+
+  const stencil = doc.addRawStream(new Uint8Array(8).fill(0xaa), {
+    Type: "XObject",
+    Subtype: "Image",
+    Width: 8,
+    Height: 8,
+    ImageMask: true,
+    BitsPerComponent: 1,
+  });
+
+  const grey = new mupdf.Pixmap(mupdf.ColorSpace.DeviceGray, [0, 0, 4, 4], false);
+  grey.clear(128);
+  const small = doc.addImage(new mupdf.Image(grey));
+  const form = doc.addStream("q 4 0 0 4 0 0 cm /G Do Q", {
+    Type: "XObject",
+    Subtype: "Form",
+    BBox: [0, 0, 4, 4],
+    Resources: { XObject: { G: small } },
+  });
+
+  const draw = (names: string[]) => names.map((name, i) => `q 40 0 0 20 ${i * 50} 10 cm /${name} Do Q`).join("\n");
+  doc.insertPage(
+    -1,
+    doc.addPage(
+      [0, 0, 300, 100],
+      0,
+      { XObject: { P: photo, T: transparent, C: cmykImage, S: stencil } },
+      draw(["P", "T", "C", "S"]),
+    ),
+  );
+  doc.insertPage(-1, doc.addPage([0, 0, 300, 100], 0, { XObject: { P: photo, F: form } }, draw(["P", "F"])));
+  const buffer = doc.saveToBuffer("compress");
+  const bytes = new Uint8Array(buffer.asUint8Array());
+  buffer.destroy();
+  doc.destroy();
+  return { bytes, jpeg };
+}
