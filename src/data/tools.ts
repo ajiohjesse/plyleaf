@@ -272,6 +272,7 @@ export const tools: Tool[] = [
     description: "Fix damaged or broken files.",
     category: "optimize-secure",
     keywords: ["fix", "corrupt"],
+    available: true,
   },
   {
     slug: "pdf-metadata",

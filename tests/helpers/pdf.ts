@@ -126,3 +126,13 @@ export function formsPdf(): Uint8Array<ArrayBuffer> {
   doc.destroy();
   return bytes;
 }
+
+/** A PDF cut off before its cross-reference table and trailer, as a broken download would be. */
+export function truncatedPdf(pageCount = 3): Uint8Array<ArrayBuffer> {
+  const bytes = makePdf(
+    Array.from({ length: pageCount }, () => A4),
+    { save: "" },
+  );
+  const text = new TextDecoder("latin1").decode(bytes);
+  return bytes.slice(0, text.lastIndexOf("xref"));
+}
