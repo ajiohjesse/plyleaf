@@ -3,12 +3,14 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M5: Editor (M0–M2 done 2026-10-31, M3 and M4 done 2026-11-01)
-- **Next action:** M5: check the editor's output in other readers (pdf.js, PDFium), then M5's last item.
+- **Next action:** M5 is built; its last item waits on the owner (below). Meanwhile M6: AcroForm filling.
 - **Owner asked (2026-11-01):** build all of M5 in one go, one PR per item, each auto-merged when CI passes.
 - **Owner asked earlier (2026-11-01):** build all of M3 and M4 in one go, one PR per tool, each auto-merged when CI passes.
   Unlock removes owner-password restrictions only after the user confirms they have the right to; libheif-js approved.
 - **Live:** https://plyleaf.ajiohjesse.workers.dev (Workers Builds deploys `main`; other branches get Preview URLs).
 - **Blocked on owner:**
+  - M5's last check: open `docs/samples/editor-sample.pdf` in Acrobat Reader and macOS Preview and tick the list in
+    `docs/samples/README.md` (Chrome's and Firefox's engines are checked by tests; those two can't run here).
   - Later, at the owner's pace: register `plyleaf.com` (and optionally the `plyleaf` GitHub org). Not blocking (D-013).
 - **Repo:** https://github.com/ajiohjesse/plyleaf (public). `gh`'s active account on this machine is `angosam`, so run
   `gh` as ajiohjesse with `GH_TOKEN=$(gh auth token --user ajiohjesse) gh …`. For `git push`, GH_TOKEN alone isn't
@@ -51,7 +53,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ### [ ] M5: Editor
 - [x] Text add · [x] Edit existing text · [x] Images · [x] Shapes · [x] Whiteout · [x] Markup · [x] Freehand · [x] Comments · [x] Stamps
 - [x] Page numbers · [x] Watermark · [x] Header/footer · [x] Bates · [x] Undo/redo
-- [ ] Output verified in Acrobat Reader, Chrome, macOS Preview
+- [ ] Output verified in Acrobat Reader, Chrome, macOS Preview (Chrome's PDFium and Firefox's pdf.js: done in tests; Acrobat Reader and Preview: owner, see `docs/samples/`)
 
 ### [ ] M6: Sign and forms
 - [ ] AcroForm fill · [ ] Type on flat forms · [ ] Signatures (draw/type/upload, saved locally) · [ ] Initials/date · [ ] Flatten
@@ -73,6 +75,18 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-11-01: The editor's output in other readers (M5)
+- `tests/helpers/viewers.ts`: PDFium (Chrome and Edge's viewer engine) renders pages with annotations; pdf.js
+  (Firefox's) reads text and annotations, both in Node from the spike's dev dependencies.
+- `tests/unit/viewers.test.ts` builds one file with everything the editor and page tools write (three fonts with
+  Unicode, an image, every shape, whiteout, a turned see-through watermark, page numbers, highlight, underline,
+  strike-out, ink, notes, stamps, on a plain and a turned page): PDFium's render differs from MuPDF's on under 0.5% of
+  pixels on each page; pdf.js finds all the added text and every annotation (pop-ups aside) with the comments' text;
+  qpdf-clean. Looked at PDFium's render by eye too.
+- The same file is committed as `docs/samples/editor-sample.pdf` with a checklist for the owner to open it in Acrobat
+  Reader and macOS Preview, the last M5 item, which can't be run here.
+- All other M5 items are done and merged (PRs 31–44 and this one).
 
 ### 2026-11-01: Bates numbering (M5)
 - `src/pagetools/bates.ts`: prefix, a number counted up page by page and padded to a number of digits, suffix.
