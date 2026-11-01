@@ -3,7 +3,7 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M5: Editor (M0–M2 done 2026-10-31, M3 and M4 done 2026-11-01)
-- **Next action:** M5: undo/redo buttons and shortcuts in the editor, then images.
+- **Next action:** M5: images in the editor.
 - **Owner asked (2026-11-01):** build all of M5 in one go, one PR per item, each auto-merged when CI passes.
 - **Owner asked earlier (2026-11-01):** build all of M3 and M4 in one go, one PR per tool, each auto-merged when CI passes.
   Unlock removes owner-password restrictions only after the user confirms they have the right to; libheif-js approved.
@@ -50,7 +50,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 
 ### [ ] M5: Editor
 - [x] Text add · [ ] Edit existing text · [ ] Images · [ ] Shapes · [ ] Whiteout · [ ] Markup · [ ] Freehand · [ ] Comments · [ ] Stamps
-- [ ] Page numbers · [ ] Watermark · [ ] Header/footer · [ ] Bates · [ ] Undo/redo
+- [ ] Page numbers · [ ] Watermark · [ ] Header/footer · [ ] Bates · [x] Undo/redo
 - [ ] Output verified in Acrobat Reader, Chrome, macOS Preview
 
 ### [ ] M6: Sign and forms
@@ -73,6 +73,15 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-11-01: Undo and redo in the editor (M5)
+- Toolbar Undo / Redo (aria-disabled when there's nothing, so focus stays; `aria-keyshortcuts`), Ctrl/⌘+Z,
+  Ctrl/⌘+Shift+Z and Ctrl+Y anywhere but a text field (which keeps its own typing undo). Undoing finishes what was
+  being typed or placed and clears a selection that's gone; "Undone"/"Redone" is announced.
+- Verified: new E2E `undo-redo.spec.ts` (add, move and retype undone and redone from buttons and shortcuts, one step
+  per gesture, a new change drops redo, the saved file has what's left): 4/4 in all four projects; `edit-text` still
+  16/16.
+- Next: images.
 
 ### 2026-11-01: Edit PDF, add text (M5)
 - Engine (D-034): `transform` takes `edits` (marks per page; text for now: standard font, bold/italic, size, colour,
