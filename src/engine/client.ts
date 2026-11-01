@@ -5,7 +5,16 @@ import type { ScanFilter } from "~/scan/filters";
 import type { Quad } from "~/scan/quad";
 import { decodeForEngine } from "./decode";
 import { carryEngineErrors, EngineError } from "./errors";
-import type { Bitmap, DocId, DocInfo, ExtractedImage, ImageOptions, PageSpec, TransformOptions } from "./types";
+import type {
+  Bitmap,
+  DocId,
+  DocInfo,
+  ExtractedImage,
+  ImageOptions,
+  PageSpec,
+  TextSelection,
+  TransformOptions,
+} from "./types";
 import type { EngineApi } from "./worker";
 
 export { EngineError } from "./errors";
@@ -159,6 +168,20 @@ export const engine = {
   /** A changed copy of an open document (compressed, secured…), as PDF bytes. The open document stays as it was. */
   transform(id: DocId, options: TransformOptions): Promise<Uint8Array<ArrayBuffer>> {
     return call(({ remote }) => remote.transform(id, options));
+  },
+
+  /**
+   * The text on a page between two points (in points from the shown page's top-left), in reading order; with `words`,
+   * the word at `from`.
+   */
+  selectText(
+    id: DocId,
+    page: number,
+    from: { x: number; y: number },
+    to: { x: number; y: number },
+    words = false,
+  ): Promise<TextSelection> {
+    return call(({ remote }) => remote.selectText(id, page, from, to, words));
   },
 
   /** Builds a new PDF from pages of open documents and blank pages, in order. */

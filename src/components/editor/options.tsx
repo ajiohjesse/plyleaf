@@ -9,10 +9,12 @@ import {
   MIN_LINE_WIDTH,
   MIN_TEXT_SIZE,
   toHex,
+  type MarkupStyle,
   type ShapeStyle,
   type TextStyle,
 } from "~/editor/items";
 import { TrashIcon } from "./icons";
+import { MARKUP_NAMES } from "./MarkupBox";
 import { SHAPE_NAMES } from "./ShapeBox";
 
 export const fieldClass =
@@ -269,6 +271,42 @@ export function WhiteoutOptions({
     <OptionsPanel legend="Whiteout options" onRemove={onRemove}>
       <ColourField label="Cover colour" value={color} onChange={onChange} />
       <p className="text-sm text-ink-muted">Covers what&apos;s underneath. It isn&apos;t removed from the file.</p>
+    </OptionsPanel>
+  );
+}
+
+const MARKUP_STYLES: MarkupStyle[] = ["highlight", "underline", "strikeout"];
+
+/** Highlight, underline or strike out, and the colour, for the selected markup or new markup. */
+export function MarkupOptions({
+  style,
+  color,
+  onStyle,
+  onColour,
+  onRemove,
+}: {
+  style: MarkupStyle;
+  color: Rgb;
+  onStyle: (style: MarkupStyle) => void;
+  onColour: (color: Rgb) => void;
+  onRemove: (() => void) | undefined;
+}) {
+  return (
+    <OptionsPanel legend="Markup options" onRemove={onRemove}>
+      <span className="flex items-center gap-1">
+        {MARKUP_STYLES.map((option) => (
+          <button
+            key={option}
+            type="button"
+            aria-pressed={style === option}
+            onClick={() => onStyle(option)}
+            className="min-h-9 shrink-0 rounded-lg border-2 border-line px-2.5 text-sm font-semibold hover:border-primary aria-pressed:border-primary aria-pressed:bg-sticky-lavender/40"
+          >
+            {MARKUP_NAMES[option]}
+          </button>
+        ))}
+      </span>
+      <ColourField label="Colour" value={color} onChange={onColour} />
     </OptionsPanel>
   );
 }

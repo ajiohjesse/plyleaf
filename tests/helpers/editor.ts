@@ -6,11 +6,17 @@ import { asPayload, pdfFile } from "./files";
 import { download } from "./organize";
 import type { TestPage } from "./pdf";
 
-/** Opens `slug` and the PDF `name` (made of `pages`) in its editor, and waits for the first page to show. */
-export async function openInEditor(page: Page, slug: string, name: string, pages: TestPage[]) {
+/**
+ * Opens `slug` and the PDF `name` (made of `pages`, or these bytes) in its editor, and waits for the first page to
+ * show.
+ */
+export async function openInEditor(page: Page, slug: string, name: string, pages: TestPage[] | Uint8Array) {
   await page.goto(`/${slug}`);
   await expect(page.locator("label[data-listening]")).toHaveCount(1);
-  await page.getByLabel("Choose a file").setInputFiles(asPayload(pdfFile(name, pages)));
+  const file = Array.isArray(pages)
+    ? asPayload(pdfFile(name, pages))
+    : { name, mimeType: "application/pdf", buffer: Buffer.from(pages) };
+  await page.getByLabel("Choose a file").setInputFiles(file);
   await expect(editorPage(page, 0).locator('canvas[data-state="ready"]')).toHaveCount(1);
 }
 

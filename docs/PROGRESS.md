@@ -3,7 +3,7 @@
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
 - **Current milestone:** M5: Editor (M0–M2 done 2026-10-31, M3 and M4 done 2026-11-01)
-- **Next action:** M5: markup (highlight, underline, strikethrough).
+- **Next action:** M5: freehand drawing.
 - **Owner asked (2026-11-01):** build all of M5 in one go, one PR per item, each auto-merged when CI passes.
 - **Owner asked earlier (2026-11-01):** build all of M3 and M4 in one go, one PR per tool, each auto-merged when CI passes.
   Unlock removes owner-password restrictions only after the user confirms they have the right to; libheif-js approved.
@@ -49,7 +49,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] Compress (3 levels) · [x] Grayscale · [x] Protect · [x] Unlock · [x] Permissions · [x] Flatten · [x] Repair · [x] Metadata
 
 ### [ ] M5: Editor
-- [x] Text add · [ ] Edit existing text · [x] Images · [x] Shapes · [x] Whiteout · [ ] Markup · [ ] Freehand · [ ] Comments · [ ] Stamps
+- [x] Text add · [ ] Edit existing text · [x] Images · [x] Shapes · [x] Whiteout · [x] Markup · [ ] Freehand · [ ] Comments · [ ] Stamps
 - [ ] Page numbers · [ ] Watermark · [ ] Header/footer · [ ] Bates · [x] Undo/redo
 - [ ] Output verified in Acrobat Reader, Chrome, macOS Preview
 
@@ -73,6 +73,23 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-11-01: Markup, and Annotate PDF (M5)
+- Engine: `engine.selectText(doc, page, from, to, words)` (`src/engine/text.ts`, MuPDF's structured text, kept for the
+  last four pages the user selects on): the text between two points in reading order, or the word clicked; nothing
+  unless the drag crosses text or the click is on a word (MuPDF snaps to the nearest otherwise). `Edits` pages take
+  `annotations`: highlight, underline and strike-out annotations with MuPDF-made appearances (D-035).
+- Editor: Highlight text tool (Highlight / Underline / Strike out, colour); dragging shows the selection live (only the
+  latest engine answer counts), a click marks a word; a message when there's no text (scanned pages). Marks stay with
+  their text (no moving), can change kind and colour, or be deleted. The tool stays on for the next mark.
+- `/annotate-pdf` live: the same editor opening with the highlighter, saving `<name>-annotated.pdf`.
+- Verified: 2 new unit tests (selection by drag and word, nothing off text, a turned page; three annotation types with
+  colours and bounds round the text, also on a turned page; qpdf-clean). New E2E `annotate.spec.ts` (highlight a line,
+  underline a clicked word, strike out across two lines, read back with MuPDF, qpdf-clean, `watchEgress`; no-text
+  message, restyle and delete; linked from home): 12/12 in all four projects.
+- Known gap: choosing text needs a pointer; keyboard users can't select text to mark yet (search-and-mark could
+  come with M7's search-and-redact).
+- Next: freehand.
 
 ### 2026-11-01: Whiteout in the editor (M5)
 - Whiteout tool: drag (or click, or Enter) to cover part of a page with a box in a cover colour (white by default, or

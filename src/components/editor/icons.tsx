@@ -84,3 +84,10 @@ export const WhiteoutIcon = () => (
     <path d="M9 9l6 4" />
   </Icon>
 );
+
+export const HighlightIcon = () => (
+  <Icon>
+    <path d="M9 11l-5 5v4h4l5-5M14 6l4 4M9 11l4-4 5 5-4 4z" />
+    <path d="M14 20h7" />
+  </Icon>
+);

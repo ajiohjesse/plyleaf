@@ -1,0 +1,44 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { EditorWorkspace } from "~/components/editor/EditorWorkspace";
+---
+
+<ToolPage
+  slug="annotate-pdf"
+  wide
+  title="Annotate PDF: highlight, underline and strike out text online, free"
+  description="Highlight, underline and strike out text in a PDF in your browser, as real PDF annotations every reader shows. Free, no account, no watermark, and your file is never uploaded."
+  heading="Annotate PDF"
+  intro="Highlight, underline and strike out text, as annotations any PDF reader shows and lists. Free, no sign-up, no watermark, and your file never leaves this device."
+  steps={[
+    { title: "Add your PDF", text: "Choose it, drop it anywhere on the page, or paste it." },
+    {
+      title: "Mark it up",
+      text: "Drag across text to highlight it, or click a word. Switch to underline or strike out.",
+    },
+    { title: "Download", text: "Your marks are saved as annotations. No account, no watermark." },
+  ]}
+  faqs={[
+    {
+      question: "Is it really free?",
+      answer:
+        "Yes. There is no paid plan, no daily limit and no watermark. Plyleaf can be free because your own browser does the work.",
+    },
+    {
+      question: "Will my highlights show in other apps?",
+      answer:
+        "Yes. They're standard PDF annotations, the same kind Acrobat, Preview and browsers make, so they show everywhere and appear in the reader's comments list, where they can be changed or removed.",
+    },
+    {
+      question: "Why can't I highlight a scanned page?",
+      answer:
+        "A scanned page is a picture of text, so there's no text to select. Text added with OCR can be highlighted.",
+    },
+    {
+      question: "Is my PDF uploaded?",
+      answer: "No. It's annotated right here in your browser and never goes over the internet.",
+    },
+  ]}
+>
+  <EditorWorkspace tool="markup" suffix="annotated" client:load />
+</ToolPage>

@@ -7,6 +7,7 @@ import { drawOnTop, freeName, ownResources, subDictionary } from "./content";
 import { EngineError } from "./errors";
 import {
   LINE_HEIGHT,
+  type Annotation,
   type Edits,
   type ImageMark,
   type Mark,
@@ -21,7 +22,7 @@ const FONT_NAMES: Record<StandardFont, [regular: string, bold: string, italic: s
   courier: ["Courier", "Courier-Bold", "Courier-Oblique", "Courier-BoldOblique"],
 };
 
-/** Draws `edits` onto the pages of `pdf`. */
+/** Draws `edits` onto the pages of `pdf` and adds their annotations. */
 export function applyEdits(pdf: mupdf.PDFDocument, edits: Edits) {
   const pageCount = pdf.countPages();
   // Several entries for one page are drawn in order, as one.
@@ -32,10 +33,35 @@ export function applyEdits(pdf: mupdf.PDFDocument, edits: Edits) {
     }
     if (marks.length > 0) byPage.set(page, [...(byPage.get(page) ?? []), ...marks]);
   }
-  if (byPage.size === 0) return;
+  if (byPage.size > 0) drawMarks(pdf, byPage, edits.images ?? []);
+  for (const { page, annotations = [] } of edits.pages) {
+    if (annotations.length > 0) annotate(pdf, page, annotations);
+  }
+}
 
+const ANNOTATION_TYPES = { highlight: "Highlight", underline: "Underline", strikeout: "StrikeOut" } as const;
+
+/** Adds annotations to a page. MuPDF draws their appearance, so every reader shows them the same way. */
+function annotate(pdf: mupdf.PDFDocument, index: number, annotations: Annotation[]) {
+  const page = pdf.loadPage(index);
+  try {
+    const [x0, y0] = page.getBounds();
+    const placed = (quad: readonly number[]) => quad.map((n, i) => n + (i % 2 === 0 ? x0 : y0)) as mupdf.Quad;
+    for (const annotation of annotations) {
+      if (annotation.quads.length === 0) continue;
+      const annot = page.createAnnotation(ANNOTATION_TYPES[annotation.type]);
+      annot.setColor([...annotation.color]);
+      annot.setQuadPoints(annotation.quads.map(placed));
+      annot.update();
+    }
+  } finally {
+    page.destroy();
+  }
+}
+
+function drawMarks(pdf: mupdf.PDFDocument, byPage: Map<number, Mark[]>, images: Uint8Array[]) {
   const targets = [...byPage.keys()];
-  const scratch = drawScratch(pdf, targets, byPage, edits.images ?? []);
+  const scratch = drawScratch(pdf, targets, byPage, images);
   try {
     // One graft map, so a font or image used on many pages is copied once.
     const map = pdf.newGraftMap();
