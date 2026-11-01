@@ -10,6 +10,7 @@ import {
   MIN_TEXT_SIZE,
   toHex,
   MAX_INK_WIDTH,
+  STAMPS,
   MIN_INK_WIDTH,
   type InkStyle,
   type MarkupStyle,
@@ -359,6 +360,69 @@ export function NoteOptions({
   return (
     <OptionsPanel legend="Comment options" onRemove={onRemove}>
       <ColourField label="Note colour" value={color} onChange={onChange} />
+    </OptionsPanel>
+  );
+}
+
+/** Which stamp (a standard one, or words of your own) and its colour. */
+export function StampOptions({
+  stamp,
+  onChange,
+  onRemove,
+}: {
+  stamp: { name: string; color: Rgb };
+  onChange: (patch: Partial<{ name: string; color: Rgb }>) => void;
+  onRemove: (() => void) | undefined;
+}) {
+  const customId = useId();
+  const standard = STAMPS.find((option) => option.name === stamp.name);
+  // While "Your own words" is chosen, even when what's typed happens to match a standard name.
+  const [custom, setCustom] = useState(!standard);
+  return (
+    <OptionsPanel legend="Stamp options" onRemove={onRemove}>
+      <span className="flex items-center gap-1">
+        {STAMPS.map((option) => (
+          <button
+            key={option.name}
+            type="button"
+            aria-pressed={!custom && stamp.name === option.name}
+            onClick={() => {
+              setCustom(false);
+              onChange({ name: option.name, color: option.color });
+            }}
+            className="min-h-9 shrink-0 rounded-lg border-2 border-line px-2.5 text-xs font-bold tracking-wide hover:border-primary aria-pressed:border-primary aria-pressed:bg-sticky-lavender/40"
+          >
+            {option.label}
+          </button>
+        ))}
+        <ToggleButton
+          label="Your own words"
+          pressed={custom}
+          onClick={() => {
+            setCustom(true);
+            if (standard) onChange({ name: "" });
+          }}
+        >
+          <span className="text-sm">Your own…</span>
+        </ToggleButton>
+      </span>
+      {custom && (
+        <span className="flex items-center gap-1">
+          <label htmlFor={customId} className="text-sm">
+            Words
+          </label>
+          <input
+            id={customId}
+            type="text"
+            value={stamp.name}
+            maxLength={40}
+            placeholder="e.g. PAID"
+            onChange={(event) => onChange({ name: event.target.value })}
+            className={`${fieldClass} w-40`}
+          />
+        </span>
+      )}
+      <ColourField label="Colour" value={stamp.color} onChange={(color) => onChange({ color })} />
     </OptionsPanel>
   );
 }

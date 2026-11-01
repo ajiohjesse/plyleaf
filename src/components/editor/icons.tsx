@@ -105,3 +105,10 @@ export const CommentIcon = () => (
     <path d="M8 8.5h8M8 12h5" />
   </Icon>
 );
+
+export const StampIcon = () => (
+  <Icon>
+    <path d="M9 3h6l-1 7h4a2 2 0 012 2v3H4v-3a2 2 0 012-2h4z" />
+    <path d="M5 19h14" />
+  </Icon>
+);

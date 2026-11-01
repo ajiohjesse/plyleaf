@@ -259,7 +259,23 @@ export interface NoteAnnotation {
   color: Rgb;
 }
 
-export type Annotation = MarkupAnnotation | InkAnnotation | NoteAnnotation;
+/**
+ * A rubber stamp: a standard PDF stamp name ("Approved", "Draft"…, shown in capitals) or words of the user's own, in a
+ * box. Readers draw it from the appearance MuPDF makes, which is always STAMP_RATIO as tall as it is wide.
+ */
+export interface StampAnnotation {
+  type: "stamp";
+  x: number;
+  y: number;
+  width: number;
+  name: string;
+  color: Rgb;
+}
+
+export type Annotation = MarkupAnnotation | InkAnnotation | NoteAnnotation | StampAnnotation;
+
+/** A stamp's height for its width. */
+export const STAMP_RATIO = 5 / 19;
 
 /** A note annotation's icon is this many points square. */
 export const NOTE_SIZE = 20;

@@ -19,6 +19,9 @@ import {
   MARKUP_COLOURS,
   NOTE_COLOUR,
   NOTE_SIZE,
+  STAMP_RATIO,
+  STAMP_WIDTH,
+  STAMPS,
   quadBounds,
   updateItem,
   WHITE,
@@ -51,6 +54,7 @@ import {
   RedoIcon,
   SelectIcon,
   ShapeIcon,
+  StampIcon,
   TextIcon,
   UndoIcon,
   WhiteoutIcon,
@@ -58,7 +62,15 @@ import {
   ZoomOutIcon,
 } from "./icons";
 import { baselineRatio } from "./measure";
-import { InkOptions, MarkupOptions, NoteOptions, ShapeOptions, TextOptions, WhiteoutOptions } from "./options";
+import {
+  InkOptions,
+  MarkupOptions,
+  NoteOptions,
+  ShapeOptions,
+  StampOptions,
+  TextOptions,
+  WhiteoutOptions,
+} from "./options";
 import { prepareImage } from "./prepareImage";
 
 /** Zoom steps, as multiples of the size that fits the pages to the screen's width. */
@@ -86,6 +98,7 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
   // A text box that hasn't had anything typed yet. It joins the items (and the history) with its first character.
   const [draft, setDraft] = useState<TextItem | NoteItem | null>(null);
   const [noteColour, setNoteColour] = useState(NOTE_COLOUR);
+  const [stamp, setStamp] = useState({ name: STAMPS[0]!.name, color: STAMPS[0]!.color });
   const [tool, setTool] = useState<Tool>(initialTool);
   const [selected, setSelected] = useState<ItemId | null>(null);
   const [editing, setEditing] = useState<ItemId | null>(null);
@@ -189,6 +202,12 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
   }
 
   function place(page: number, x: number, y: number) {
+    if (tool === "stamp") {
+      if (!stamp.name.trim()) return setNotice("Type the words for your stamp first.");
+      const [width, height] = [STAMP_WIDTH, STAMP_WIDTH * STAMP_RATIO];
+      setNotice(null);
+      return add({ id: newId(), kind: "stamp", page, x: x - width / 2, y: y - height / 2, width, ...stamp });
+    }
     if (tool === "note") {
       // The press is the icon's middle. Like a text box, it joins the items with its first character.
       const half = NOTE_SIZE / 2;
@@ -394,8 +413,16 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
   const markupOptions = tool === "markup" || selectedItem?.kind === "markup";
   const inkOptions = tool === "draw" || selectedItem?.kind === "ink";
   const noteOptions = tool === "note" || selectedItem?.kind === "note";
+  const stampOptions = tool === "stamp" || selectedItem?.kind === "stamp";
   const removeSelected = selectedItem ? () => handlers.handlersFor(selectedItem).onRemove() : undefined;
-  const missing = selectedItem?.kind === "text" ? unsupportedCharacters(selectedItem.text) : [];
+  const missing =
+    selectedItem?.kind === "text"
+      ? unsupportedCharacters(selectedItem.text)
+      : selectedItem?.kind === "stamp"
+        ? unsupportedCharacters(selectedItem.name)
+        : tool === "stamp"
+          ? unsupportedCharacters(stamp.name)
+          : [];
 
   return (
     <div className="space-y-3">
@@ -447,6 +474,16 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
             }}
           >
             <CommentIcon />
+          </ToolButton>
+          <ToolButton
+            label="Add stamp"
+            pressed={tool === "stamp"}
+            onClick={() => {
+              setTool(tool === "stamp" ? "select" : "stamp");
+              setSelected(null);
+            }}
+          >
+            <StampIcon />
           </ToolButton>
           <ToolButton
             label="Add shape"
@@ -508,7 +545,12 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
           <ToolButton label="Zoom in" disabled={zoom === ZOOMS.length - 1} onClick={() => setZoom(zoom + 1)}>
             <ZoomInIcon />
           </ToolButton>
-          <p className="ml-auto hidden px-2 text-sm text-ink-muted md:block" aria-live="polite">
+          {/* One line: it gives way (cut short, whole in its tooltip) rather than making the toolbar taller. */}
+          <p
+            className="hidden min-w-0 flex-1 truncate px-2 text-right text-sm text-ink-muted md:block"
+            aria-live="polite"
+            title={hint(tool, selectedItem, editing)}
+          >
             {hint(tool, selectedItem, editing)}
           </p>
         </div>
@@ -517,6 +559,20 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
           <TextOptions
             style={selectedItem?.kind === "text" ? selectedItem : textStyle}
             onChange={restyle}
+            onRemove={removeSelected}
+          />
+        )}
+        {stampOptions && (
+          <StampOptions
+            key={selectedItem?.kind === "stamp" ? selectedItem.id : "new"}
+            stamp={selectedItem?.kind === "stamp" ? selectedItem : stamp}
+            onChange={(patch) => {
+              setStamp((current) => ({ ...current, ...patch }));
+              if (selectedItem?.kind === "stamp") {
+                const key = Object.keys(patch).join();
+                update((list) => updateItem(list, selectedItem.id, patch), `style:${selectedItem.id}:${key}`);
+              }
+            }}
             onRemove={removeSelected}
           />
         )}
@@ -650,6 +706,7 @@ function hint(tool: Tool, selected: Item | null, editing: ItemId | null) {
   if (tool === "text") return "Click the page where the text should go.";
   if (tool === "markup") return "Drag across the text to mark, or click a word.";
   if (tool === "note") return "Click the page where the comment should go.";
+  if (tool === "stamp") return "Choose a stamp, then click the page to put it there.";
   if (tool === "draw") return "Draw on the page. Each stroke can be moved or deleted afterwards.";
   if (tool === "shape") return "Drag across the page to draw, or click to place one.";
   if (tool === "whiteout") return "Drag over what to cover. It's hidden, not removed from the file.";
