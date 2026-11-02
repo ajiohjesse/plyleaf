@@ -22,3 +22,11 @@ export function contrastRatio(a: string, b: string): number {
   const [hi, lo] = [relativeLuminance(a), relativeLuminance(b)].sort((x, y) => y - x) as [number, number];
   return (hi + 0.05) / (lo + 0.05);
 }
+
+/** Dark ink, the design's text colour. */
+export const INK = "#0f0d2e";
+
+/** Whichever of dark ink or white reads better on `background`: for text on a colour the user chose. */
+export function readableOn(background: string): string {
+  return contrastRatio(INK, background) >= contrastRatio("#ffffff", background) ? INK : "#ffffff";
+}
