@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { contrastRatio, parseHex, relativeLuminance } from "~/lib/contrast";
+import { contrastRatio, INK, parseHex, readableOn, relativeLuminance } from "~/lib/contrast";
 
 describe("parseHex", () => {
   it("parses long and short forms", () => {
@@ -25,5 +25,16 @@ describe("contrastRatio", () => {
 
   it("is symmetric", () => {
     expect(contrastRatio("#3d4ef5", "#ffffff")).toBe(contrastRatio("#ffffff", "#3d4ef5"));
+  });
+});
+
+describe("readableOn", () => {
+  it("picks dark ink on light colours and white on dark ones, always readable", () => {
+    expect(readableOn("#ffd43b")).toBe(INK);
+    expect(readableOn("#ffffff")).toBe(INK);
+    expect(readableOn("#000000")).toBe("#ffffff");
+    expect(readableOn("#1d3fa8")).toBe("#ffffff");
+    const colours = ["#ff0000", "#00ff00", "#0000ff", "#808080", "#ffb3c1", "#3d4ef5"];
+    expect(colours.filter((colour) => contrastRatio(readableOn(colour), colour) < 4.5)).toEqual([]);
   });
 });

@@ -1,5 +1,6 @@
 import { useId, useLayoutEffect, useRef } from "react";
 import { NOTE_SIZE, toHex, type NoteItem } from "~/editor/items";
+import { readableOn } from "~/lib/contrast";
 import { useItemGestures, type ItemHandlers } from "./gestures";
 import { SelectionFrame } from "./SelectionFrame";
 
@@ -28,6 +29,9 @@ export function NoteBox({ item, scale, selected, editing, onText, onEndEdit, ...
   }, [editing]);
   const size = NOTE_SIZE * scale;
   const colour = toHex(item.color);
+  // A PDF note has no text colour of its own (each reader shows its text its own way), so here the text and the icon's
+  // lines are dark or light, whichever reads on the colour chosen.
+  const ink = readableOn(colour);
 
   return (
     <div className="absolute" style={{ left: item.x * scale, top: item.y * scale }}>
@@ -43,15 +47,15 @@ export function NoteBox({ item, scale, selected, editing, onText, onEndEdit, ...
         {...gestures}
       >
         <svg viewBox="0 0 20 20" aria-hidden="true" className="block size-full drop-shadow-sm">
-          <path d="M2 2h16v12h-7l-5 4v-4H2z" fill={colour} stroke="#0f0d2e" strokeWidth={1} strokeLinejoin="round" />
-          <path d="M5 6h10M5 9.5h7" stroke="#0f0d2e" strokeWidth={1} strokeLinecap="round" />
+          <path d="M2 2h16v12h-7l-5 4v-4H2z" fill={colour} stroke={ink} strokeWidth={1} strokeLinejoin="round" />
+          <path d="M5 6h10M5 9.5h7" stroke={ink} strokeWidth={1} strokeLinecap="round" />
         </svg>
         {selected && !editing && <SelectionFrame />}
       </button>
       {(editing || (selected && item.text)) && (
         <div
           className="absolute top-0 z-10 w-60 rounded-lg border-2 border-ink/15 p-2 shadow-sticky"
-          style={{ left: size + 8, backgroundColor: colour }}
+          style={{ left: size + 8, backgroundColor: colour, color: ink }}
         >
           {editing ? (
             <textarea
@@ -70,7 +74,7 @@ export function NoteBox({ item, scale, selected, editing, onText, onEndEdit, ...
               className="block w-full resize-none rounded border-0 bg-surface/70 p-1.5 text-sm text-ink focus:outline-2 focus:outline-primary"
             />
           ) : (
-            <p id={textId} className="text-sm break-words whitespace-pre-wrap text-ink">
+            <p id={textId} data-note-text className="text-sm break-words whitespace-pre-wrap">
               {item.text}
             </p>
           )}

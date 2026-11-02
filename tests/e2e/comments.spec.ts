@@ -69,3 +69,17 @@ test("a comment can be changed later, and an empty one goes away", async ({ page
   const result = await saveEdits(page);
   expect(notes(result.bytes).map((note) => note.text)).toEqual(["First and second"]);
 });
+
+test("a comment's text stays readable on a dark note colour", async ({ page }) => {
+  await openInEditor(page, "annotate-pdf", "dark.pdf", [PAGE]);
+  await page.getByRole("toolbar", { name: "Editing tools" }).getByRole("button", { name: "Add comment" }).click();
+  await clickAt(page, 0, 200, 200, PAGE.width);
+  await page.keyboard.type("Readable on black");
+  await page.keyboard.press("Escape");
+  await page.getByLabel("Note colour").fill("#000000");
+  const text = page.locator("[data-note-text]");
+  await expect(text).toHaveText("Readable on black");
+  await expect(text).toHaveCSS("color", "rgb(255, 255, 255)");
+  await page.getByLabel("Note colour").fill("#ffd43b");
+  await expect(text).toHaveCSS("color", "rgb(15, 13, 46)");
+});
