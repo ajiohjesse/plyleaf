@@ -17,7 +17,7 @@ import {
   type ShapeStyle,
   type TextStyle,
 } from "~/editor/items";
-import { TrashIcon } from "./icons";
+import { ArrowIcon, EllipseIcon, LineIcon, RectangleIcon, TrashIcon } from "./icons";
 import { MARKUP_NAMES } from "./MarkupBox";
 import { SHAPE_NAMES } from "./ShapeBox";
 
@@ -192,6 +192,14 @@ export function TextOptions({
 
 const SHAPES: ShapeStyle["shape"][] = ["rectangle", "ellipse", "line", "arrow"];
 
+/** Each kind of shape as a picture of itself; its name is the button's label. */
+const SHAPE_ICONS: Record<ShapeStyle["shape"], React.ReactNode> = {
+  rectangle: <RectangleIcon />,
+  ellipse: <EllipseIcon />,
+  line: <LineIcon />,
+  arrow: <ArrowIcon />,
+};
+
 /** Which shape, its outline (colour and width) and inside, for the selected shape or new ones. */
 export function ShapeOptions({
   style,
@@ -215,10 +223,12 @@ export function ShapeOptions({
               key={shape}
               type="button"
               aria-pressed={style.shape === shape}
+              aria-label={SHAPE_NAMES[shape]}
+              title={SHAPE_NAMES[shape]}
               onClick={() => onChange({ shape })}
-              className="min-h-9 shrink-0 rounded-lg border-2 border-line px-2.5 text-sm font-semibold hover:border-primary aria-pressed:border-primary aria-pressed:bg-sticky-lavender/40"
+              className="grid size-10 shrink-0 place-items-center rounded-lg border-2 border-line hover:border-primary aria-pressed:border-primary aria-pressed:bg-sticky-lavender/40"
             >
-              {SHAPE_NAMES[shape]}
+              {SHAPE_ICONS[shape]}
             </button>
           ))}
         </span>
