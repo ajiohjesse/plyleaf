@@ -12,6 +12,7 @@ import type {
   ExtractedImage,
   ImageOptions,
   PageSpec,
+  FormField,
   TextLine,
   TextSelection,
   TransformOptions,
@@ -188,6 +189,11 @@ export const engine = {
   /** The lines of text on a page (left to right as shown), with how each looks. */
   textLines(id: DocId, page: number): Promise<TextLine[]> {
     return call(({ remote }) => remote.textLines(id, page));
+  },
+
+  /** The interactive form fields on every page (one entry per widget), with their values. */
+  formFields(id: DocId): Promise<FormField[]> {
+    return call(({ remote }) => remote.formFields(id));
   },
 
   /** Builds a new PDF from pages of open documents and blank pages, in order. */

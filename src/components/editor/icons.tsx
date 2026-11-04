@@ -104,6 +104,45 @@ export const ImageIcon = () => (
   </Icon>
 );
 
+/** A pen nib signing a line. */
+export const SignIcon = () => (
+  <Icon>
+    <path d="M14.5 4.5l5 5-8.2 8.2-5.6 1.3 1.3-5.6z" />
+    <path d="M12.5 6.5l5 5" />
+    <path d="M3 21h18" />
+  </Icon>
+);
+
+/** Two capital letters on a line: initials. */
+export const InitialsIcon = () => (
+  <Icon>
+    <path d="M3.5 15.5l3-10 3 10" />
+    <path d="M4.5 12.5h4" />
+    <path d="M13 15.5v-10h3.5a2.5 2.5 0 010 5H13h4a2.5 2.5 0 010 5z" />
+    <path d="M3 20h18" />
+  </Icon>
+);
+
+/** A calendar page. */
+export const DateIcon = () => (
+  <Icon>
+    <rect x={3.5} y={5} width={17} height={15.5} rx={2.5} />
+    <path d="M3.5 10h17" />
+    <path d="M8 3v4" />
+    <path d="M16 3v4" />
+    <path d="M7.5 14h2" />
+    <path d="M11 14h2" />
+  </Icon>
+);
+
+/** A ticked box. */
+export const TickIcon = () => (
+  <Icon>
+    <rect x={3.5} y={3.5} width={17} height={17} rx={2.5} />
+    <path d="M7.5 12.5l3 3 6-7" />
+  </Icon>
+);
+
 // The shapes the Add shape tool draws, as they'll look.
 
 export const RectangleIcon = () => (

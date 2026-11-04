@@ -3,11 +3,18 @@ import { engine } from "~/engine/client";
 import { outputName } from "~/download/download";
 import { cssFont, FONTS, unsupportedCharacters } from "~/editor/fonts";
 import { canRedo, canUndo, change, redo, settle, startHistory, undo, type History } from "~/editor/history";
+import { formatDate, type DateFormat } from "~/editor/dates";
+import { changedFields, fieldEdits, type FieldInput } from "~/editor/forms";
+import type { Box, FormField } from "~/engine/types";
+import { fittedSize, placedSize, type SignatureKind } from "~/sign/ink";
+import { SignPanel } from "~/components/sign/SignPanel";
+import { useSignatures, type Signature } from "~/components/sign/useSignatures";
 import {
   clickedShape,
   DEFAULT_INK,
   DEFAULT_SHAPE,
   DEFAULT_TEXT,
+  DEFAULT_TICK,
   drawnShape,
   inkOrigin,
   isEmpty,
@@ -39,6 +46,8 @@ import {
   type ShapeStyle,
   type TextItem,
   type TextStyle,
+  type TickItem,
+  type TickStyle,
 } from "~/editor/items";
 import { startingSize } from "~/editor/images";
 import type { Point } from "~/editor/shapes";
@@ -50,15 +59,19 @@ import { ActionBar, FailureAlert, plural, primaryButton } from "~/components/wor
 import { EditorPage, type PageHandlers, type Tool } from "./EditorPage";
 import {
   CommentIcon,
+  DateIcon,
   EditTextIcon,
   HighlightIcon,
   ImageIcon,
+  InitialsIcon,
   PenIcon,
   RedoIcon,
   SelectIcon,
   ShapeIcon,
+  SignIcon,
   StampIcon,
   TextIcon,
+  TickIcon,
   UndoIcon,
   WhiteoutIcon,
   ZoomInIcon,
@@ -66,12 +79,14 @@ import {
 } from "./icons";
 import { baselineRatio } from "./measure";
 import {
+  DateOptions,
   InkOptions,
   MarkupOptions,
   NoteOptions,
   ShapeOptions,
   StampOptions,
   TextOptions,
+  TickOptions,
   WhiteoutOptions,
 } from "./options";
 import { prepareImage } from "./prepareImage";
@@ -88,6 +103,11 @@ interface Props {
   initialTool?: Tool;
   /** Added to the output's name: "report-edited.pdf". */
   suffix?: string;
+  /**
+   * Fill PDF form: a PDF with no fields to fill opens with the text tool (to type on a flat form) at a form's usual
+   * text size.
+   */
+  fillForm?: boolean;
 }
 
 /**
@@ -95,17 +115,32 @@ interface Props {
  * that saves a copy with the additions written into the pages. Everything added can be selected, moved and changed
  * until then.
  */
-export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited" }: Props) {
+export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited", fillForm = false }: Props) {
   const [history, setHistory] = useState<History<Item[]>>(() => startHistory([]));
   const items = history.present;
   // A text box that hasn't had anything typed yet. It joins the items (and the history) with its first character.
   const [draft, setDraft] = useState<TextItem | NoteItem | null>(null);
   const [noteColour, setNoteColour] = useState(NOTE_COLOUR);
   const [stamp, setStamp] = useState({ name: STAMPS[0]!.name, color: STAMPS[0]!.color });
-  const [tool, setTool] = useState<Tool>(initialTool);
+  // A form with nothing to fill in opens ready to type on (Fill PDF form).
+  const flatForm = fillForm && doc.info.formFields === 0;
+  const [tool, setTool] = useState<Tool>(flatForm ? "text" : initialTool);
   const [selected, setSelected] = useState<ItemId | null>(null);
   const [editing, setEditing] = useState<ItemId | null>(null);
-  const [textStyle, setTextStyle] = useState<TextStyle>(DEFAULT_TEXT);
+  const [textStyle, setTextStyle] = useState<TextStyle>(fillForm ? { ...DEFAULT_TEXT, size: 12 } : DEFAULT_TEXT);
+  const [tickStyle, setTickStyle] = useState<TickStyle>(DEFAULT_TICK);
+  const [dateFormat, setDateFormat] = useState<DateFormat>("numeric");
+  // The document's interactive form fields (null until they're read), and what the user has filled in, by field name.
+  const [fields, setFields] = useState<FormField[] | null>(doc.info.formFields > 0 ? null : []);
+  const [fieldValues, setFieldValues] = useState<ReadonlyMap<string, FieldInput>>(new Map());
+  const [flatten, setFlatten] = useState(false);
+  const { signatures, storage, add: addSignature, remove: forgetSignature } = useSignatures();
+  // The signature (and initials) the Sign tool puts down: the one chosen, or else the newest.
+  const [chosen, setChosen] = useState<Record<SignatureKind, string | null>>({ signature: null, initials: null });
+  // An empty signature field the user pressed before having a signature: the next one made or chosen goes in it.
+  const [signTarget, setSignTarget] = useState<{ page: number; box: Box } | null>(null);
+  // Each signature's picture, added to the assets once.
+  const signatureAssets = useRef(new Map<string, AssetId>());
   const [shapeStyle, setShapeStyle] = useState<ShapeStyle>(DEFAULT_SHAPE);
   // A shape being drawn: shown, but not an item until the pointer is let go.
   const [sketch, setSketch] = useState<Item | null>(null);
@@ -113,7 +148,13 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
   const [inkStyle, setInkStyle] = useState<InkStyle>(DEFAULT_INK);
   const [markupStyle, setMarkupStyle] = useState<MarkupStyle>("highlight");
   const [markupColours, setMarkupColours] = useState(MARKUP_COLOURS);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(
+    flatForm
+      ? "This PDF has no fields to fill in, so you can type anywhere: click where the words should go. Use Add tick for boxes, and Sign for your signature."
+      : null,
+  );
+  // For the date tool. Read once, when the editor opens.
+  const [today] = useState(() => new Date());
   // Text selection asks the engine at every move; only the latest answer counts.
   const selecting = useRef(0);
   const [zoom, setZoom] = useState(ZOOMS.indexOf(1));
@@ -143,6 +184,66 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
     element.scrollIntoView({ block: "nearest" });
   });
 
+  useEffect(() => {
+    if (doc.info.formFields === 0) return;
+    let current = true;
+    engine.formFields(doc.info.id).then(
+      (found) => current && setFields(found),
+      () => current && setFields([]),
+    );
+    return () => {
+      current = false;
+    };
+  }, [doc.info.id, doc.info.formFields]);
+
+  const ofKind = (kind: SignatureKind) => signatures.filter((signature) => signature.kind === kind);
+  const chosenSignature = (kind: SignatureKind): Signature | undefined =>
+    ofKind(kind).find((signature) => signature.id === chosen[kind]) ?? ofKind(kind).at(-1);
+
+  /** The asset showing a signature, added the first time it's used. */
+  function signatureAsset(signature: Signature): AssetId {
+    const known = signatureAssets.current.get(signature.id);
+    if (known) return known;
+    const asset: Asset = {
+      id: newId(),
+      name: signature.kind === "signature" ? "Signature" : "Initials",
+      bytes: signature.png,
+      url: URL.createObjectURL(new Blob([signature.png.slice()], { type: "image/png" })),
+    };
+    setAssets((current) => new Map(current).set(asset.id, asset));
+    signatureAssets.current.set(signature.id, asset.id);
+    return asset.id;
+  }
+
+  /** Puts a signature (or initials) on a page: centred on a point, or fitted into a signature field's box. */
+  function placeSignature(signature: Signature, page: number, at: { x: number; y: number } | { box: Box }) {
+    const info = doc.info.pages[page]!;
+    let size: { width: number; height: number };
+    let centre: { x: number; y: number };
+    if ("box" in at) {
+      const [x0, y0, x1, y1] = at.box;
+      size = fittedSize(signature.width, signature.height, { width: x1 - x0, height: y1 - y0 });
+      centre = { x: (x0 + x1) / 2, y: (y0 + y1) / 2 };
+    } else {
+      size = placedSize(signature.width, signature.height, signature.kind);
+      centre = at;
+    }
+    const x = Math.min(Math.max(0, centre.x - size.width / 2), Math.max(0, info.width - size.width));
+    const y = Math.min(Math.max(0, centre.y - size.height / 2), Math.max(0, info.height - size.height));
+    setNotice(null);
+    add({ id: newId(), kind: "image", page, x, y, ...size, asset: signatureAsset(signature), role: signature.kind });
+  }
+
+  /** Chooses a signature for the Sign tool; one wanted for a signature field goes straight into it. */
+  function chooseSignature(signature: Signature) {
+    setChosen((current) => ({ ...current, [signature.kind]: signature.id }));
+    if (signTarget && signature.kind === "signature") {
+      placeSignature(signature, signTarget.page, { box: signTarget.box });
+      setSignTarget(null);
+    }
+  }
+
+  const pageFields = groupByPage(fields ?? []);
   const shown = [...items, ...(draft ? [draft] : []), ...(sketch ? [sketch] : [])];
   const selectedItem = shown.find((item) => item.id === selected) ?? null;
   const update = useCallback(
@@ -205,6 +306,29 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
   }
 
   function place(page: number, x: number, y: number) {
+    if (tool === "sign" || tool === "initials") {
+      const signature = chosenSignature(tool === "sign" ? "signature" : "initials");
+      if (!signature) {
+        return setNotice(
+          tool === "sign"
+            ? "Make your signature first, above the pages."
+            : "Make your initials first, above the pages.",
+        );
+      }
+      return placeSignature(signature, page, { x, y });
+    }
+    if (tool === "tick") {
+      const { size } = tickStyle;
+      const tick: TickItem = { id: newId(), kind: "tick", page, x: x - size / 2, y: y - size / 2, ...tickStyle };
+      // Forms usually have several boxes to tick, so the tool stays on.
+      update((list) => [...list, tick]);
+      return;
+    }
+    if (tool === "date") {
+      const ascent = baselineRatio(cssFont(textStyle.font, textStyle.bold, textStyle.italic)) * textStyle.size;
+      const text = formatDate(today, dateFormat);
+      return add({ id: newId(), kind: "text", page, x, y: y + ascent, text, ...textStyle });
+    }
     if (tool === "stamp") {
       if (!stamp.name.trim()) return setNotice("Type the words for your stamp first.");
       const [width, height] = [STAMP_WIDTH, STAMP_WIDTH * STAMP_RATIO];
@@ -281,6 +405,15 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
       setSelected(null);
       setEditing(null);
     },
+    onFieldChange: (name, value) => setFieldValues((current) => new Map(current).set(name, value)),
+    onSignField: (field) => {
+      const signature = chosenSignature("signature");
+      if (signature) return placeSignature(signature, field.page, { box: field.box });
+      // No signature yet: make one, and it goes in this field.
+      setSignTarget({ page: field.page, box: field.box });
+      setSelected(null);
+      setTool("sign");
+    },
     handlersFor: (item) => {
       const isDraft = draft?.id === item.id;
       const page = doc.info.pages[item.page]!;
@@ -332,7 +465,11 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
           }
           setHistory(settle);
         },
-        onResize: (width, height) => update((list) => updateItem(list, item.id, { width, height }), `size:${item.id}`),
+        onResize: (width, height) =>
+          update(
+            (list) => updateItem(list, item.id, item.kind === "tick" ? { size: width } : { width, height }),
+            `size:${item.id}`,
+          ),
       };
     },
   };
@@ -419,7 +556,8 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
     setWorking(true);
     setError(null);
     try {
-      const bytes = await engine.transform(doc.info.id, { edits: toEdits(items, assets) });
+      const edits = { ...toEdits(items, assets), fields: fieldEdits(fields ?? [], fieldValues) };
+      const bytes = await engine.transform(doc.info.id, { edits, ...(flatten && { flatten: "all" as const }) });
       onSaved(new Blob([bytes], { type: "application/pdf" }), outputName(doc.name, suffix));
     } catch (failure) {
       setError(operationFailureMessage(failure));
@@ -428,7 +566,14 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
     }
   }
 
-  const changes = items.filter((item) => !isEmpty(item)).length;
+  const filledIn = changedFields(fields ?? [], fieldValues).length;
+  const changes = items.filter((item) => !isEmpty(item)).length + filledIn;
+  // Flattening is offered once there's something it would fix in place: fields, or annotations old or new.
+  const flattenable =
+    (fields?.length ?? 0) > 0 ||
+    doc.info.annotations > 0 ||
+    items.some((item) => ["markup", "ink", "note", "stamp"].includes(item.kind));
+  const tickOptions = tool === "tick" || selectedItem?.kind === "tick";
   const textOptions = tool === "text" || selectedItem?.kind === "text";
   const shapeOptions = tool === "shape" || selectedItem?.kind === "shape";
   const whiteoutOptions = tool === "whiteout" || selectedItem?.kind === "whiteout";
@@ -466,6 +611,48 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
             }}
           >
             <TextIcon />
+          </ToolButton>
+          <ToolButton
+            label="Sign"
+            pressed={tool === "sign"}
+            onClick={() => {
+              setTool(tool === "sign" ? "select" : "sign");
+              setSelected(null);
+              setSignTarget(null);
+            }}
+          >
+            <SignIcon />
+          </ToolButton>
+          <ToolButton
+            label="Add initials"
+            pressed={tool === "initials"}
+            onClick={() => {
+              setTool(tool === "initials" ? "select" : "initials");
+              setSelected(null);
+              setSignTarget(null);
+            }}
+          >
+            <InitialsIcon />
+          </ToolButton>
+          <ToolButton
+            label="Add date"
+            pressed={tool === "date"}
+            onClick={() => {
+              setTool(tool === "date" ? "select" : "date");
+              setSelected(null);
+            }}
+          >
+            <DateIcon />
+          </ToolButton>
+          <ToolButton
+            label="Add tick"
+            pressed={tool === "tick"}
+            onClick={() => {
+              setTool(tool === "tick" ? "select" : "tick");
+              setSelected(null);
+            }}
+          >
+            <TickIcon />
           </ToolButton>
           <ToolButton
             label="Highlight text"
@@ -587,6 +774,37 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
           </p>
         </div>
         {/* Floats over the board, so the pages don't jump when it appears. */}
+        {(tool === "sign" || tool === "initials") && (
+          <SignPanel
+            key={tool}
+            kind={tool === "sign" ? "signature" : "initials"}
+            signatures={ofKind(tool === "sign" ? "signature" : "initials")}
+            chosen={chosenSignature(tool === "sign" ? "signature" : "initials")?.id ?? null}
+            storage={storage}
+            onChoose={chooseSignature}
+            onForget={(signature) => {
+              setChosen((current) => ({ ...current, [signature.kind]: null }));
+              void forgetSignature(signature);
+            }}
+            onMake={async (image, remember) => {
+              chooseSignature(await addSignature(tool === "sign" ? "signature" : "initials", image, remember));
+            }}
+          />
+        )}
+        {tool === "date" && <DateOptions format={dateFormat} today={today} onChange={setDateFormat} />}
+        {tickOptions && (
+          <TickOptions
+            style={selectedItem?.kind === "tick" ? selectedItem : tickStyle}
+            onChange={(patch) => {
+              setTickStyle((style) => ({ ...style, ...patch }));
+              if (selectedItem?.kind === "tick") {
+                const key = Object.keys(patch).join();
+                update((list) => updateItem(list, selectedItem.id, patch), `style:${selectedItem.id}:${key}`);
+              }
+            }}
+            onRemove={removeSelected}
+          />
+        )}
         {textOptions && (
           <TextOptions
             style={selectedItem?.kind === "text" ? selectedItem : textStyle}
@@ -717,6 +935,9 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
               observeNear={observeNear}
               observeOnScreen={observeOnScreen}
               assets={assets}
+              fields={pageFields[index] ?? NO_FIELDS}
+              fieldValues={fieldValues}
+              group={doc.info.id}
               onVisible={(visible) => {
                 if (visible) onScreenPages.current.add(index);
                 else onScreenPages.current.delete(index);
@@ -729,10 +950,34 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
 
       <ActionBar
         status={
-          working ? "Saving…" : changes === 0 ? "Add something to the pages, then download." : plural(changes, "edit")
+          working
+            ? "Saving…"
+            : changes === 0
+              ? fields && fields.length > 0
+                ? "Fill in the form, or add something to the pages, then download."
+                : "Add something to the pages, then download."
+              : [
+                  filledIn > 0 && `${plural(filledIn, "field")} filled in`,
+                  changes - filledIn > 0 && plural(changes - filledIn, "edit"),
+                ]
+                  .filter(Boolean)
+                  .join(", ")
         }
       >
-        <button type="button" disabled={working || changes === 0} className={primaryButton} onClick={() => void save()}>
+        {flattenable && (
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={flatten} onChange={(event) => setFlatten(event.target.checked)} />
+            <span>
+              Flatten <span className="text-ink-muted">(fields and annotations can&apos;t be changed afterwards)</span>
+            </span>
+          </label>
+        )}
+        <button
+          type="button"
+          disabled={working || (changes === 0 && !flatten)}
+          className={primaryButton}
+          onClick={() => void save()}
+        >
           {working ? "Saving…" : "Download PDF"}
         </button>
       </ActionBar>
@@ -740,8 +985,14 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
   );
 }
 
+const NO_FIELDS: readonly FormField[] = [];
+
 function hint(tool: Tool, selected: Item | null, editing: ItemId | null) {
   if (tool === "text") return "Click the page where the text should go.";
+  if (tool === "sign") return "Click the page where your signature should go.";
+  if (tool === "initials") return "Click the page where your initials should go.";
+  if (tool === "date") return "Click the page where the date should go.";
+  if (tool === "tick") return "Click each box to tick it.";
   if (tool === "retext") return "Click a line of the page's text to change it.";
   if (tool === "markup") return "Drag across the text to mark, or click a word.";
   if (tool === "note") return "Click the page where the comment should go.";
@@ -810,4 +1061,11 @@ function ToolButton({
       {children}
     </button>
   );
+}
+
+/** Form fields by page. */
+function groupByPage(fields: readonly FormField[]): FormField[][] {
+  const pages: FormField[][] = [];
+  for (const field of fields) (pages[field.page] ??= []).push(field);
+  return pages;
 }

@@ -5,6 +5,7 @@ import * as mupdf from "mupdf";
 import { KAPPA, lineGeometry } from "~/editor/shapes";
 import { drawOnTop, freeName, ownResources, subDictionary } from "./content";
 import { EngineError } from "./errors";
+import { fillFields } from "./forms";
 import {
   LINE_HEIGHT,
   NOTE_SIZE,
@@ -26,8 +27,9 @@ const FONT_NAMES: Record<StandardFont, [regular: string, bold: string, italic: s
   courier: ["Courier", "Courier-Bold", "Courier-Oblique", "Courier-BoldOblique"],
 };
 
-/** Draws `edits` onto the pages of `pdf` and adds their annotations. */
+/** Fills in `edits`' form fields, draws its marks onto the pages of `pdf` and adds its annotations. */
 export function applyEdits(pdf: mupdf.PDFDocument, edits: Edits) {
+  if (edits.fields && edits.fields.length > 0) fillFields(pdf, edits.fields);
   const pageCount = pdf.countPages();
   // Several entries for one page are drawn in order, as one.
   const byPage = new Map<number, Mark[]>();

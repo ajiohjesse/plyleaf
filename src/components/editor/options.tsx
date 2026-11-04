@@ -16,10 +16,16 @@ import {
   type MarkupStyle,
   type ShapeStyle,
   type TextStyle,
+  type TickStyle,
+  MAX_TICK_SIZE,
+  MIN_TICK_SIZE,
 } from "~/editor/items";
+import { DATE_FORMATS, formatDate, type DateFormat } from "~/editor/dates";
+import type { TickSymbol } from "~/editor/shapes";
 import { ArrowIcon, EllipseIcon, LineIcon, RectangleIcon, TrashIcon } from "./icons";
 import { MARKUP_NAMES } from "./MarkupBox";
 import { SHAPE_NAMES } from "./ShapeBox";
+import { TICK_NAMES, TickFace } from "./TickBox";
 
 export const fieldClass =
   "rounded-lg border-2 border-line bg-surface px-2 py-1.5 text-base focus:border-primary focus:outline-none";
@@ -433,6 +439,80 @@ export function StampOptions({
         </span>
       )}
       <ColourField label="Colour" value={stamp.color} onChange={(color) => onChange({ color })} />
+    </OptionsPanel>
+  );
+}
+
+const TICKS: TickSymbol[] = ["check", "cross", "dot"];
+
+/** Check mark, cross or dot, its size and colour, for the selected tick or new ones. */
+export function TickOptions({
+  style,
+  onChange,
+  onRemove,
+}: {
+  style: TickStyle;
+  onChange: (patch: Partial<TickStyle>) => void;
+  onRemove: (() => void) | undefined;
+}) {
+  return (
+    <OptionsPanel legend="Tick options" onRemove={onRemove}>
+      <span className="flex items-center gap-1">
+        {TICKS.map((symbol) => (
+          <button
+            key={symbol}
+            type="button"
+            aria-pressed={style.symbol === symbol}
+            aria-label={TICK_NAMES[symbol]}
+            title={TICK_NAMES[symbol]}
+            onClick={() => onChange({ symbol })}
+            className="grid size-10 shrink-0 place-items-center rounded-lg border-2 border-line hover:border-primary aria-pressed:border-primary aria-pressed:bg-sticky-lavender/40"
+          >
+            <span className="block size-5">
+              <TickFace symbol={symbol} size={20} color={[0.06, 0.05, 0.18]} />
+            </span>
+          </button>
+        ))}
+      </span>
+      <NumberField
+        label="Size"
+        value={Math.round(style.size)}
+        min={MIN_TICK_SIZE}
+        max={MAX_TICK_SIZE}
+        onChange={(size) => onChange({ size })}
+      />
+      <ColourField label="Colour" value={style.color} onChange={(color) => onChange({ color })} />
+    </OptionsPanel>
+  );
+}
+
+/** How the date reads, shown as today's date in each format. */
+export function DateOptions({
+  format,
+  today,
+  onChange,
+}: {
+  format: DateFormat;
+  today: Date;
+  onChange: (format: DateFormat) => void;
+}) {
+  return (
+    <OptionsPanel legend="Date options" onRemove={undefined}>
+      <span className="text-sm">Format</span>
+      <span className="flex items-center gap-1">
+        {DATE_FORMATS.map((option) => (
+          <button
+            key={option}
+            type="button"
+            aria-pressed={format === option}
+            onClick={() => onChange(option)}
+            className="min-h-9 shrink-0 rounded-lg border-2 border-line px-2.5 text-sm font-semibold hover:border-primary aria-pressed:border-primary aria-pressed:bg-sticky-lavender/40"
+          >
+            {formatDate(today, option)}
+          </button>
+        ))}
+      </span>
+      <span className="text-sm text-ink-muted">Placed as text you can move, restyle or change.</span>
     </OptionsPanel>
   );
 }

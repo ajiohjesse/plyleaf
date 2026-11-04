@@ -9,10 +9,10 @@ import { Editor } from "./Editor";
 import type { Tool } from "./EditorPage";
 
 /**
- * The editor's workspace (Edit PDF, Annotate PDF): one PDF in, the editor, and the done screen. The editor stays mounted (hidden) behind the done
+ * The editor's workspace (Edit PDF, Annotate PDF, Sign PDF, Fill PDF form): one PDF in, the editor, and the done screen. The editor stays mounted (hidden) behind the done
  * screen, so "Back to editing" returns to everything as it was, undo history and all.
  */
-export function EditorWorkspace({ tool, suffix }: { tool?: Tool; suffix?: string }) {
+export function EditorWorkspace({ tool, suffix, fillForm }: { tool?: Tool; suffix?: string; fillForm?: boolean }) {
   const [state, intake] = useIntake({ passwords: true, multiple: false });
   const doc = state.documents[0];
   const [saved, setSaved] = useState<{ key: string; file: Blob; name: string } | null>(null);
@@ -48,6 +48,7 @@ export function EditorWorkspace({ tool, suffix }: { tool?: Tool; suffix?: string
             doc={doc}
             {...(tool && { initialTool: tool })}
             {...(suffix && { suffix })}
+            {...(fillForm && { fillForm })}
             onSaved={(file, name) => {
               setReturning(false);
               setSaved({ key: doc.key, file, name });

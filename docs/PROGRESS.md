@@ -2,8 +2,10 @@
 
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
-- **Current milestone:** M6: Sign and forms (M0–M2 done 2026-10-31, M3 and M4 done 2026-11-01, M5 done 2026-11-02)
-- **Next action:** M6, starting with AcroForm filling.
+- **Current milestone:** M7: Redact and OCR (M0–M2 done 2026-10-31, M3 and M4 done 2026-11-01, M5 done 2026-11-02,
+  M6 done 2026-11-04)
+- **Next action:** M7, starting with true redaction.
+- **Owner asked (2026-11-04):** build all of M6 in one go, as one PR, auto-merged when CI passes.
 - **Owner asked (2026-11-01):** build all of M5 in one go, one PR per item, each auto-merged when CI passes.
 - **Owner asked earlier (2026-11-01):** build all of M3 and M4 in one go, one PR per tool, each auto-merged when CI passes.
   Unlock removes owner-password restrictions only after the user confirms they have the right to; libheif-js approved.
@@ -53,8 +55,8 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] Page numbers · [x] Watermark · [x] Header/footer · [x] Bates · [x] Undo/redo
 - [x] Output verified in Acrobat Reader, Chrome, macOS Preview (Chrome's PDFium and Firefox's pdf.js in tests; Acrobat Reader and Preview by the owner, 2026-11-02)
 
-### [ ] M6: Sign and forms
-- [ ] AcroForm fill · [ ] Type on flat forms · [ ] Signatures (draw/type/upload, saved locally) · [ ] Initials/date · [ ] Flatten
+### [x] M6: Sign and forms
+- [x] AcroForm fill · [x] Type on flat forms · [x] Signatures (draw/type/upload, saved locally) · [x] Initials/date · [x] Flatten
 
 ### [ ] M7: Redact and OCR
 - [ ] True redaction (verified non-extractable) · [ ] Search-and-redact · [ ] OCR → searchable PDF (language picker)
@@ -73,6 +75,33 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-11-04: Sign and forms, M6 done
+- Engine (D-037): `engine.formFields(doc)` lists each widget (text, check box, radio, combo, list, signature, button)
+  with its box, value, on state, options, read-only and multi-line; `Edits.fields` fills them in first (MuPDF sets the
+  value and redraws the appearance), so flattening and other readers show the answers. Read-only fields, signatures and
+  buttons are never changed. Flattening gives empty signature fields an empty appearance first (MuPDF would otherwise
+  print its own "SIGN" flag into the page).
+- Editor: a PDF's fields are real inputs over its pages (opaque, pale blue, sized to the field), live with the Select
+  tool; values are kept by field name, so a field repeated on several pages fills everywhere. New tools: Sign, Add
+  initials, Add date (today in figures, words or ISO, placed as ordinary text), Add tick (check, cross, dot; drawn as
+  lines, so every reader shows it). A Flatten tick box in the action bar appears once there are fields or annotations.
+- Signatures (D-038): made by drawing (pointer, pen, touch), typing (three OFL handwriting fonts, self-hosted, loaded
+  only when shown) or uploading a photo or scan (its paper taken out); each becomes a trimmed transparent PNG placed as
+  an image item (36 pt tall; initials 24 pt), or fitted into a signature field from its "Sign here" button. "Save it on
+  this device" keeps them in IndexedDB (`src/sign/store.ts`); the bin forgets them there too. Nothing is uploaded.
+- `/sign-pdf` (opens with Sign) and `/fill-pdf-form` (a PDF with no fields opens with Add text at 12 pt and says so)
+  are live and linked from home.
+- Verified: 14 new unit tests (`engine-forms`: listing, filling every kind, unchecking, flatten with no "SIGN" flag,
+  bad indexes; `sign-forms`: field values by name, ticks, dates, ink bounds, paper removal, sizes). New E2E
+  `fill-form.spec.ts` (every field kind filled and read back with MuPDF, qpdf-clean, `watchEgress`; flattened answers
+  in the page; flat form typed, ticked, dated) and `sign.spec.ts` (drawn signature placed, kept on the device across
+  visits, forgotten, `watchEgress`; typed signature into a signature field and initials; uploaded photo with its paper
+  taken out): 24/24 in Chromium, Firefox, WebKit and Pixel 7. Checked at 375 px and desktop.
+- Known gaps: a signature is a picture of a signature, not a certificate-based digital signature (the FAQ says so);
+  form fields aren't in the undo history (their inputs keep their own typing undo); a radio group can't be set back to
+  none.
+- Next: M7, true redaction.
 
 ### 2026-11-02: M5 done
 - The owner opened `docs/samples/editor-sample.pdf` in Acrobat Reader and macOS Preview and everything on the checklist

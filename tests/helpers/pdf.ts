@@ -127,6 +127,101 @@ export function formsPdf(): Uint8Array<ArrayBuffer> {
   return bytes;
 }
 
+/** Where `interactiveFormPdf`'s fields are, as (x0, y0, x1, y1) points from the top-left of its 400 × 400 page. */
+export const FORM_FIELDS = {
+  name: [20, 40, 220, 60],
+  notes: [20, 80, 220, 140],
+  agree: [20, 164, 36, 180],
+  sizeS: [20, 204, 36, 220],
+  sizeM: [50, 204, 66, 220],
+  sizeL: [80, 204, 96, 220],
+  country: [20, 240, 160, 260],
+  colour: [200, 240, 300, 280],
+  ref: [240, 40, 380, 60],
+  sig: [200, 340, 380, 380],
+} as const;
+
+/**
+ * A 400 × 400 pt page with one of each kind of form field (see FORM_FIELDS): text "name" (tooltip "Full name"),
+ * multi-line "notes", check box "agree" (on state "Yes"), radio group "size" (S, M, L), combo box "country", list box
+ * "colour" (export values r, g, b), read-only "ref" ("R-1") and signature "sig". Check boxes and radio buttons have
+ * appearances (a filled square or dot when on), as forms made by real apps do.
+ */
+export function interactiveFormPdf(): Uint8Array<ArrayBuffer> {
+  const doc = new mupdf.PDFDocument();
+  const font = doc.addSimpleFont(new mupdf.Font("Helvetica"));
+  const contents = `0 g BT /F1 10 Tf 20 370 Td (Application form) Tj ET`;
+  doc.insertPage(-1, doc.addPage([0, 0, 400, 400], 0, { Font: { F1: font } }, contents));
+  const page = doc.findPage(0);
+  const annots = doc.newArray();
+  page.put("Annots", annots);
+  const fields = doc.newArray();
+  // From top-left boxes to PDF rectangles.
+  const rect = ([x0, y0, x1, y1]: readonly [number, number, number, number]) => [x0, 400 - y1, x1, 400 - y0];
+  const form = (content: string, size: number) =>
+    doc.addStream(content, { Type: "XObject", Subtype: "Form", BBox: [0, 0, size, size] });
+  const widget = (box: readonly [number, number, number, number], dict: Record<string, unknown>) => {
+    const object = doc.addObject({ Type: "Annot", Subtype: "Widget", F: 4, P: page, Rect: rect(box), ...dict });
+    annots.push(object);
+    return object;
+  };
+  const text = { FT: "Tx", DA: "(/Helv 0 Tf 0 g)" };
+  fields.push(widget(FORM_FIELDS.name, { ...text, T: "(name)", TU: "(Full name)" }));
+  fields.push(widget(FORM_FIELDS.notes, { ...text, T: "(notes)", Ff: 4096, DA: "(/Helv 10 Tf 0 g)" }));
+  fields.push(widget(FORM_FIELDS.ref, { ...text, T: "(ref)", V: "(R-1)", Ff: 1 }));
+  fields.push(
+    widget(FORM_FIELDS.agree, {
+      FT: "Btn",
+      T: "(agree)",
+      V: doc.newName("Off"),
+      AS: doc.newName("Off"),
+      AP: { N: { Yes: form("0 g 3 3 10 10 re f", 16), Off: form("", 16) } },
+    }),
+  );
+  const radio = doc.addObject({ FT: "Btn", T: "(size)", Ff: 49152, V: doc.newName("Off"), Kids: [] });
+  const dot = "0 g 8 4 m 10.2 4 12 5.8 12 8 c 12 10.2 10.2 12 8 12 c 5.8 12 4 10.2 4 8 c 4 5.8 5.8 4 8 4 c f";
+  for (const state of ["S", "M", "L"] as const) {
+    const kid = widget(FORM_FIELDS[`size${state}`], {
+      Parent: radio,
+      AS: doc.newName("Off"),
+      AP: { N: { [state]: form(dot, 16), Off: form("", 16) } },
+    });
+    radio.get("Kids").push(kid);
+  }
+  fields.push(radio);
+  fields.push(
+    widget(FORM_FIELDS.country, {
+      FT: "Ch",
+      T: "(country)",
+      Ff: 131072,
+      Opt: ["(Ghana)", "(Nigeria)", "(Kenya)"],
+      DA: "(/Helv 0 Tf 0 g)",
+    }),
+  );
+  fields.push(
+    widget(FORM_FIELDS.colour, {
+      FT: "Ch",
+      T: "(colour)",
+      Opt: [
+        ["(r)", "(Red)"],
+        ["(g)", "(Green)"],
+        ["(b)", "(Blue)"],
+      ],
+      DA: "(/Helv 10 Tf 0 g)",
+    }),
+  );
+  fields.push(widget(FORM_FIELDS.sig, { FT: "Sig", T: "(sig)" }));
+  doc
+    .getTrailer()
+    .get("Root")
+    .put("AcroForm", doc.addObject({ Fields: fields, DR: { Font: { Helv: font } }, DA: "(/Helv 0 Tf 0 g)" }));
+  const buffer = doc.saveToBuffer("compress");
+  const bytes = new Uint8Array(buffer.asUint8Array());
+  buffer.destroy();
+  doc.destroy();
+  return bytes;
+}
+
 /** A PDF cut off before its cross-reference table and trailer, as a broken download would be. */
 export function truncatedPdf(pageCount = 3): Uint8Array<ArrayBuffer> {
   const bytes = makePdf(
