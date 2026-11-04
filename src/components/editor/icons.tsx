@@ -85,6 +85,16 @@ export const WhiteoutIcon = () => (
   </Icon>
 );
 
+/** Lines of text, one of them blacked out. */
+export const RedactIcon = () => (
+  <Icon>
+    <path d="M4 6h16" />
+    <rect x="4" y="10" width="11" height="4" rx="1" fill="currentColor" />
+    <path d="M18.5 12H20" />
+    <path d="M4 18h10" />
+  </Icon>
+);
+
 /** A capital T with a small pencil: changing the words that are there. */
 export const EditTextIcon = () => (
   <Icon>

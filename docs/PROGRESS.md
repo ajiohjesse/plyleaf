@@ -2,10 +2,13 @@
 
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
-- **Current milestone:** M7: Redact and OCR (M0–M2 done 2026-10-31, M3 and M4 done 2026-11-01, M5 done 2026-11-02,
-  M6 done 2026-11-04)
-- **Next action:** M7, starting with true redaction.
-- **Owner asked (2026-11-04):** build all of M6 in one go, as one PR, auto-merged when CI passes.
+- **Current milestone:** M8: Office conversions (M0–M2 done 2026-10-31, M3 and M4 done 2026-11-01, M5 done 2026-11-02,
+  M6 and M7 done 2026-11-04)
+- **Next action:** M8's spike: client-side Office conversion options (LibreOffice/ZetaOffice WASM, office2pdf WASM,
+  docx-preview + print) for fidelity, bundle size and speed, written up for the owner's D-007 decision. Nothing is built
+  past the spike until the owner decides.
+- **Owner asked (2026-11-04):** build all of M7 in one go, as one PR, auto-merged when CI passes. Same for M6 earlier
+  that day.
 - **Owner asked (2026-11-01):** build all of M5 in one go, one PR per item, each auto-merged when CI passes.
 - **Owner asked earlier (2026-11-01):** build all of M3 and M4 in one go, one PR per tool, each auto-merged when CI passes.
   Unlock removes owner-password restrictions only after the user confirms they have the right to; libheif-js approved.
@@ -58,8 +61,8 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ### [x] M6: Sign and forms
 - [x] AcroForm fill · [x] Type on flat forms · [x] Signatures (draw/type/upload, saved locally) · [x] Initials/date · [x] Flatten
 
-### [ ] M7: Redact and OCR
-- [ ] True redaction (verified non-extractable) · [ ] Search-and-redact · [ ] OCR → searchable PDF (language picker)
+### [x] M7: Redact and OCR
+- [x] True redaction (verified non-extractable) · [x] Search-and-redact · [x] OCR → searchable PDF (language picker)
 
 ### [ ] M8: Office conversions
 - [ ] Spike + D-007 decided by owner
@@ -75,6 +78,39 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-11-04: Redact and OCR, M7 done
+- Redaction (D-039): a Redact tool in the editor. Drag a box, click a word, or find words (whole words optional) or
+  patterns (email addresses, phone numbers, account numbers, dates) and mark every match at once, as one undo step; a
+  search run again doesn't mark the same words twice. Marks show what they cover (hatched, red edge) until download.
+  Saving sends `Edits.pages[].redact` and the engine (`src/engine/redact.ts`) applies them last: links, comments and form
+  fields over an area are deleted (a field's value too, unless another widget still shows it), then MuPDF's redaction
+  removes the text, blanks the image pixels and drops drawings inside, and paints the area black. "Also remove the
+  document's properties" (on by default) removes the metadata too. Search is pure (`src/redact/search.ts`) over each
+  page's characters (`engine.findText`), so a phrase is found across a line's end.
+- `/redact-pdf` opens the editor with Redact; the Redact tool is in every editor page's toolbar, and Whiteout's hint
+  points to it.
+- OCR (D-040): `/ocr-pdf`. Tesseract.js 7 (Apache-2.0) runs in its own worker with its WASM (the relaxed-SIMD, SIMD or
+  plain LSTM build, by what the browser supports) and worker script as hashed assets of ours; 23 languages' reading data
+  (tessdata best_int, 0.6–3 MB each) is copied from `@tesseract.js-data/*` packages to `/ocr/tessdata/4.0.0_best_int/`
+  by `scripts/ocr-data.ts` before dev and build. Nothing loads until "Make it searchable". Each page is rendered at 300
+  dpi (less for huge pages), read, and Tesseract's text-only PDF of it is drawn over the page as a form XObject
+  (`TransformOptions.textLayers`, `src/engine/ocr.ts`): invisible text where the words are, the page unchanged. Pages
+  with text are skipped unless asked; up to three languages, the browser's and English to start with; real progress and
+  a Stop button.
+- Verified: unit tests `engine-redact` (search boxes, patterns, every secret gone from MuPDF's and pdf.js's text and the
+  decompressed bytes, image pixels blanked, links/comments/fields removed, turned page, added marks redacted),
+  `engine-ocr` (Tesseract in Node: words land where the picture shows them on an upright and a sideways-stored scan,
+  render unchanged, pdf.js reads them, qpdf-clean) and `redact-ocr` (patterns, items, languages, resolution, every
+  language has its data package). New E2E `redact.spec.ts` and `ocr.spec.ts` (with `watchEgress`; OCR checks its WASM
+  and data came from our origin): 16/16 in Chromium, Firefox, WebKit and Pixel 7; the full suite passed (578, 2 skipped).
+  Checked at 375 px and desktop, and Stop mid-run.
+- Found on the way: tesseract.js 7 passes a language object's data where its code belongs when initialising, so data
+  can't be handed to it directly; it fetches by code from `langPath` instead (D-040).
+- Known gaps: redaction doesn't search or clean bookmarks, attachments or hidden layers' names; tagged PDFs' structure
+  text (alt text) isn't searched. OCR doesn't straighten skewed or turned scans (Tesseract reads mild skew), and reading
+  the same page twice (pages with text, when asked) adds the words again.
+- Next: M8's spike and the owner's D-007 decision.
 
 ### 2026-11-04: Sign and forms, M6 done
 - Engine (D-037): `engine.formFields(doc)` lists each widget (text, check box, radio, combo, list, signature, button)

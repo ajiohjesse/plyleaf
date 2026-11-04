@@ -13,6 +13,7 @@ import type {
   ImageOptions,
   PageSpec,
   FormField,
+  PageMatches,
   TextLine,
   TextSelection,
   TransformOptions,
@@ -194,6 +195,19 @@ export const engine = {
   /** The interactive form fields on every page (one entry per widget), with their values. */
   formFields(id: DocId): Promise<FormField[]> {
     return call(({ remote }) => remote.formFields(id));
+  },
+
+  /**
+   * Every match of a regular expression (as source and flags, see ~/redact/search) in each page's text, page by page,
+   * with a box for each line a match is on.
+   */
+  findText(id: DocId, expression: { source: string; flags: string }): Promise<PageMatches[]> {
+    return call(({ remote }) => remote.findText(id, expression.source, expression.flags));
+  },
+
+  /** How many characters of text each page has (0 for a page that's only a picture, such as a scan). */
+  textAmounts(id: DocId): Promise<number[]> {
+    return call(({ remote }) => remote.textAmounts(id));
   },
 
   /** Builds a new PDF from pages of open documents and blank pages, in order. */

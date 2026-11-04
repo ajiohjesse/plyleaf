@@ -80,6 +80,12 @@ Cloudflare Pages. Package manager: pnpm.
   field values by name in `src/editor/forms.ts`, inputs over the page in `components/editor/FormFields.tsx`. Signatures
   are PNG image items made in `src/components/sign/` (pad, typed fonts, upload) and kept on the device in IndexedDB
   (`src/sign/store.ts`). Pages: `/sign-pdf`, `/fill-pdf-form`. Test form: `interactiveFormPdf()` in `tests/helpers/pdf.ts`.
+- Redact (M7, D-039) is an editor tool: `RedactItem`s become `Edits.pages[].redact`, applied last by `src/engine/redact.ts`;
+  search-and-redact is pure in `src/redact/search.ts` over `engine.findText`. Page: `/redact-pdf`.
+- OCR (M7, D-040): `src/ocr/` (Tesseract.js in its own worker, lazy; `ocr.ts` reads pages into text layers for
+  `transform`'s `textLayers`, drawn by `src/engine/ocr.ts`), `src/components/ocr/OcrWorkspace.tsx`. Reading data is
+  copied to `public/ocr/` (gitignored) by `scripts/ocr-data.ts`, run by `pnpm dev` / `pnpm build`; a new language needs its
+  `@tesseract.js-data/<code>` dependency and an entry in `src/ocr/catalogue.ts`. Test scans: `scannedPdf()`.
 - Page tools (page numbers, watermark, header/footer, Bates): pure placement and tokens in `src/pagetools/`, shared form
   pieces and the live `PagePreview` in `src/components/pagetools/fields.tsx`; each is a `SingleFileTool` saving edits.
 - `src/download/`: output names, `downloadFile` and `saveAs`; `src/components/download/DownloadPanel` is the "done"

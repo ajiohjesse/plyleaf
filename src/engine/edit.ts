@@ -6,6 +6,7 @@ import { KAPPA, lineGeometry } from "~/editor/shapes";
 import { drawOnTop, freeName, ownResources, subDictionary } from "./content";
 import { EngineError } from "./errors";
 import { fillFields } from "./forms";
+import { redactPage } from "./redact";
 import {
   LINE_HEIGHT,
   NOTE_SIZE,
@@ -46,6 +47,10 @@ export function applyEdits(pdf: mupdf.PDFDocument, edits: Edits) {
   if (byPage.size > 0) drawMarks(pdf, byPage, edits.images ?? []);
   for (const { page, annotations = [] } of edits.pages) {
     if (annotations.length > 0) annotate(pdf, page, annotations);
+  }
+  // Last, so whatever is in a redacted area, the page's own or just added, goes.
+  for (const { page, redact = [] } of edits.pages) {
+    if (redact.length > 0) redactPage(pdf, page, redact);
   }
 }
 

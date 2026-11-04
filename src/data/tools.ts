@@ -225,7 +225,8 @@ export const tools: Tool[] = [
     name: "Redact PDF",
     description: "Remove sensitive text for good.",
     category: "edit-sign",
-    keywords: ["blackout", "censor", "hide"],
+    keywords: ["blackout", "censor", "hide", "remove", "search and redact", "sanitize"],
+    available: true,
   },
 
   // Optimize & secure
@@ -242,7 +243,8 @@ export const tools: Tool[] = [
     name: "OCR PDF",
     description: "Make scanned PDFs searchable.",
     category: "optimize-secure",
-    keywords: ["scan", "recognize", "searchable"],
+    keywords: ["scan", "recognize", "searchable", "text recognition", "copy text"],
+    available: true,
   },
   {
     slug: "protect-pdf",

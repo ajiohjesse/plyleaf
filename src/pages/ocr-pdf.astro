@@ -1,0 +1,55 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { OcrWorkspace } from "~/components/ocr/OcrWorkspace";
+---
+
+<ToolPage
+  slug="ocr-pdf"
+  title="OCR PDF: make a scanned PDF searchable, free and private"
+  description="Turn a scanned PDF or a photo of a document into a searchable PDF you can select and copy text from, in 23 languages, in your browser. Free with no limits and no account, and your file is never uploaded."
+  heading="OCR PDF"
+  intro="Make a scanned PDF searchable: Plyleaf reads the words on each page and puts them over the picture, so you can search, select and copy them. Free, no sign-up, and your file never leaves this device."
+  steps={[
+    {
+      title: "Add your PDF",
+      text: "A scan, or a photo of a document. Choose it, drop it anywhere on the page, or paste it.",
+    },
+    {
+      title: "Choose its languages",
+      text: "Up to three. Pages that already have text are left as they are, unless you ask to read them too.",
+    },
+    {
+      title: "Download",
+      text: "The pages look exactly as before, with text you can search, select and copy. No account needed.",
+    },
+  ]}
+  faqs={[
+    {
+      question: "What does OCR do to my PDF?",
+      answer:
+        "It reads the words in the pictures of the pages (optical character recognition) and adds them to each page as invisible text in the same place. Nothing you can see changes: the scan stays as it was, and now search, select, copy and screen readers work.",
+    },
+    {
+      question: "Which languages can it read?",
+      answer:
+        "Arabic, Chinese (Simplified and Traditional), Czech, Dutch, English, French, German, Greek, Hebrew, Hindi, Indonesian, Italian, Japanese, Korean, Polish, Portuguese, Russian, Spanish, Swedish, Turkish, Ukrainian and Vietnamese. Choose the ones the document is in, up to three.",
+    },
+    {
+      question: "Is my file uploaded to read it?",
+      answer:
+        "No. The reading happens in your browser. What's downloaded is the reading data for the languages you choose (about 1 to 3 MB each), from Plyleaf, the first time you use them; your file never goes over the internet.",
+    },
+    {
+      question: "How accurate is it?",
+      answer:
+        "Very good on clear, printed text scanned straight. Small print, blurry photos, unusual fonts, tables and handwriting read less well. For the best results, scan at 300 dpi; a photo taken with Scan to PDF works too.",
+    },
+    {
+      question: "Is it really free?",
+      answer:
+        "Yes. There is no paid plan, no page limit and no watermark. Plyleaf can be free because your own browser does the work.",
+    },
+  ]}
+>
+  <OcrWorkspace client:load />
+</ToolPage>
