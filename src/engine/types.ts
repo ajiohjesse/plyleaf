@@ -303,8 +303,54 @@ export interface TextLine {
   color: Rgb;
 }
 
+/** The kinds of interactive form field (AcroForm widgets) a page can have. */
+export type FormFieldType = "text" | "checkbox" | "radio" | "combobox" | "listbox" | "signature" | "button";
+
+/**
+ * One widget of an interactive form field, as the page shows it. A field can have several widgets (a radio group's
+ * buttons, a name repeated on every page); they share its `name` and value.
+ */
+export interface FormField {
+  page: number;
+  /** Its place among the page's widgets: with `page`, how edits name it. */
+  index: number;
+  /** The field's full name. */
+  name: string;
+  /** What readers show as its name: its tooltip, or its name. */
+  label: string;
+  type: FormFieldType;
+  box: Box;
+  /**
+   * Text: what's typed. Check box and radio button: the field's state, "Off" or the name of the state that's on.
+   * Combo box and list box: the chosen option's export value ("" for none).
+   */
+  value: string;
+  /** A check box's or radio button's state when it's this one that's on. */
+  onState?: string;
+  /** A choice field's options. */
+  options?: { value: string; label: string }[];
+  multiline?: boolean;
+  /** The most characters a text field takes (0: no limit). */
+  maxLength?: number;
+  /** A text field that hides what's typed. */
+  password?: boolean;
+  readOnly: boolean;
+}
+
+/**
+ * A value for a form field's widget: text or an option's export value for text and choice fields, whether it's on for
+ * a check box, and for a radio button, true to turn this one on.
+ */
+export interface FieldValue {
+  page: number;
+  index: number;
+  value: string | boolean;
+}
+
 /** Marks to draw on pages and annotations to add to them, by page index. */
 export interface Edits {
+  /** Form fields filled in first, so flattening draws what's in them. */
+  fields?: FieldValue[];
   pages: {
     page: number;
     marks: Mark[];

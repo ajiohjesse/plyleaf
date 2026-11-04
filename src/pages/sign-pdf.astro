@@ -1,0 +1,54 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { EditorWorkspace } from "~/components/editor/EditorWorkspace";
+---
+
+<ToolPage
+  slug="sign-pdf"
+  wide
+  title="Sign PDF: add your signature, initials and the date online, free"
+  description="Draw, type or upload your signature and put it on a PDF in your browser, with your initials and today's date. Saved signatures stay on your device. Free, no account, no watermark, and your file is never uploaded."
+  heading="Sign PDF"
+  intro="Draw your signature, type it in a handwriting style, or use a photo of it, and put it anywhere on the pages, with your initials and the date. Free, no sign-up, no watermark, and your file never leaves this device."
+  steps={[
+    { title: "Add your PDF", text: "Choose it, drop it anywhere on the page, or paste it." },
+    {
+      title: "Make your signature",
+      text: "Draw it, type it or upload a picture of it. Then click where it goes, and move or resize it.",
+    },
+    { title: "Download", text: "Your signature is written into the page. No account, no watermark." },
+  ]}
+  faqs={[
+    {
+      question: "Is it really free?",
+      answer:
+        "Yes. There is no paid plan, no daily limit and no watermark. Plyleaf can be free because your own browser does the work.",
+    },
+    {
+      question: "Where is my signature kept?",
+      answer:
+        "Only in this browser on this device, if you tick “Save it on this device”. It's never uploaded, there's no account, and you can forget a saved signature at any time with the bin button next to it.",
+    },
+    {
+      question: "How do I sign without a mouse?",
+      answer:
+        "Type your name and choose a handwriting style, or upload a photo or scan of your signature on paper: Plyleaf takes out the paper so only the ink shows. Then place it from the keyboard: press Enter on a page, and move it with the arrow keys.",
+    },
+    {
+      question: "What about forms with a signature box?",
+      answer:
+        "Signature fields show “Sign here”. Press it and your signature is fitted into the box. To fill in the rest of a form, use the same editor's fields, or Fill PDF form.",
+    },
+    {
+      question: "Is this a digital signature?",
+      answer:
+        "No. It puts a picture of your signature on the page, which is what most forms and agreements ask for. It isn't a certificate-based digital signature that proves who signed and that the file hasn't changed since.",
+    },
+    {
+      question: "Is my PDF uploaded?",
+      answer: "No. It's signed right here in your browser and never goes over the internet.",
+    },
+  ]}
+>
+  <EditorWorkspace tool="sign" suffix="signed" client:load />
+</ToolPage>

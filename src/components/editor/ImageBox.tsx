@@ -41,7 +41,13 @@ export function ImageBox({ item, asset, scale, selected, onResize, ...handlers }
       type="button"
       data-item={item.id}
       data-kind="image"
-      aria-label={`Image: ${asset?.name ?? "picture"}`}
+      aria-label={
+        item.role === "signature"
+          ? "Signature"
+          : item.role === "initials"
+            ? "Initials"
+            : `Image: ${asset?.name ?? "picture"}`
+      }
       aria-pressed={selected}
       className="absolute block cursor-move border-0 bg-transparent p-0 select-none"
       style={{

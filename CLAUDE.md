@@ -76,6 +76,10 @@ Cloudflare Pages. Package manager: pnpm.
 - Editor (M5, D-034): pure model in `src/editor/` (items in PDF points from the shown page's top-left, undo history);
   UI in `src/components/editor/` (`EditorWorkspace` → `Editor` → `EditorPage` + item components). Saving is
   `engine.transform(doc, { edits })` (`src/engine/edit.ts`). E2E steps: `tests/helpers/editor.ts`.
+- Sign and forms (M6, D-037/D-038) are editor tools too: `engine.formFields` + `Edits.fields` (`src/engine/forms.ts`),
+  field values by name in `src/editor/forms.ts`, inputs over the page in `components/editor/FormFields.tsx`. Signatures
+  are PNG image items made in `src/components/sign/` (pad, typed fonts, upload) and kept on the device in IndexedDB
+  (`src/sign/store.ts`). Pages: `/sign-pdf`, `/fill-pdf-form`. Test form: `interactiveFormPdf()` in `tests/helpers/pdf.ts`.
 - Page tools (page numbers, watermark, header/footer, Bates): pure placement and tokens in `src/pagetools/`, shared form
   pieces and the live `PagePreview` in `src/components/pagetools/fields.tsx`; each is a `SingleFileTool` saving edits.
 - `src/download/`: output names, `downloadFile` and `saveAs`; `src/components/download/DownloadPanel` is the "done"

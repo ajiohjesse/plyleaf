@@ -1,7 +1,8 @@
 import { memo, useEffect, useRef, useState } from "react";
 import type { Point } from "~/editor/shapes";
 import { engine } from "~/engine/client";
-import type { PageInfo, TextLine } from "~/engine/types";
+import type { FormField, PageInfo, TextLine } from "~/engine/types";
+import type { FieldInput } from "~/editor/forms";
 import type { Asset, AssetId, Item, ItemId } from "~/editor/items";
 import { PageCanvas } from "~/components/thumbnails/PageCanvas";
 import type { Observe } from "~/components/thumbnails/ThumbnailGrid";
@@ -13,12 +14,27 @@ import { NoteBox } from "./NoteBox";
 import { ShapeBox } from "./ShapeBox";
 import { StampBox } from "./StampBox";
 import { WhiteoutBox } from "./WhiteoutBox";
+import { FormFields } from "./FormFields";
+import { TickBox } from "./TickBox";
 import { TextBox } from "./TextBox";
 
 /** Pages are rendered at most this many device pixels wide; zoomed further, the image is scaled up. */
 const MAX_RENDER = 1600;
 
-export type Tool = "select" | "text" | "retext" | "markup" | "draw" | "note" | "stamp" | "shape" | "whiteout";
+export type Tool =
+  | "select"
+  | "text"
+  | "retext"
+  | "markup"
+  | "draw"
+  | "note"
+  | "stamp"
+  | "shape"
+  | "whiteout"
+  | "sign"
+  | "initials"
+  | "date"
+  | "tick";
 
 /** Tools that draw by dragging across the page (a click places something of a set size). */
 const DRAWING: ReadonlySet<Tool> = new Set(["markup", "draw", "shape", "whiteout"]);
@@ -35,6 +51,10 @@ export interface PageHandlers {
   onPickLine: (page: number, line: TextLine) => void;
   /** The user pressed the page itself (not an item) with the select tool. */
   onBackground: () => void;
+  /** The user filled in a form field (by name: its widgets share the value). */
+  onFieldChange: (name: string, value: FieldInput) => void;
+  /** The user pressed an empty signature field's "Sign here". */
+  onSignField: (field: FormField) => void;
   handlersFor: (item: Item) => ItemHandlers & {
     onText: (text: string) => void;
     onEndEdit: () => void;
@@ -56,6 +76,11 @@ interface Props extends PageHandlers {
   observeNear: Observe;
   observeOnScreen: Observe;
   assets: ReadonlyMap<AssetId, Asset>;
+  /** The page's interactive form fields, and what's been filled in (by field name). */
+  fields: readonly FormField[];
+  fieldValues: ReadonlyMap<string, FieldInput>;
+  /** Names this document's radio groups apart from others'. */
+  group: string;
   /** Says when the page comes on screen or goes off it. */
   onVisible: (visible: boolean) => void;
 }
@@ -176,6 +201,17 @@ export const EditorPage = memo(function EditorPage(props: Props) {
       ) : (
         <div className="absolute inset-0" onPointerDown={() => props.onBackground()} />
       )}
+      {props.fields.length > 0 && (
+        <FormFields
+          fields={props.fields.filter((field) => !signedHere(field, items))}
+          values={props.fieldValues}
+          scale={scale}
+          active={tool === "select"}
+          group={props.group}
+          onChange={props.onFieldChange}
+          onSign={props.onSignField}
+        />
+      )}
       {/* Rewritten lines: the old text is covered here (in the PDF it's taken out). */}
       {items.map((item) =>
         item.kind === "text" && item.replaces ? (
@@ -213,6 +249,18 @@ export const EditorPage = memo(function EditorPage(props: Props) {
           ))}
       {items.map((item) => {
         const { onText, onEndEdit, onResize, ...handlers } = props.handlersFor(item);
+        if (item.kind === "tick") {
+          return (
+            <TickBox
+              key={item.id}
+              item={item}
+              scale={scale}
+              selected={item.id === selected}
+              onResize={onResize}
+              {...handlers}
+            />
+          );
+        }
         if (item.kind === "stamp") {
           return (
             <StampBox
@@ -295,3 +343,14 @@ export const EditorPage = memo(function EditorPage(props: Props) {
     </li>
   );
 });
+
+/** A signature field with a signature put in it (its middle inside the field), which no longer needs "Sign here". */
+function signedHere(field: FormField, items: readonly Item[]) {
+  if (field.type !== "signature") return false;
+  const [x0, y0, x1, y1] = field.box;
+  return items.some((item) => {
+    if (item.kind !== "image" || item.role !== "signature") return false;
+    const [x, y] = [item.x + item.width / 2, item.y + item.height / 2];
+    return x >= x0 && x <= x1 && y >= y0 && y <= y1;
+  });
+}

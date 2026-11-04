@@ -38,3 +38,30 @@ export function lineGeometry(
     head: [tip, { x: base.x + side.x, y: base.y + side.y }, { x: base.x - side.x, y: base.y - side.y }],
   };
 }
+
+/** The marks for ticking a box on a form: a check mark, a cross or a dot. */
+export type TickSymbol = "check" | "cross" | "dot";
+
+/** A tick's line width, for its size. */
+export const tickWidth = (size: number) => Math.max(1, size * 0.14);
+
+/**
+ * The lines of a check mark or cross filling a `size`-point square from (x, y), each from one point to the next. A
+ * dot has none: it's a filled circle in the middle half of the square.
+ */
+export function tickLines(symbol: TickSymbol, x: number, y: number, size: number): [Point, Point][] {
+  const at = (u: number, v: number): Point => ({ x: x + u * size, y: y + v * size });
+  if (symbol === "check") {
+    return [
+      [at(0.12, 0.55), at(0.4, 0.82)],
+      [at(0.4, 0.82), at(0.88, 0.18)],
+    ];
+  }
+  if (symbol === "cross") {
+    return [
+      [at(0.18, 0.18), at(0.82, 0.82)],
+      [at(0.82, 0.18), at(0.18, 0.82)],
+    ];
+  }
+  return [];
+}

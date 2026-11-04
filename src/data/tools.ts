@@ -209,14 +209,16 @@ export const tools: Tool[] = [
     name: "Sign PDF",
     description: "Draw, type or upload your signature.",
     category: "edit-sign",
-    keywords: ["signature", "esign"],
+    keywords: ["signature", "esign", "initials", "date"],
+    available: true,
   },
   {
     slug: "fill-pdf-form",
     name: "Fill PDF form",
     description: "Fill in forms, interactive or not.",
     category: "edit-sign",
-    keywords: ["form", "acroform"],
+    keywords: ["form", "acroform", "fillable", "tick", "checkbox"],
+    available: true,
   },
   {
     slug: "redact-pdf",

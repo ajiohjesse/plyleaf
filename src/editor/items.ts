@@ -1,6 +1,7 @@
 // What the user has added in the editor, and how it becomes the engine's edits. Items are measured like marks: PDF
 // points from the top-left of the page as it's shown. The list is in drawing order, so later items are on top.
 import type { Annotation, Box, Edits, Mark, Quad, Rgb, ShapeKind, StandardFont, TextLine } from "~/engine/types";
+import { tickLines, tickWidth, type TickSymbol } from "./shapes";
 
 export { NOTE_SIZE, STAMP_RATIO } from "~/engine/types";
 
@@ -60,6 +61,8 @@ export interface ImageItem {
   height: number;
   /** The picture, from the editor's assets. */
   asset: AssetId;
+  /** A signature or initials (an image made in the editor or saved on this device). */
+  role?: "signature" | "initials";
 }
 
 export interface ShapeItem {
@@ -170,7 +173,27 @@ export const stampLabel = (name: string) => STAMPS.find((stamp) => stamp.name ==
 export const STAMP_WIDTH = 160;
 export const MIN_STAMP_WIDTH = 40;
 
-export type Item = TextItem | ImageItem | ShapeItem | WhiteoutItem | MarkupItem | InkItem | NoteItem | StampItem;
+/** A tick in a box of a form that isn't interactive: a check mark, a cross or a dot filling a square from (x, y). */
+export interface TickItem {
+  id: ItemId;
+  kind: "tick";
+  page: number;
+  x: number;
+  y: number;
+  size: number;
+  symbol: TickSymbol;
+  color: Rgb;
+}
+
+/** How new ticks look. */
+export type TickStyle = Pick<TickItem, "symbol" | "size" | "color">;
+
+export const DEFAULT_TICK: TickStyle = { symbol: "check", size: 14, color: [0, 0, 0] };
+export const MIN_TICK_SIZE = 6;
+export const MAX_TICK_SIZE = 72;
+
+export type Item =
+  TextItem | ImageItem | ShapeItem | WhiteoutItem | MarkupItem | InkItem | NoteItem | StampItem | TickItem;
 
 /** How new strokes look. */
 export type InkStyle = Pick<InkItem, "color" | "width" | "opacity">;
@@ -288,7 +311,8 @@ export type Patch =
   | Partial<Omit<MarkupItem, "id" | "kind">>
   | Partial<Omit<InkItem, "id" | "kind">>
   | Partial<Omit<NoteItem, "id" | "kind">>
-  | Partial<Omit<StampItem, "id" | "kind">>;
+  | Partial<Omit<StampItem, "id" | "kind">>
+  | Partial<Omit<TickItem, "id" | "kind">>;
 
 export function updateItem(items: readonly Item[], id: ItemId, patch: Patch): Item[] {
   return items.map((item) => (item.id === id ? ({ ...item, ...patch } as Item) : item));
@@ -332,7 +356,30 @@ export function toEdits(items: readonly Item[], assets: ReadonlyMap<AssetId, Ass
   const images: Uint8Array[] = [];
   const imageIndex = new Map<AssetId, number>();
 
-  function toMark(item: Exclude<Item, MarkupItem | InkItem | NoteItem | StampItem>): Mark {
+  function toMarks(item: Exclude<Item, MarkupItem | InkItem | NoteItem | StampItem>): Mark[] {
+    if (item.kind !== "tick") return [toMark(item)];
+    const { x, y, size, symbol, color } = item;
+    if (symbol === "dot") {
+      const [width, height] = [size / 2, size / 2];
+      const [left, top] = [x + size / 4, y + size / 4];
+      return [
+        { type: "shape", shape: "ellipse", x: left, y: top, width, height, stroke: null, fill: color, lineWidth: 0 },
+      ];
+    }
+    return tickLines(symbol, x, y, size).map(([from, to]) => ({
+      type: "shape",
+      shape: "line",
+      x: from.x,
+      y: from.y,
+      width: to.x - from.x,
+      height: to.y - from.y,
+      stroke: color,
+      fill: null,
+      lineWidth: tickWidth(size),
+    }));
+  }
+
+  function toMark(item: Exclude<Item, MarkupItem | InkItem | NoteItem | StampItem | TickItem>): Mark {
     if (item.kind === "text") {
       const { x, y, text, font, bold, italic, size, color } = item;
       return { type: "text", x, y, text, font, bold, italic, size, color };
@@ -379,7 +426,7 @@ export function toEdits(items: readonly Item[], assets: ReadonlyMap<AssetId, Ass
                 };
       annotations.set(item.page, [...(annotations.get(item.page) ?? []), annotation]);
     } else {
-      byPage.set(item.page, [...(byPage.get(item.page) ?? []), toMark(item)]);
+      byPage.set(item.page, [...(byPage.get(item.page) ?? []), ...toMarks(item)]);
     }
   }
   const pages = [...new Set([...byPage.keys(), ...annotations.keys(), ...removals.keys()])].sort((a, b) => a - b);

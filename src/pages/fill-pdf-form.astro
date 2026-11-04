@@ -1,0 +1,52 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { EditorWorkspace } from "~/components/editor/EditorWorkspace";
+---
+
+<ToolPage
+  slug="fill-pdf-form"
+  wide
+  title="Fill PDF form: fill in any form online and sign it, free"
+  description="Fill in a PDF form's fields, or type and tick on forms that have none, then sign and date it, in your browser. Free, no account, no watermark, and your file is never uploaded."
+  heading="Fill PDF form"
+  intro="Type into a form's fields, tick its boxes and pick its options. A form without fields works too: click anywhere to type or tick. Then sign, date and download. Free, no sign-up, no watermark, and your file never leaves this device."
+  steps={[
+    { title: "Add your PDF form", text: "Choose it, drop it anywhere on the page, or paste it." },
+    {
+      title: "Fill it in",
+      text: "Type in its fields and tick its boxes, or, on a printed form, click where the words or ticks go.",
+    },
+    {
+      title: "Download",
+      text: "Your answers are saved in the form. Flatten it if nobody should change them. No account, no watermark.",
+    },
+  ]}
+  faqs={[
+    {
+      question: "Is it really free?",
+      answer:
+        "Yes. There is no paid plan, no daily limit and no watermark. Plyleaf can be free because your own browser does the work.",
+    },
+    {
+      question: "What if my form has no fields to click?",
+      answer:
+        "Many forms are just printed pages. Plyleaf opens those ready to type: click where an answer goes and type it, use Add tick for check boxes, Add date for today's date and Sign for your signature. Everything can be moved until you download.",
+    },
+    {
+      question: "Can the answers be changed later?",
+      answer:
+        "Answers typed into a form's fields stay in those fields, so any PDF reader can change them. Tick Flatten before downloading to make them part of the page instead, so they can't be changed and look the same everywhere.",
+    },
+    {
+      question: "Which fields work?",
+      answer:
+        "Text boxes (one line or several), check boxes, radio buttons, drop-down lists and list boxes. Read-only fields stay as they are. Signature fields show “Sign here” and take your signature as a picture.",
+    },
+    {
+      question: "Is my form uploaded?",
+      answer: "No. It's filled in right here in your browser and never goes over the internet.",
+    },
+  ]}
+>
+  <EditorWorkspace fillForm suffix="filled" client:load />
+</ToolPage>

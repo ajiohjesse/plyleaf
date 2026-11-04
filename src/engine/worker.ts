@@ -14,6 +14,7 @@ import type {
   ExtractedImage,
   ImageOptions,
   PageSpec,
+  FormField,
   TextLine,
   TextSelection,
   TransformOptions,
@@ -153,6 +154,11 @@ const api = {
   async textLines(id: DocId, page: number): Promise<TextLine[]> {
     const ops = await loading;
     return ops.textLines(textOf(ops, id, page));
+  },
+
+  async formFields(id: DocId): Promise<FormField[]> {
+    const ops = await loading;
+    return ops.formFields(get(id));
   },
 
   async assemble(pages: PageSpec[]): Promise<Uint8Array<ArrayBuffer>> {

@@ -26,7 +26,10 @@ export function transform(
   try {
     // Edits first, so what was added is flattened, greyed and compressed with the rest of the page.
     if (options.edits) applyEdits(copy, options.edits);
-    if (options.flatten) copy.bake(options.flatten === "all", true);
+    if (options.flatten) {
+      blankUnsignedSignatures(copy);
+      copy.bake(options.flatten === "all", true);
+    }
     if (options.metadata) changeMetadata(copy, options.metadata);
     if (options.grayscale) toGrey(copy);
     if (options.compress && options.compress !== "low") recompressImages(copy, IMAGE_LEVELS[options.compress]);
@@ -40,6 +43,34 @@ export function transform(
   } finally {
     copy.destroy();
   }
+}
+
+/**
+ * Gives empty signature fields an empty appearance before flattening. Without one MuPDF draws its own "sign here" flag,
+ * which flattening would print on the page.
+ */
+function blankUnsignedSignatures(pdf: mupdf.PDFDocument) {
+  for (let index = 0; index < pdf.countPages(); index++) {
+    const page = pdf.loadPage(index);
+    try {
+      for (const widget of page.getWidgets()) {
+        if (widget.getFieldType() !== "signature" || widget.getValue() !== "") continue;
+        const [x0, y0, x1, y1] = rectOf(widget.getObject());
+        const blank = pdf.addStream("", { Type: "XObject", Subtype: "Form", BBox: [0, 0, x1 - x0, y1 - y0] });
+        widget.getObject().put("AP", pdf.newDictionary());
+        widget.getObject().get("AP").put("N", blank);
+      }
+    } finally {
+      page.destroy();
+    }
+  }
+}
+
+function rectOf(object: mupdf.PDFObject): [number, number, number, number] {
+  const rect = object.get("Rect");
+  if (!rect.isArray()) return [0, 0, 0, 0];
+  const [a, b, c, d] = [0, 1, 2, 3].map((i) => rect.get(i).asNumber()) as [number, number, number, number];
+  return [Math.min(a, c), Math.min(b, d), Math.max(a, c), Math.max(b, d)];
 }
 
 /** Sets or removes document information (see TransformOptions.metadata). */

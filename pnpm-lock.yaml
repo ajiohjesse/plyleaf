@@ -184,6 +184,15 @@ importers:
       '@fontsource-variable/outfit':
         specifier: ^5.3.0
         version: 5.3.0
+      '@fontsource/caveat':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/dancing-script':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/sacramento':
+        specifier: ^5.3.0
+        version: 5.3.0
       '@tailwindcss/vite':
         specifier: ^4.3.3
         version: 4.3.3(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
@@ -741,6 +750,15 @@ packages:
 
   '@fontsource-variable/outfit@5.3.0':
     resolution: {integrity: sha512-fPb5XnYK0k7SbR++HEmm4+ZqDszmLKQ+sPRUr8oQ/KNC0vy6r6hazJFe8iYozv4cqlHbvJ/JECkJWrfDodUMVQ==}
+
+  '@fontsource/caveat@5.3.0':
+    resolution: {integrity: sha512-eHTfzQxFSW9ABERRLNruHoNJmKed2J7pqTUc5lp4a4POMgXGKpxmWj3d9Hz10kmAg6iuTTLe6UagbA4bnsmfQw==}
+
+  '@fontsource/dancing-script@5.3.0':
+    resolution: {integrity: sha512-/FFbz4ZCNN+eG2a6phkZB41iKmyCC6rq2blA/kG9OFeI3/tpzLNazND1bBdEnogLhpfg7o4NfauTbEEYSpSUGg==}
+
+  '@fontsource/sacramento@5.3.0':
+    resolution: {integrity: sha512-KkqN52aTsJ0pSBva/NREqFljs0M1TwMIpNcqdSQc2EKR/mVU1CvM2dazf9eG19rHMTIssjbia83nGG705SlD1w==}
 
   '@img/colour@1.1.0':
     resolution: {integrity: sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==}
@@ -3172,6 +3190,12 @@ snapshots:
   '@fontsource-variable/figtree@5.3.0': {}
 
   '@fontsource-variable/outfit@5.3.0': {}
+
+  '@fontsource/caveat@5.3.0': {}
+
+  '@fontsource/dancing-script@5.3.0': {}
+
+  '@fontsource/sacramento@5.3.0': {}
 
   '@img/colour@1.1.0': {}
 
