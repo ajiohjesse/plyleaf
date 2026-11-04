@@ -1,0 +1,57 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { EditorWorkspace } from "~/components/editor/EditorWorkspace";
+---
+
+<ToolPage
+  slug="redact-pdf"
+  wide
+  title="Redact PDF: remove sensitive text and images for good, free"
+  description="Black out names, numbers and anything else in a PDF and remove it from the file for real, in your browser. Find and redact every email address or phone number at once. Free, no account, and your file is never uploaded."
+  heading="Redact PDF"
+  intro="Mark what has to go, by drawing over it, clicking a word, or finding every match at once, and download a copy with it taken out of the file, not just covered. Free, no sign-up, and your file never leaves this device."
+  steps={[
+    { title: "Add your PDF", text: "Choose it, drop it anywhere on the page, or paste it." },
+    {
+      title: "Mark what to remove",
+      text: "Drag over it, click a word, or find words, email addresses, phone numbers or account numbers and mark them all.",
+    },
+    {
+      title: "Download",
+      text: "Everything marked is removed from the file and a black box put in its place. Check it, then share it.",
+    },
+  ]}
+  faqs={[
+    {
+      question: "Is the text really gone, or just covered?",
+      answer:
+        "Really gone. The words under a redaction are deleted from the page, not hidden under a box, so they can't be selected, copied, searched or recovered. Pictures lose the pixels under the box, and drawings, comments, links and form fields inside it are removed too.",
+    },
+    {
+      question: "How do I redact the same thing everywhere?",
+      answer:
+        "Type the words in “Find words to redact” and press Mark all, or press Email addresses, Phone numbers, Account numbers (card, bank and ID numbers) or Dates. Every match on every page is marked. Check them before you download: you can delete a mark, move it or make it bigger.",
+    },
+    {
+      question: "Does it work on scanned documents?",
+      answer:
+        "Draw boxes over what to remove and it's cut out of the picture. A scan has no text to search, so finding words needs it made searchable first, with OCR PDF.",
+    },
+    {
+      question: "What about the document's hidden information?",
+      answer:
+        "With “Also remove the document's properties”, on unless you untick it, the title, author and other document information are taken out too, as they often name people or the original file.",
+    },
+    {
+      question: "Is it really free?",
+      answer:
+        "Yes. There is no paid plan, no daily limit and no watermark. Plyleaf can be free because your own browser does the work.",
+    },
+    {
+      question: "Is my PDF uploaded?",
+      answer: "No. It's redacted right here in your browser and never goes over the internet.",
+    },
+  ]}
+>
+  <EditorWorkspace tool="redact" suffix="redacted" client:load />
+</ToolPage>

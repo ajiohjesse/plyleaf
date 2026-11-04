@@ -7,6 +7,7 @@ import { formatDate, type DateFormat } from "~/editor/dates";
 import { changedFields, fieldEdits, type FieldInput } from "~/editor/forms";
 import type { Box, FormField } from "~/engine/types";
 import { fittedSize, placedSize, type SignatureKind } from "~/sign/ink";
+import { queryExpression, type SearchQuery } from "~/redact/search";
 import { SignPanel } from "~/components/sign/SignPanel";
 import { useSignatures, type Signature } from "~/components/sign/useSignatures";
 import {
@@ -32,6 +33,8 @@ import {
   STAMP_WIDTH,
   STAMPS,
   quadBounds,
+  alreadyRedacted,
+  redactionOver,
   updateItem,
   WHITE,
   type Asset,
@@ -65,6 +68,7 @@ import {
   ImageIcon,
   InitialsIcon,
   PenIcon,
+  RedactIcon,
   RedoIcon,
   SelectIcon,
   ShapeIcon,
@@ -83,6 +87,7 @@ import {
   InkOptions,
   MarkupOptions,
   NoteOptions,
+  RedactOptions,
   ShapeOptions,
   StampOptions,
   TextOptions,
@@ -134,6 +139,9 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
   const [fields, setFields] = useState<FormField[] | null>(doc.info.formFields > 0 ? null : []);
   const [fieldValues, setFieldValues] = useState<ReadonlyMap<string, FieldInput>>(new Map());
   const [flatten, setFlatten] = useState(false);
+  // With redactions, the document's properties (title, author…) are removed too unless the user says not to.
+  const [removeProperties, setRemoveProperties] = useState(true);
+  const [searching, setSearching] = useState(false);
   const { signatures, storage, add: addSignature, remove: forgetSignature } = useSignatures();
   // The signature (and initials) the Sign tool puts down: the one chosen, or else the newest.
   const [chosen, setChosen] = useState<Record<SignatureKind, string | null>>({ signature: null, initials: null });
@@ -346,6 +354,7 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
       return;
     }
     if (tool === "markup") return void markUp(page, { x, y }, { x, y }, true, true);
+    if (tool === "redact") return void redactWordAt(page, x, y);
     if (tool === "shape") {
       return add({ id: newId(), kind: "shape", page, ...shapeStyle, ...clickedShape(shapeStyle, x, y) });
     }
@@ -361,6 +370,62 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
     setSelected(item.id);
     setEditing(item.id);
     setTool("select");
+  }
+
+  /** Redact tool, a click: the word there, or a box of the usual size where there's no text (a scan, a picture). */
+  async function redactWordAt(page: number, x: number, y: number) {
+    let selection;
+    try {
+      selection = await engine.selectText(doc.info.id, page, { x, y }, { x, y }, true);
+    } catch (failure) {
+      return setError(operationFailureMessage(failure));
+    }
+    const info = doc.info.pages[page]!;
+    const item: Item =
+      selection.quads.length > 0
+        ? redactionOver(page, quadBounds(selection.quads), info, selection.text)
+        : { id: newId(), kind: "redact", page, ...clickedShape({ ...shapeStyle, shape: "rectangle" }, x, y) };
+    setNotice(null);
+    update((list) => [...list, item]);
+  }
+
+  /** Marks every match of a search for redaction, as one step. */
+  async function redactMatches(query: SearchQuery) {
+    const expression = queryExpression(query);
+    if (!expression) return;
+    setSearching(true);
+    setError(null);
+    try {
+      const found = await engine.findText(doc.info.id, expression);
+      const marked: Item[] = [];
+      let matches = 0;
+      for (const { page, matches: onPage } of found) {
+        for (const match of onPage) {
+          matches++;
+          for (const box of match.boxes) {
+            if (alreadyRedacted([...items, ...marked], page, box)) continue;
+            marked.push(redactionOver(page, box, doc.info.pages[page]!, match.text));
+          }
+        }
+      }
+      const pages = new Set(marked.map((item) => item.page)).size;
+      if (matches === 0) {
+        setNotice(
+          "Nothing found. If this is a scan, its pages are pictures of text with nothing to search: make it searchable with OCR PDF first, or draw boxes over what to redact.",
+        );
+      } else if (marked.length === 0) {
+        setNotice(`All ${plural(matches, "match", "matches")} found are already marked.`);
+      } else {
+        update((list) => [...list, ...marked]);
+        setNotice(
+          `Marked ${plural(matches, "match", "matches")} on ${plural(pages, "page")}. Check them, then download. Undo takes them back, and a mark you select can be deleted.`,
+        );
+      }
+    } catch (failure) {
+      setError(operationFailureMessage(failure));
+    } finally {
+      setSearching(false);
+    }
   }
 
   const handlers: PageHandlers = {
@@ -396,9 +461,13 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
       else if (tool === "whiteout") {
         const box = drawnShape({ ...shapeStyle, shape: "rectangle" }, from, to);
         item = { id, kind: "whiteout", page, ...box, color: coverColour };
+      } else if (tool === "redact") {
+        item = { id, kind: "redact", page, ...drawnShape({ ...shapeStyle, shape: "rectangle" }, from, to) };
       } else return;
       if (!done) return setSketch(item);
       setSketch(null);
+      // Redacting is usually several areas, so the tool stays on.
+      if (item.kind === "redact") return update((list) => [...list, item]);
       add(item);
     },
     onBackground: () => {
@@ -557,7 +626,11 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
     setError(null);
     try {
       const edits = { ...toEdits(items, assets), fields: fieldEdits(fields ?? [], fieldValues) };
-      const bytes = await engine.transform(doc.info.id, { edits, ...(flatten && { flatten: "all" as const }) });
+      const bytes = await engine.transform(doc.info.id, {
+        edits,
+        ...(flatten && { flatten: "all" as const }),
+        ...(redactions > 0 && removeProperties && { metadata: "remove" as const }),
+      });
       onSaved(new Blob([bytes], { type: "application/pdf" }), outputName(doc.name, suffix));
     } catch (failure) {
       setError(operationFailureMessage(failure));
@@ -567,6 +640,7 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
   }
 
   const filledIn = changedFields(fields ?? [], fieldValues).length;
+  const redactions = items.filter((item) => item.kind === "redact").length;
   const changes = items.filter((item) => !isEmpty(item)).length + filledIn;
   // Flattening is offered once there's something it would fix in place: fields, or annotations old or new.
   const flattenable =
@@ -577,6 +651,7 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
   const textOptions = tool === "text" || selectedItem?.kind === "text";
   const shapeOptions = tool === "shape" || selectedItem?.kind === "shape";
   const whiteoutOptions = tool === "whiteout" || selectedItem?.kind === "whiteout";
+  const redactOptions = tool === "redact" || selectedItem?.kind === "redact";
   const markupOptions = tool === "markup" || selectedItem?.kind === "markup";
   const inkOptions = tool === "draw" || selectedItem?.kind === "ink";
   const noteOptions = tool === "note" || selectedItem?.kind === "note";
@@ -713,6 +788,16 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
             }}
           >
             <WhiteoutIcon />
+          </ToolButton>
+          <ToolButton
+            label="Redact"
+            pressed={tool === "redact"}
+            onClick={() => {
+              setTool(tool === "redact" ? "select" : "redact");
+              setSelected(null);
+            }}
+          >
+            <RedactIcon />
           </ToolButton>
           <ToolButton
             label="Edit text"
@@ -884,6 +969,13 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
             onRemove={removeSelected}
           />
         )}
+        {redactOptions && (
+          <RedactOptions
+            searching={searching}
+            onSearch={(query) => void redactMatches(query)}
+            onRemove={removeSelected}
+          />
+        )}
         {shapeOptions && (
           <ShapeOptions
             style={selectedItem?.kind === "shape" ? selectedItem : shapeStyle}
@@ -957,13 +1049,26 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
                 ? "Fill in the form, or add something to the pages, then download."
                 : "Add something to the pages, then download."
               : [
+                  redactions > 0 && `${plural(redactions, "area")} to redact for good`,
                   filledIn > 0 && `${plural(filledIn, "field")} filled in`,
-                  changes - filledIn > 0 && plural(changes - filledIn, "edit"),
+                  changes - filledIn - redactions > 0 && plural(changes - filledIn - redactions, "edit"),
                 ]
                   .filter(Boolean)
                   .join(", ")
         }
       >
+        {redactions > 0 && (
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={removeProperties}
+              onChange={(event) => setRemoveProperties(event.target.checked)}
+            />
+            <span>
+              Also remove the document&apos;s properties <span className="text-ink-muted">(title, author…)</span>
+            </span>
+          </label>
+        )}
         {flattenable && (
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={flatten} onChange={(event) => setFlatten(event.target.checked)} />
@@ -999,9 +1104,13 @@ function hint(tool: Tool, selected: Item | null, editing: ItemId | null) {
   if (tool === "stamp") return "Choose a stamp, then click the page to put it there.";
   if (tool === "draw") return "Draw on the page. Each stroke can be moved or deleted afterwards.";
   if (tool === "shape") return "Drag across the page to draw, or click to place one.";
-  if (tool === "whiteout") return "Drag over what to cover. It's hidden, not removed from the file.";
+  if (tool === "whiteout")
+    return "Drag over what to cover. It's hidden, not removed from the file: to remove it, use Redact.";
+  if (tool === "redact")
+    return "Drag over what to remove, click a word, or find words above. It's removed when you download.";
   if (editing) return "Type, then press Esc or click outside when you're done.";
   if (selected?.kind === "markup") return "Change its kind or colour, or delete it.";
+  if (selected?.kind === "redact") return "Drag to move, or the corner to resize. Delete it to keep what's under it.";
   if (selected?.kind === "note") return "Drag to move it. Click again, or press Enter, to change the comment.";
   if (selected && selected.kind !== "text")
     return "Drag to move, or use the arrow keys. Drag the corner, or + and -, to resize.";

@@ -96,6 +96,61 @@ export interface WhiteoutItem {
   color: Rgb;
 }
 
+/**
+ * An area to redact: on saving, everything in it (text, the covered part of pictures, drawings, comments, links and
+ * form fields over it) is taken out of the file and it's painted black. Until then it shows what it covers. `text` is
+ * what a search or a click on a word found there, for its label.
+ */
+export interface RedactItem {
+  id: ItemId;
+  kind: "redact";
+  page: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  text?: string;
+}
+
+/** Points added round found text, so a redaction covers the whole of every character. */
+export const REDACT_PADDING = 1;
+
+/** A redaction over a found box (x0, y0, x1, y1), a little bigger than it, kept on the page. */
+export function redactionOver(
+  page: number,
+  [x0, y0, x1, y1]: Box,
+  size: { width: number; height: number },
+  text?: string,
+): RedactItem {
+  const left = Math.max(0, x0 - REDACT_PADDING);
+  const top = Math.max(0, y0 - REDACT_PADDING);
+  const right = Math.min(size.width, x1 + REDACT_PADDING);
+  const bottom = Math.min(size.height, y1 + REDACT_PADDING);
+  return {
+    id: newId(),
+    kind: "redact",
+    page,
+    x: left,
+    y: top,
+    width: right - left,
+    height: bottom - top,
+    ...(text && { text }),
+  };
+}
+
+/** Whether a redaction already covers a box (a search run twice doesn't mark the same words twice). */
+export function alreadyRedacted(items: readonly Item[], page: number, [x0, y0, x1, y1]: Box): boolean {
+  return items.some(
+    (item) =>
+      item.kind === "redact" &&
+      item.page === page &&
+      item.x <= x0 + 0.01 &&
+      item.y <= y0 + 0.01 &&
+      item.x + item.width >= x1 - 0.01 &&
+      item.y + item.height >= y1 - 0.01,
+  );
+}
+
 export type MarkupStyle = "highlight" | "underline" | "strikeout";
 
 /**
@@ -193,7 +248,7 @@ export const MIN_TICK_SIZE = 6;
 export const MAX_TICK_SIZE = 72;
 
 export type Item =
-  TextItem | ImageItem | ShapeItem | WhiteoutItem | MarkupItem | InkItem | NoteItem | StampItem | TickItem;
+  TextItem | ImageItem | ShapeItem | WhiteoutItem | RedactItem | MarkupItem | InkItem | NoteItem | StampItem | TickItem;
 
 /** How new strokes look. */
 export type InkStyle = Pick<InkItem, "color" | "width" | "opacity">;
@@ -308,6 +363,7 @@ export type Patch =
   | Partial<Omit<ImageItem, "id" | "kind">>
   | Partial<Omit<ShapeItem, "id" | "kind">>
   | Partial<Omit<WhiteoutItem, "id" | "kind">>
+  | Partial<Omit<RedactItem, "id" | "kind">>
   | Partial<Omit<MarkupItem, "id" | "kind">>
   | Partial<Omit<InkItem, "id" | "kind">>
   | Partial<Omit<NoteItem, "id" | "kind">>
@@ -353,10 +409,11 @@ export function toEdits(items: readonly Item[], assets: ReadonlyMap<AssetId, Ass
   const byPage = new Map<number, Mark[]>();
   const annotations = new Map<number, Annotation[]>();
   const removals = new Map<number, Box[]>();
+  const redactions = new Map<number, Box[]>();
   const images: Uint8Array[] = [];
   const imageIndex = new Map<AssetId, number>();
 
-  function toMarks(item: Exclude<Item, MarkupItem | InkItem | NoteItem | StampItem>): Mark[] {
+  function toMarks(item: Exclude<Item, MarkupItem | InkItem | NoteItem | StampItem | RedactItem>): Mark[] {
     if (item.kind !== "tick") return [toMark(item)];
     const { x, y, size, symbol, color } = item;
     if (symbol === "dot") {
@@ -379,7 +436,7 @@ export function toEdits(items: readonly Item[], assets: ReadonlyMap<AssetId, Ass
     }));
   }
 
-  function toMark(item: Exclude<Item, MarkupItem | InkItem | NoteItem | StampItem | TickItem>): Mark {
+  function toMark(item: Exclude<Item, MarkupItem | InkItem | NoteItem | StampItem | TickItem | RedactItem>): Mark {
     if (item.kind === "text") {
       const { x, y, text, font, bold, italic, size, color } = item;
       return { type: "text", x, y, text, font, bold, italic, size, color };
@@ -405,6 +462,11 @@ export function toEdits(items: readonly Item[], assets: ReadonlyMap<AssetId, Ass
 
   for (const item of items) {
     if (isEmpty(item)) continue;
+    if (item.kind === "redact") {
+      const box: Box = [item.x, item.y, item.x + item.width, item.y + item.height];
+      redactions.set(item.page, [...(redactions.get(item.page) ?? []), box]);
+      continue;
+    }
     if (item.kind === "text" && item.replaces) {
       removals.set(item.page, [...(removals.get(item.page) ?? []), item.replaces.box]);
       if (!item.text.trim()) continue;
@@ -429,13 +491,16 @@ export function toEdits(items: readonly Item[], assets: ReadonlyMap<AssetId, Ass
       byPage.set(item.page, [...(byPage.get(item.page) ?? []), ...toMarks(item)]);
     }
   }
-  const pages = [...new Set([...byPage.keys(), ...annotations.keys(), ...removals.keys()])].sort((a, b) => a - b);
+  const pages = [...new Set([...byPage.keys(), ...annotations.keys(), ...removals.keys(), ...redactions.keys()])].sort(
+    (a, b) => a - b,
+  );
   return {
     pages: pages.map((page) => ({
       page,
       marks: byPage.get(page) ?? [],
       ...(annotations.has(page) && { annotations: annotations.get(page)! }),
       ...(removals.has(page) && { removeText: removals.get(page)! }),
+      ...(redactions.has(page) && { redact: redactions.get(page)! }),
     })),
     ...(images.length > 0 && { images }),
   };

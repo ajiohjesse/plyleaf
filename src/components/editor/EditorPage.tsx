@@ -31,13 +31,14 @@ export type Tool =
   | "stamp"
   | "shape"
   | "whiteout"
+  | "redact"
   | "sign"
   | "initials"
   | "date"
   | "tick";
 
 /** Tools that draw by dragging across the page (a click places something of a set size). */
-const DRAWING: ReadonlySet<Tool> = new Set(["markup", "draw", "shape", "whiteout"]);
+const DRAWING: ReadonlySet<Tool> = new Set(["markup", "draw", "shape", "whiteout", "redact"]);
 
 /** A press has to move this many CSS pixels to draw rather than click. */
 const DRAW_THRESHOLD = 4;
@@ -293,7 +294,7 @@ export const EditorPage = memo(function EditorPage(props: Props) {
         if (item.kind === "markup") {
           return <MarkupBox key={item.id} item={item} scale={scale} selected={item.id === selected} {...handlers} />;
         }
-        if (item.kind === "whiteout") {
+        if (item.kind === "whiteout" || item.kind === "redact") {
           return (
             <WhiteoutBox
               key={item.id}

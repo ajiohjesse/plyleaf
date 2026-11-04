@@ -22,6 +22,7 @@ import {
 } from "~/editor/items";
 import { DATE_FORMATS, formatDate, type DateFormat } from "~/editor/dates";
 import type { TickSymbol } from "~/editor/shapes";
+import { PATTERNS, type SearchQuery } from "~/redact/search";
 import { ArrowIcon, EllipseIcon, LineIcon, RectangleIcon, TrashIcon } from "./icons";
 import { MARKUP_NAMES } from "./MarkupBox";
 import { SHAPE_NAMES } from "./ShapeBox";
@@ -291,6 +292,71 @@ export function WhiteoutOptions({
     <OptionsPanel legend="Whiteout options" onRemove={onRemove}>
       <ColourField label="Cover colour" value={color} onChange={onChange} />
       <p className="text-sm text-ink-muted">Covers what&apos;s underneath. It isn&apos;t removed from the file.</p>
+    </OptionsPanel>
+  );
+}
+
+/**
+ * Redact: find words or a pattern and mark every match, besides drawing boxes. Shown with the Redact tool or a
+ * redaction selected.
+ */
+export function RedactOptions({
+  searching,
+  onSearch,
+  onRemove,
+}: {
+  searching: boolean;
+  onSearch: (query: SearchQuery) => void;
+  onRemove: (() => void) | undefined;
+}) {
+  const [text, setText] = useState("");
+  const [wholeWords, setWholeWords] = useState(false);
+  return (
+    <OptionsPanel legend="Redact options" onRemove={onRemove}>
+      <search className="contents">
+        <form
+          className="flex items-center gap-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (text.trim()) onSearch({ kind: "words", text, wholeWords });
+          }}
+        >
+          <input
+            type="search"
+            value={text}
+            onChange={(event) => setText(event.target.value)}
+            aria-label="Words to redact"
+            placeholder="Find words to redact"
+            className={`${fieldClass} w-40`}
+          />
+          <label className="flex items-center gap-1.5 text-sm">
+            <input type="checkbox" checked={wholeWords} onChange={(event) => setWholeWords(event.target.checked)} />
+            Whole words
+          </label>
+          <button
+            type="submit"
+            disabled={searching || !text.trim()}
+            className="inline-flex min-h-10 shrink-0 items-center rounded-pill bg-ink px-4 text-sm font-semibold text-surface hover:bg-ink/85 disabled:opacity-40"
+          >
+            Mark all
+          </button>
+        </form>
+      </search>
+      <span className="h-6 w-px shrink-0 bg-line" aria-hidden="true" />
+      <fieldset className="flex min-w-0 items-center gap-1.5">
+        <legend className="sr-only">Mark every</legend>
+        {PATTERNS.map((pattern) => (
+          <button
+            key={pattern.id}
+            type="button"
+            disabled={searching}
+            onClick={() => onSearch({ kind: "pattern", pattern: pattern.id })}
+            className="inline-flex min-h-10 shrink-0 items-center rounded-pill border border-line px-3 text-sm font-semibold hover:bg-ink/10 disabled:opacity-40"
+          >
+            {pattern.label}
+          </button>
+        ))}
+      </fieldset>
     </OptionsPanel>
   );
 }

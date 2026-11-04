@@ -15,6 +15,7 @@ import type {
   ImageOptions,
   PageSpec,
   FormField,
+  PageMatches,
   TextLine,
   TextSelection,
   TransformOptions,
@@ -159,6 +160,16 @@ const api = {
   async formFields(id: DocId): Promise<FormField[]> {
     const ops = await loading;
     return ops.formFields(get(id));
+  },
+
+  async findText(id: DocId, source: string, flags: string): Promise<PageMatches[]> {
+    const ops = await loading;
+    return ops.findText(get(id), source, flags);
+  },
+
+  async textAmounts(id: DocId): Promise<number[]> {
+    const ops = await loading;
+    return ops.textAmounts(get(id));
   },
 
   async assemble(pages: PageSpec[]): Promise<Uint8Array<ArrayBuffer>> {

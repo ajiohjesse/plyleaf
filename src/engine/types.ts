@@ -357,13 +357,36 @@ export interface Edits {
     annotations?: Annotation[];
     /** Text taken out of the page first (the text whose characters are in these boxes), to be written anew. */
     removeText?: Box[];
+    /**
+     * Areas redacted last, after everything else is drawn and added: what's in them is taken out of the file for good
+     * (text, the covered pixels of images, drawings inside them, annotations, links and form fields over them) and
+     * each is painted black.
+     */
+    redact?: Box[];
   }[];
   /** JPEG or PNG files that image marks draw. An image used by many marks is stored once in the PDF. */
   images?: Uint8Array[];
 }
 
+/**
+ * Words read from a page by OCR, as Tesseract writes them: a one-page PDF of invisible text, the size of the picture
+ * that was read. It's stretched over the page.
+ */
+export interface TextLayer {
+  page: number;
+  pdf: Uint8Array;
+}
+
+/** A redaction search's matches on a page: each match's words and a box per line it's on. */
+export interface PageMatches {
+  page: number;
+  matches: { text: string; boxes: Box[] }[];
+}
+
 /** What to change in a copy of an open document before saving it (Optimize & secure tools). */
 export interface TransformOptions {
+  /** OCR's invisible text, put onto the pages first. */
+  textLayers?: TextLayer[];
   /** Drawn onto the pages first, so the other options apply to them too. */
   edits?: Edits;
   /** Defaults to keeping the document's own encryption. */

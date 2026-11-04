@@ -6,3 +6,7 @@
 
 /_astro/*
   Cache-Control: public, max-age=31536000, immutable
+
+# OCR reading data: the path names the model version, so a file there never changes.
+/ocr/tessdata/*
+  Cache-Control: public, max-age=31536000, immutable
