@@ -13,6 +13,8 @@ import type {
   ImageOptions,
   PageSpec,
   FormField,
+  HtmlPdfOptions,
+  HtmlPdfResult,
   PageMatches,
   TextLine,
   TextSelection,
@@ -208,6 +210,22 @@ export const engine = {
   /** How many characters of text each page has (0 for a page that's only a picture, such as a scan). */
   textAmounts(id: DocId): Promise<number[]> {
     return call(({ remote }) => remote.textAmounts(id));
+  },
+
+  /**
+   * Lays out an HTML document on pages as a PDF (margins from its `@page` rule; images only as data: URLs). Opens
+   * nothing: the result is the file.
+   */
+  htmlToPdf(html: string, options: HtmlPdfOptions): Promise<HtmlPdfResult> {
+    return call(async (running) => {
+      running.bytes += html.length * 2;
+      return running.remote.htmlToPdf(html, options);
+    });
+  },
+
+  /** Each page's text, in reading order. */
+  pdfText(id: DocId): Promise<string[]> {
+    return call(({ remote }) => remote.pdfText(id));
   },
 
   /** Builds a new PDF from pages of open documents and blank pages, in order. */
