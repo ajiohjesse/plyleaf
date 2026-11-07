@@ -20,3 +20,9 @@ public/ocr/
 bench/engine/public/fixtures/
 bench/engine/dist/
 bench/engine/results/thumbs/
+
+# Office spike (M8): generated documents, converted PDFs, contact sheets, logs
+bench/office/fixtures/
+bench/office/out/
+bench/office/sheets/
+bench/office/results/*.log

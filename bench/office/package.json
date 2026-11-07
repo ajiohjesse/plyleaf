@@ -1,0 +1,14 @@
+{
+  "name": "plyleaf-office-spike",
+  "private": true,
+  "type": "module",
+  "description": "M8 spike: client-side Office to PDF candidates. Standalone so the candidates stay out of the app's dependencies.",
+  "dependencies": {
+    "@matbee/libreoffice-converter": "2.7.2",
+    "docx": "9.15.3",
+    "docx-preview": "0.4.1",
+    "docx-to-pdf-wasm": "0.1.0",
+    "exceljs": "4.4.0",
+    "pptxgenjs": "4.0.1"
+  }
+}

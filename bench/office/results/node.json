@@ -1,0 +1,73 @@
+[
+  {
+    "candidate": "libreoffice",
+    "step": "init",
+    "ms": 952
+  },
+  {
+    "candidate": "libreoffice",
+    "file": "report.docx",
+    "ms": 1063,
+    "warmMs": 115,
+    "pages": 2,
+    "bytes": 41567
+  },
+  {
+    "candidate": "libreoffice",
+    "file": "budget.xlsx",
+    "ms": 373,
+    "warmMs": 221,
+    "pages": 2,
+    "bytes": 28107
+  },
+  {
+    "candidate": "libreoffice",
+    "file": "deck.pptx",
+    "ms": 548,
+    "warmMs": 251,
+    "pages": 5,
+    "bytes": 43275
+  },
+  {
+    "candidate": "libreoffice",
+    "file": "page.html",
+    "ms": 113,
+    "warmMs": 80,
+    "pages": 3,
+    "bytes": 31961
+  },
+  {
+    "candidate": "libreoffice",
+    "file": "report.odt",
+    "ms": 142,
+    "pages": 2,
+    "bytes": 41565
+  },
+  {
+    "candidate": "libreoffice",
+    "file": "budget.ods",
+    "ms": 186,
+    "pages": 2,
+    "bytes": 28103
+  },
+  {
+    "candidate": "libreoffice",
+    "file": "deck.odp",
+    "ms": 224,
+    "pages": 5,
+    "bytes": 43275
+  },
+  {
+    "candidate": "docx-to-pdf-wasm",
+    "step": "init",
+    "ms": 5
+  },
+  {
+    "candidate": "docx-to-pdf-wasm",
+    "file": "report.docx",
+    "ms": 85,
+    "warmMs": 39,
+    "pages": 3,
+    "bytes": 33216
+  }
+]

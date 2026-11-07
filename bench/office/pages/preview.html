@@ -1,0 +1,32 @@
+<!doctype html><meta charset="utf-8" /><title>docx-preview</title>
+<style>
+  @page {
+    margin: 0;
+  }
+  body {
+    margin: 0;
+  }
+  .docx-wrapper {
+    background: none !important;
+    padding: 0 !important;
+  }
+  .docx-wrapper > section.docx {
+    box-shadow: none !important;
+    margin: 0 !important;
+    break-after: page;
+  }
+</style>
+<script src="/node_modules/.pnpm/jszip@3.10.2/node_modules/jszip/dist/jszip.min.js"></script>
+<script src="/node_modules/docx-preview/dist/docx-preview.js"></script>
+<div id="c"></div>
+<script>
+  window.render = async () => {
+    const t = performance.now();
+    const blob = await (await fetch("/fixtures/report.docx")).blob();
+    await docx.renderAsync(blob, document.getElementById("c"), null, {
+      inWrapper: true,
+      ignoreLastRenderedPageBreak: false,
+    });
+    return Math.round(performance.now() - t);
+  };
+</script>

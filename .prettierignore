@@ -12,3 +12,6 @@ bench/engine/dist/
 bench/engine/results/
 bench/engine/public/
 public/ocr/
+bench/office/results/
+bench/office/fixtures/
+bench/office/out/
