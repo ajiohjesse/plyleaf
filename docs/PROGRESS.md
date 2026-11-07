@@ -2,11 +2,10 @@
 
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
-- **Current milestone:** M8: Office conversions (M0–M2 done 2026-10-31, M3 and M4 done 2026-11-01, M5 done 2026-11-02,
+- **Current milestone:** M8: Text conversions (M0–M2 done 2026-10-31, M3 and M4 done 2026-11-01, M5 done 2026-11-02,
   M6 and M7 done 2026-11-04)
-- **Next action:** M8's spike: client-side Office conversion options (LibreOffice/ZetaOffice WASM, office2pdf WASM,
-  docx-preview + print) for fidelity, bundle size and speed, written up for the owner's D-007 decision. Nothing is built
-  past the spike until the owner decides.
+- **Next action:** M8: HTML / plain text / Markdown → PDF, then PDF → plain text. Office conversions are dropped
+  (D-041, owner, 2026-11-07).
 - **Owner asked (2026-11-04):** build all of M7 in one go, as one PR, auto-merged when CI passes. Same for M6 earlier
   that day.
 - **Owner asked (2026-11-01):** build all of M5 in one go, one PR per item, each auto-merged when CI passes.
@@ -61,12 +60,13 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ### [x] M6: Sign and forms
 - [x] AcroForm fill · [x] Type on flat forms · [x] Signatures (draw/type/upload, saved locally) · [x] Initials/date · [x] Flatten
 
-### [x] M7: Redact and OCR
-- [x] True redaction (verified non-extractable) · [x] Search-and-redact · [x] OCR → searchable PDF (language picker)
+### [x] M7: Redact
+- [x] True redaction (verified non-extractable) · [x] Search-and-redact
+- OCR → searchable PDF was built (2026-11-04), then removed by the owner (D-042, 2026-11-07)
 
-### [ ] M8: Office conversions
-- [ ] Spike + D-007 decided by owner
-- [ ] Word/Excel/PPT/ODF/HTML → PDF · [ ] PDF → Word/Excel/PPT/text
+### [ ] M8: Text conversions
+- [x] Office spike; owner dropped Office conversions (D-041, 2026-11-07)
+- [ ] HTML / plain text / Markdown → PDF · [ ] PDF → plain text
 
 ### [ ] M9: Launch readiness
 - [ ] PWA offline · [ ] Lighthouse targets · [ ] WCAG 2.2 AA audit · [ ] Privacy/About/Donate pages · [ ] SEO metadata + sitemap
@@ -78,6 +78,34 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-11-07: OCR removed
+- The owner removed OCR for the same reason as the Office tools (D-042, supersedes D-040): `/ocr-pdf`, `src/ocr/`,
+  `src/components/ocr/`, `src/engine/ocr.ts` (and `transform`'s `textLayers`), `scripts/ocr-data.ts`, `public/ocr/`,
+  Tesseract.js and its 23 language packages, `scannedPdf()` and the OCR tests are gone. Copy that pointed to OCR (Redact,
+  Annotate, Scan to PDF, the home comparison) now says scans aren't searchable.
+- Verified: `pnpm check`, `pnpm build`, E2E.
+
+- The owner decided against tools that need a large WASM download: Word/Excel/PowerPoint/ODF → PDF and PDF →
+  Word/Excel/PowerPoint are out of scope, with no server fallback (D-041, closes D-007). M8 is now Text conversions.
+- Removed the four Office tools from the catalogue (`src/data/tools.ts`) and the spike harness (`bench/office/`, still in
+  the history at 5657f09). The spike report stays in `docs/research/` as the record of why.
+- Verified: `pnpm check`.
+- Next: HTML / plain text / Markdown → PDF.
+
+### 2026-11-07: Office conversion spike (M8)
+- Spike for D-007, report in [docs/research/office-spike.md](research/office-spike.md); harness in `bench/office/` (removed later the same day)
+  (standalone package, so the candidates stay out of the app's dependencies).
+- Test documents generated in code (DOCX/XLSX/PPTX/HTML, plus ODF twins); converted with LibreOffice WASM
+  (`@matbee/libreoffice-converter` 2.7.2), docx-to-pdf-wasm and docx-preview + print; timed in Node and in Chromium,
+  Firefox and WebKit; sizes measured with gzip/Brotli; contact sheets in `docs/research/office-spike/`.
+- Findings: LibreOffice WASM is correct for Word/Excel/PowerPoint/ODF, under a second per file, 48 MB Brotli once;
+  Chromium hung on 2 of 6 cold starts (needs a watchdog); `soffice.wasm` (141 MB) is over Cloudflare's 25 MiB per-file
+  limit; LibreOffice's HTML import breaks tables (use browser print); docx-to-pdf-wasm and docx-preview lose too much.
+  A naive PDF → DOCX prototype on MuPDF structured text shows the route works but needs real layout analysis.
+- Not done: Microsoft Office reference PDFs (Office automation stalled on a hidden prompt; a Word process it started
+  may still be running), office2pdf (needs a Rust toolchain), memory on phones.
+- Next: owner decides D-007, then the build.
 
 ### 2026-11-04: Redact and OCR, M7 done
 - Redaction (D-039): a Redact tool in the editor. Drag a box, click a word, or find words (whole words optional) or

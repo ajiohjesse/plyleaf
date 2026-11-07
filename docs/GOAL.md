@@ -32,7 +32,7 @@ These override any other consideration. A change that breaks one is a bug.
 |---|-----------|-------------|
 | P1 | **Free forever, all features** | No paid tier, no feature flags tied to payment, no "upgrade" prompts. Donations are optional and never gate anything. |
 | P2 | **No account required, ever** | No sign-in screen in any flow. There is no account system at all (see DECISIONS D-003). |
-| P3 | **Local-first processing** | User files are processed in the browser. No user file bytes go over the network. The only exception is a feature the user explicitly opts into, with clear disclosure (see M8 gate). |
+| P3 | **Local-first processing** | User files are processed in the browser. No user file bytes go over the network, with no exceptions (D-041). |
 | P4 | **No watermarks or degraded output** | Output is the same quality you'd pay for elsewhere. |
 | P5 | **Honest UI** | No dark patterns, fake progress bars, countdowns or nag modals. A cookie-free analytics setup means no cookie banner either. |
 | P6 | **Fast and light** | Tool pages are static HTML. Heavy engines (WASM) are loaded lazily, only when a file is dropped. |
@@ -55,11 +55,10 @@ Grouped as they appear in the app. **(E)** = in the unified Editor workspace.
 
 **Convert to PDF**
 - JPG / PNG / WebP / HEIC / GIF / TIFF → PDF · Scan to PDF (phone camera, with edge detection and perspective fix)
-- Word / Excel / PowerPoint / ODF → PDF · HTML / plain text / Markdown → PDF
+- HTML / plain text / Markdown → PDF
 
 **Convert from PDF**
 - PDF → JPG / PNG / WebP (per page, chosen DPI) · Extract images · PDF → plain text
-- PDF → Word (DOCX) · PDF → Excel (XLSX, table detection) · PDF → PowerPoint (PPTX, pages as slides)
 - PDF → PDF/A, archival *(v1.x)*
 
 **Edit & annotate (E)**
@@ -77,7 +76,6 @@ Grouped as they appear in the app. **(E)** = in the unified Editor workspace.
 - Compress (low / recommended / extreme, with before and after sizes) · Grayscale
 - Protect with password (AES-256) · Unlock (with the known password) · Edit permissions
 - True redaction (content removed, not covered), including search-and-redact
-- OCR → searchable PDF (multiple languages)
 - Edit metadata · Remove metadata · Repair corrupted PDFs
 
 **Page tools**
@@ -95,6 +93,9 @@ Grouped as they appear in the app. **(E)** = in the unified Editor workspace.
 - User accounts, cloud storage, sharing links, team features (they conflict with P2/P3 and cost money to run).
 - AI chat-with-PDF, translation, e-signature *workflows* with audit trails (send for signing). Revisit after v1.0.
 - Native desktop/mobile apps (the PWA covers this).
+- Word / Excel / PowerPoint / ODF ↔ PDF conversion, in either direction. Doing it well in the browser means a
+  ~50 MB LibreOffice WASM download, and a server would break P3 (D-041).
+- OCR (making scans searchable): its engine and per-language reading data are a large download (D-042).
 
 ## 6. Success criteria for v1.0
 
@@ -145,15 +146,13 @@ The unified editing workspace, the heart of the app.
 - Done when: AcroForm filling, typing on flat forms, signatures (draw/type/upload) saved locally, initials, date stamps
   and flatten all work.
 
-### M7: Redact and OCR
-- Done when: true redaction (verified: redacted text can't be extracted from the output), search-and-redact, and OCR to a
-  searchable PDF with a language picker all work; OCR language data loads lazily.
+### M7: Redact
+- Done when: true redaction (verified: redacted text can't be extracted from the output) and search-and-redact work.
+  (OCR was built here, then removed: D-042.)
 
-### M8: Office conversions (decision gate)
-- Gate: spike client-side options (LibreOffice/ZetaOffice WASM, office2pdf WASM, docx-preview + print) for fidelity, bundle size and speed.
-  If client-side quality isn't acceptable, present the owner with an opt-in server fallback (self-hosted Gotenberg,
-  files deleted right after conversion, clearly disclosed) **for a decision**. Don't build the server without approval.
-- Done when: Word/Excel/PowerPoint/ODF/HTML → PDF and PDF → Word/Excel/PowerPoint/text work at the agreed quality bar.
+### M8: Text conversions
+- Office conversions were dropped (D-041): no Word/Excel/PowerPoint/ODF in either direction.
+- Done when: HTML / plain text / Markdown → PDF and PDF → plain text work, with no new large WASM download.
 
 ### M9: Launch readiness
 - Done when: PWA offline mode works; Lighthouse targets from §6 are met; WCAG 2.2 AA audit passes; privacy, about,

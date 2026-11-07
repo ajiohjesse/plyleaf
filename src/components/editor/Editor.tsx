@@ -411,7 +411,7 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
       const pages = new Set(marked.map((item) => item.page)).size;
       if (matches === 0) {
         setNotice(
-          "Nothing found. If this is a scan, its pages are pictures of text with nothing to search: make it searchable with OCR PDF first, or draw boxes over what to redact.",
+          "Nothing found. If this is a scan, its pages are pictures of text with nothing to search: draw boxes over what to redact instead.",
         );
       } else if (marked.length === 0) {
         setNotice(`All ${plural(matches, "match", "matches")} found are already marked.`);

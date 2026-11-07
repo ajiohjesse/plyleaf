@@ -1,9 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { alreadyRedacted, redactionOver, toEdits, type Item } from "~/editor/items";
-import { LANGUAGES, matchLanguage, startingLanguages } from "~/ocr/catalogue";
-import { ocrResolution } from "~/ocr/resolution";
 import { findMatches, queryExpression, type PageChar, type SearchQuery } from "~/redact/search";
-import { pagesToRead } from "~/components/ocr/OcrWorkspace";
 
 /** A line of characters 6 points wide each, from x = 0, on a line `row` (12 points tall). */
 const line = (text: string, row = 0): PageChar[] =>
@@ -75,37 +72,4 @@ describe("search to redact", () => {
     expect(edits.pages[0]!.redact).toEqual([[10, 20, 40, 60]]);
     expect(edits.pages[0]!.marks).toHaveLength(1);
   });
-});
-
-describe("OCR", () => {
-  test("starts with the browser's language and English", () => {
-    expect(startingLanguages(["fr-FR", "en-GB"])).toEqual(["fra", "eng"]);
-    expect(startingLanguages(["en-US"])).toEqual(["eng"]);
-    expect(startingLanguages(["xx", "de"])).toEqual(["deu", "eng"]);
-    expect(startingLanguages([])).toEqual(["eng"]);
-    expect(matchLanguage("zh-TW")).toBe("chi_tra");
-    expect(matchLanguage("zh-CN")).toBe("chi_sim");
-    expect(matchLanguage("pt-BR")).toBe("por");
-    expect(new Set(LANGUAGES.map((language) => language.code)).size).toBe(LANGUAGES.length);
-  });
-
-  test("reads at 300 dpi, less for very big pages", () => {
-    expect(ocrResolution({ width: 595, height: 842 })).toBe(300);
-    expect(ocrResolution({ width: 2384, height: 3370 })).toBe(106);
-  });
-
-  test("reads pages without text unless asked to read them all", () => {
-    expect(pagesToRead([0, 500, 3, 12], false)).toEqual([0, 2]);
-    expect(pagesToRead([0, 500], true)).toEqual([0, 1]);
-  });
-});
-
-test("every language offered has its reading data as a dependency, and nothing more", async () => {
-  const { readFile } = await import("node:fs/promises");
-  const pkg = JSON.parse(await readFile("package.json", "utf8")) as { dependencies: Record<string, string> };
-  const packaged = Object.keys(pkg.dependencies)
-    .filter((name) => name.startsWith("@tesseract.js-data/"))
-    .map((name) => name.slice("@tesseract.js-data/".length))
-    .sort();
-  expect(packaged).toEqual(LANGUAGES.map((language) => language.code).sort());
 });
