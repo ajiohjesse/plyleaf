@@ -84,6 +84,9 @@ Cloudflare Pages. Package manager: pnpm.
   search-and-redact is pure in `src/redact/search.ts` over `engine.findText`. Page: `/redact-pdf`.
 - Page tools (page numbers, watermark, header/footer, Bates): pure placement and tokens in `src/pagetools/`, shared form
   pieces and the live `PagePreview` in `src/components/pagetools/fields.tsx`; each is a `SingleFileTool` saving edits.
+- Text conversions (M8, D-043): `/text-to-pdf`, `/markdown-to-pdf`, `/html-to-pdf` share
+  `src/components/convert/TextToPdfWorkspace.tsx`; everything becomes HTML (`src/convert/text.ts`, and `html.ts` on the
+  page for HTML's added files) that `engine.htmlToPdf` lays out with MuPDF. `/pdf-to-text` uses `engine.pdfText`.
 - `src/download/`: output names, `downloadFile` and `saveAs`; `src/components/download/DownloadPanel` is the "done"
   screen. Show engine failures with `openFailureMessage` / `operationFailureMessage` from `src/intake/files.ts` (D-019).
 - `src/pages/test-harness/`: pages for E2E tests to drive internals, built only when `PLYLEAF_TEST_HARNESS=1`.

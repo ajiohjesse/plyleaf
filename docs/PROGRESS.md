@@ -2,10 +2,10 @@
 
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
-- **Current milestone:** M8: Text conversions (M0–M2 done 2026-10-31, M3 and M4 done 2026-11-01, M5 done 2026-11-02,
-  M6 and M7 done 2026-11-04)
-- **Next action:** M8: HTML / plain text / Markdown → PDF, then PDF → plain text. Office conversions are dropped
-  (D-041, owner, 2026-11-07).
+- **Current milestone:** M9: Launch readiness (M0–M2 done 2026-10-31, M3 and M4 done 2026-11-01, M5 done 2026-11-02,
+  M6 and M7 done 2026-11-04, M8 done 2026-11-07)
+- **Next action:** M9: PWA offline.
+- **Owner asked (2026-11-07):** build all of M8 in one PR, merge it when CI passes, then trim stale branches and worktrees.
 - **Owner asked (2026-11-04):** build all of M7 in one go, as one PR, auto-merged when CI passes. Same for M6 earlier
   that day.
 - **Owner asked (2026-11-01):** build all of M5 in one go, one PR per item, each auto-merged when CI passes.
@@ -64,9 +64,9 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] True redaction (verified non-extractable) · [x] Search-and-redact
 - OCR → searchable PDF was built (2026-11-04), then removed by the owner (D-042, 2026-11-07)
 
-### [ ] M8: Text conversions
+### [x] M8: Text conversions
 - [x] Office spike; owner dropped Office conversions (D-041, 2026-11-07)
-- [ ] HTML / plain text / Markdown → PDF · [ ] PDF → plain text
+- [x] HTML / plain text / Markdown → PDF · [x] PDF → plain text
 
 ### [ ] M9: Launch readiness
 - [ ] PWA offline · [ ] Lighthouse targets · [ ] WCAG 2.2 AA audit · [ ] Privacy/About/Donate pages · [ ] SEO metadata + sitemap
@@ -78,6 +78,26 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-11-07: Text conversions, M8 done
+- Text to PDF (D-043): `/text-to-pdf`, `/markdown-to-pdf` and `/html-to-pdf`, one workspace
+  (`src/components/convert/TextToPdfWorkspace.tsx`). A file (dropped, chosen or pasted; UTF-8, UTF-16 or Windows-1252)
+  or typed text, read as plain text, Markdown or HTML (from the file's name, switchable). A4 or US Letter (Letter by
+  default in the US and Canada), portrait or landscape, three margins; for text and Markdown a font and size. HTML
+  lists the pictures and stylesheets it uses; ones the user adds go in, ones on other sites are left out, never fetched.
+  Pure parts in `src/convert/text.ts` (text/Markdown → HTML, titles, references) and `src/convert/html.ts` (DOM: inlining
+  files, dropping scripts); the engine's `htmlToPdf` (`src/engine/convert.ts`) lays out, keeps links, subsets fonts,
+  sets the title, and refuses over 5,000 pages (`too-large`). `marked` 18.1.0 (MIT) is the one new dependency, ~13 KB
+  gzipped, loaded only when Markdown is converted.
+- PDF to text: `/pdf-to-text` on `SingleFileTool`; `engine.pdfText` gives each page's text, joined with or without
+  "--- Page N ---" lines (`src/convert/pdf-text.ts`). A .txt download (UTF-8) and a Copy text button on the done screen
+  (`DownloadPanel`'s `copy`). Says which pages had no text, and when a PDF is all pictures.
+- `FileDrop` takes other file types (`other`), for text files.
+- Verified: unit tests `engine-convert` (page sizes, margins, links, CJK subsetting, plain text spacing, Markdown,
+  limits, qpdf and pdf.js read the output) and `convert-text`; E2E `text-to-pdf` and `pdf-to-text` in Chromium,
+  Firefox, WebKit and mobile Chromium (egress checked, qpdf, the HTML's added picture and stylesheet in and its remote
+  picture left out); checked in the browser at phone and desktop widths. `pnpm check`.
+- Next: M9, PWA offline.
 
 ### 2026-11-07: OCR removed
 - The owner removed OCR for the same reason as the Office tools (D-042, supersedes D-040): `/ocr-pdf`, `src/ocr/`,
