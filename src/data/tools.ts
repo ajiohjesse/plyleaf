@@ -143,7 +143,32 @@ export const tools: Tool[] = [
     name: "PDF to text",
     description: "Copy out all the text.",
     category: "convert",
-    keywords: ["txt"],
+    keywords: ["txt", "extract text", "copy"],
+    available: true,
+  },
+  {
+    slug: "html-to-pdf",
+    name: "HTML to PDF",
+    description: "Turn a web page file into a PDF.",
+    category: "convert",
+    keywords: ["web page", "htm", "website"],
+    available: true,
+  },
+  {
+    slug: "markdown-to-pdf",
+    name: "Markdown to PDF",
+    description: "Formatted PDFs from .md files.",
+    category: "convert",
+    keywords: ["md", "readme", "notes"],
+    available: true,
+  },
+  {
+    slug: "text-to-pdf",
+    name: "Text to PDF",
+    description: "Plain text and .txt files to PDF.",
+    category: "convert",
+    keywords: ["txt", "notepad", "plain text"],
+    available: true,
   },
 
   // Edit & sign

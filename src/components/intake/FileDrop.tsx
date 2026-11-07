@@ -7,9 +7,23 @@ const acceptAttribute: Record<FileKind, string> = {
   image: "image/*,.heic,.heif",
 };
 
+/** Files other than PDFs and images (text files, say): what the picker offers and what the zone calls them. */
+export interface OtherFiles {
+  /** The picker's accept attribute. */
+  accept: string;
+  /** "a text file", for "Drop a text file here". */
+  one: string;
+  /** "text files", for "Add more text files". */
+  many: string;
+  /** The small zone's title, in place of "Add more …". */
+  more?: string;
+}
+
 interface Props {
   onFiles: (files: File[]) => void;
   accept?: readonly FileKind[];
+  /** Takes these instead of `accept`'s kinds. */
+  other?: OtherFiles;
   multiple?: boolean;
   /** A smaller zone, for adding more files once a workspace has some. */
   compact?: boolean;
@@ -21,7 +35,7 @@ const hasFiles = (event: DragEvent) => event.dataTransfer?.types.includes("Files
  * Where files come in: a picker, a drop anywhere on the page, or a paste. Starts loading the engine as soon as the
  * user reaches for a file (hovering or focusing the picker, or dragging a file over the page).
  */
-export function FileDrop({ onFiles, accept = ["pdf"], multiple = true, compact = false }: Props) {
+export function FileDrop({ onFiles, accept = ["pdf"], other, multiple = true, compact = false }: Props) {
   const inputId = useId();
   const hintId = useId();
   const [dragging, setDragging] = useState(false);
@@ -82,15 +96,17 @@ export function FileDrop({ onFiles, accept = ["pdf"], multiple = true, compact =
   }, []);
 
   const both = accept.includes("image") && accept.includes("pdf");
-  const noun = accept.includes("image") ? (both ? "files" : "images") : "PDFs";
-  const one = accept.includes("image") ? (both ? "file" : "image") : "PDF";
+  const noun = other?.many ?? (accept.includes("image") ? (both ? "files" : "images") : "PDFs");
+  const one = other ? other.one.replace(/^an? /, "") : accept.includes("image") ? (both ? "file" : "image") : "PDF";
   const title = compact
-    ? multiple
-      ? `Add more ${noun}`
-      : `Use a different ${one}`
+    ? other?.more
+      ? other.more
+      : multiple
+        ? `Add more ${noun}`
+        : `Use a different ${one}`
     : multiple
-      ? `Drop ${both ? "PDFs or images" : noun} here`
-      : `Drop a ${one} here`;
+      ? `Drop ${both && !other ? "PDFs or images" : noun} here`
+      : `Drop ${other ? other.one : `a ${one}`} here`;
   const pick = multiple ? "Choose files" : "Choose a file";
 
   return (
@@ -132,7 +148,7 @@ export function FileDrop({ onFiles, accept = ["pdf"], multiple = true, compact =
           id={inputId}
           type="file"
           className="sr-only"
-          accept={accept.map((kind) => acceptAttribute[kind]).join(",")}
+          accept={other?.accept ?? accept.map((kind) => acceptAttribute[kind]).join(",")}
           multiple={multiple}
           aria-label={pick}
           aria-describedby={hintId}

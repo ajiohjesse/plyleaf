@@ -1,0 +1,48 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { TextToPdfWorkspace } from "~/components/convert/TextToPdfWorkspace";
+---
+
+<ToolPage
+  slug="text-to-pdf"
+  title="Text to PDF: convert TXT files to PDF free, no sign-up"
+  description="Turn plain text or a .txt file into a PDF in your browser, with the page size, margins, font and text size you choose. Free with no limits, no watermark and no account, and your text is never uploaded."
+  heading="Text to PDF"
+  intro="Turn a .txt file, or anything you type or paste, into a tidy PDF. Free, no sign-up, no watermark, and your text never leaves this device."
+  steps={[
+    { title: "Add your text", text: "Drop a .txt file anywhere on the page, choose one, or type or paste it in." },
+    {
+      title: "Pick the look",
+      text: "A4 or US Letter, margins, and a monospaced, sans-serif or serif font at the size you like.",
+    },
+    { title: "Convert and download", text: "Every line and space is kept, and long lines wrap. No account needed." },
+  ]}
+  faqs={[
+    {
+      question: "Is it really free?",
+      answer:
+        "Yes. There is no paid plan, no daily limit and no watermark. Plyleaf can be free because your own browser does the work.",
+    },
+    {
+      question: "Is my text uploaded?",
+      answer: "No. The PDF is made right here in your browser. Your text never goes over the internet.",
+    },
+    {
+      question: "Can I copy the text out of the PDF afterwards?",
+      answer:
+        "Yes. The PDF holds real text, not a picture of it, so you can select, copy and search it, and it stays sharp at any zoom.",
+    },
+    {
+      question: "Which languages work?",
+      answer:
+        "Most of them: accented Latin letters, Greek, Cyrillic, Chinese, Japanese, Korean and more. Files saved as UTF-8, UTF-16 or older Windows text are all read correctly.",
+    },
+    {
+      question: "Why monospaced by default?",
+      answer:
+        "Plain text often lines things up with spaces, like tables and code. A monospaced font keeps those columns straight. Pick sans serif or serif for ordinary writing.",
+    },
+  ]}
+>
+  <TextToPdfWorkspace format="text" client:load />
+</ToolPage>

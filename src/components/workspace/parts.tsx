@@ -11,7 +11,15 @@ import { PageCanvas } from "~/components/thumbnails/PageCanvas";
 export const plural = (count: number, one: string, many = `${one}s`) => `${count} ${count === 1 ? one : many}`;
 
 /** A tool's result: the file to download, or why it couldn't be made. */
-export type Result = { file: Blob; name: string; detail?: string } | { error: string };
+export type Result =
+  | {
+      file: Blob;
+      name: string;
+      detail?: string;
+      /** Text the done screen offers to copy, for a text file. */
+      copy?: string;
+    }
+  | { error: string };
 
 /** Sticks to the bottom of the screen while the workspace is in view: what will happen, and the button that does it. */
 export function ActionBar({ status, children }: { status: React.ReactNode; children: React.ReactNode }) {

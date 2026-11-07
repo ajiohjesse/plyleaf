@@ -1,0 +1,48 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { TextToPdfWorkspace } from "~/components/convert/TextToPdfWorkspace";
+---
+
+<ToolPage
+  slug="markdown-to-pdf"
+  title="Markdown to PDF: convert .md files to PDF free, no sign-up"
+  description="Turn Markdown into a neatly formatted PDF in your browser: headings, lists, tables, code and working links. Free with no limits, no watermark and no account, and your file is never uploaded."
+  heading="Markdown to PDF"
+  intro="Turn a README, notes or any .md file into a clean, printable PDF. Free, no sign-up, no watermark, and your file never leaves this device."
+  steps={[
+    { title: "Add your Markdown", text: "Drop a .md file anywhere on the page, choose one, or paste it in." },
+    { title: "Pick the look", text: "A4 or US Letter, margins, a sans-serif or serif font, and the text size." },
+    {
+      title: "Convert and download",
+      text: "Headings, lists, tables, quotes and code come out formatted, and links still work. No account needed.",
+    },
+  ]}
+  faqs={[
+    {
+      question: "Is it really free?",
+      answer:
+        "Yes. There is no paid plan, no daily limit and no watermark. Plyleaf can be free because your own browser does the work.",
+    },
+    {
+      question: "Is my file uploaded?",
+      answer: "No. The PDF is made right here in your browser. Your file never goes over the internet.",
+    },
+    {
+      question: "Which Markdown does it understand?",
+      answer:
+        "CommonMark, plus GitHub's extras: tables, task lists, strikethrough and links written as plain web addresses. Links to headings in the same file, like [Install](#install), jump to that heading in the PDF.",
+    },
+    {
+      question: "What about pictures in my Markdown?",
+      answer:
+        "Pictures written into the file as data are kept. Plyleaf never downloads anything, so pictures linked from a website are left out.",
+    },
+    {
+      question: "Is code highlighted in colour?",
+      answer:
+        "Not yet. Code blocks are set in a monospaced font on a light background, with their spacing kept, and long lines wrap so nothing is cut off.",
+    },
+  ]}
+>
+  <TextToPdfWorkspace format="markdown" client:load />
+</ToolPage>

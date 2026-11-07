@@ -7,6 +7,8 @@ interface Props {
   name: string;
   /** A line about what's in the file, e.g. "3 PDFs in one zip". */
   detail?: string;
+  /** Text to offer to copy as well (the file's own text, for a text file). */
+  copy?: string;
   /** Goes back to the workspace, e.g. to change something and make the file again. */
   onStartOver?: () => void;
   startOverLabel?: string;
@@ -16,7 +18,7 @@ interface Props {
  * The "done" screen: the result, a Download button that's always there and never asks for anything, and "Save as…"
  * where the browser can ask where to save.
  */
-export function DownloadPanel({ file, name, detail, onStartOver, startOverLabel = "Start over" }: Props) {
+export function DownloadPanel({ file, name, detail, copy, onStartOver, startOverLabel = "Start over" }: Props) {
   const headingId = useId();
   // Only rendered after the user has done something, so this runs in the browser.
   const [saveAsSupported] = useState(canSaveAs);
@@ -24,6 +26,15 @@ export function DownloadPanel({ file, name, detail, onStartOver, startOverLabel 
   const headingRef = useRef<HTMLHeadingElement>(null);
   // The workspace this replaces had focus (the button that made the file), so bring focus and the view here.
   useEffect(() => headingRef.current?.focus(), []);
+
+  async function copyText() {
+    try {
+      await navigator.clipboard.writeText(copy ?? "");
+      setStatus("Copied the text.");
+    } catch {
+      setStatus("Your browser didn't allow copying. Download the file instead.");
+    }
+  }
 
   async function chooseWhere() {
     setStatus("");
@@ -66,6 +77,15 @@ export function DownloadPanel({ file, name, detail, onStartOver, startOverLabel 
             onClick={() => void chooseWhere()}
           >
             Save as…
+          </button>
+        )}
+        {copy !== undefined && (
+          <button
+            type="button"
+            className="btn-pill border-2 border-primary bg-surface text-primary hover:bg-sticky-lavender/30"
+            onClick={() => void copyText()}
+          >
+            Copy text
           </button>
         )}
         {onStartOver && (
