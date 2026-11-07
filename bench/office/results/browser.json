@@ -1,0 +1,78 @@
+[
+  {
+    "browser": "chromium",
+    "run": 0,
+    "isolated": true,
+    "initMs": 1197,
+    "report.docx": 1529,
+    "report.docx.bytes": 41567,
+    "budget.xlsx": 692,
+    "budget.xlsx.bytes": 28107,
+    "deck.pptx": 877,
+    "deck.pptx.bytes": 43275,
+    "memoryMB": null
+  },
+  {
+    "browser": "chromium",
+    "run": 1,
+    "error": "Error: timed out after 240 s"
+  },
+  {
+    "browser": "firefox",
+    "run": 0,
+    "isolated": true,
+    "initMs": 2318,
+    "report.docx": 638,
+    "report.docx.bytes": 41567,
+    "budget.xlsx": 393,
+    "budget.xlsx.bytes": 28107,
+    "deck.pptx": 906,
+    "deck.pptx.bytes": 43275,
+    "memoryMB": null
+  },
+  {
+    "browser": "firefox",
+    "run": 1,
+    "isolated": true,
+    "initMs": 2059,
+    "report.docx": 702,
+    "report.docx.bytes": 41567,
+    "budget.xlsx": 397,
+    "budget.xlsx.bytes": 28107,
+    "deck.pptx": 906,
+    "deck.pptx.bytes": 43275,
+    "memoryMB": null
+  },
+  {
+    "browser": "webkit",
+    "run": 0,
+    "isolated": true,
+    "initMs": 2375,
+    "report.docx": 379,
+    "report.docx.bytes": 41567,
+    "budget.xlsx": 264,
+    "budget.xlsx.bytes": 28107,
+    "deck.pptx": 440,
+    "deck.pptx.bytes": 43275,
+    "memoryMB": null
+  },
+  {
+    "browser": "webkit",
+    "run": 1,
+    "isolated": true,
+    "initMs": 2307,
+    "report.docx": 412,
+    "report.docx.bytes": 41567,
+    "budget.xlsx": 286,
+    "budget.xlsx.bytes": 28107,
+    "deck.pptx": 443,
+    "deck.pptx.bytes": 43275,
+    "memoryMB": null
+  },
+  {
+    "browser": "chromium",
+    "candidate": "docx-preview",
+    "renderMs": 94,
+    "pages": 3
+  }
+]

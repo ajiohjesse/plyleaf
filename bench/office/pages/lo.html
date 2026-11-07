@@ -1,0 +1,36 @@
+<!doctype html><meta charset="utf-8" /><title>LibreOffice WASM</title>
+<script type="module">
+  import { WorkerBrowserConverter } from "/node_modules/@matbee/libreoffice-converter/dist/browser.js";
+  const W = "/node_modules/@matbee/libreoffice-converter/wasm/";
+  window.runLo = async () => {
+    const out = { isolated: crossOriginIsolated };
+    let t = performance.now();
+    const lo = new WorkerBrowserConverter({
+      sofficeJs: W + "soffice.js",
+      sofficeWasm: W + "soffice.wasm",
+      sofficeData: W + "soffice.data",
+      sofficeWorkerJs: W + "soffice.worker.js",
+      browserWorkerJs: "/node_modules/@matbee/libreoffice-converter/dist/browser.worker.global.js",
+    });
+    await lo.initialize();
+    out.initMs = Math.round(performance.now() - t);
+    for (const [f, fmt] of [
+      ["report.docx", "docx"],
+      ["budget.xlsx", "xlsx"],
+      ["deck.pptx", "pptx"],
+    ]) {
+      const bytes = new Uint8Array(await (await fetch("/fixtures/" + f)).arrayBuffer());
+      t = performance.now();
+      const r = await lo.convert(bytes, { outputFormat: "pdf", inputFormat: fmt }, f);
+      out[f] = Math.round(performance.now() - t);
+      out[f + ".bytes"] = r.data.length;
+    }
+    try {
+      const m = await performance.measureUserAgentSpecificMemory();
+      out.memoryMB = Math.round(m.bytes / 1e6);
+    } catch {
+      out.memoryMB = null;
+    }
+    return out;
+  };
+</script>
