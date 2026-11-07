@@ -76,7 +76,6 @@ Grouped as they appear in the app. **(E)** = in the unified Editor workspace.
 - Compress (low / recommended / extreme, with before and after sizes) · Grayscale
 - Protect with password (AES-256) · Unlock (with the known password) · Edit permissions
 - True redaction (content removed, not covered), including search-and-redact
-- OCR → searchable PDF (multiple languages)
 - Edit metadata · Remove metadata · Repair corrupted PDFs
 
 **Page tools**
@@ -96,6 +95,7 @@ Grouped as they appear in the app. **(E)** = in the unified Editor workspace.
 - Native desktop/mobile apps (the PWA covers this).
 - Word / Excel / PowerPoint / ODF ↔ PDF conversion, in either direction. Doing it well in the browser means a
   ~50 MB LibreOffice WASM download, and a server would break P3 (D-041).
+- OCR (making scans searchable): its engine and per-language reading data are a large download (D-042).
 
 ## 6. Success criteria for v1.0
 
@@ -146,9 +146,9 @@ The unified editing workspace, the heart of the app.
 - Done when: AcroForm filling, typing on flat forms, signatures (draw/type/upload) saved locally, initials, date stamps
   and flatten all work.
 
-### M7: Redact and OCR
-- Done when: true redaction (verified: redacted text can't be extracted from the output), search-and-redact, and OCR to a
-  searchable PDF with a language picker all work; OCR language data loads lazily.
+### M7: Redact
+- Done when: true redaction (verified: redacted text can't be extracted from the output) and search-and-redact work.
+  (OCR was built here, then removed: D-042.)
 
 ### M8: Text conversions
 - Office conversions were dropped (D-041): no Word/Excel/PowerPoint/ODF in either direction.

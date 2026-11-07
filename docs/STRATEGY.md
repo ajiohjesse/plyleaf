@@ -48,7 +48,7 @@ even with heavy traffic. Nothing needs to be monetised.
 | Hard part | Approach |
 |-----------|----------|
 | Office ↔ PDF conversion is heavy client-side | **Not offered** (D-041): the only good client-side engine is a ~50 MB LibreOffice WASM download, and a server would break P3. |
-| Big WASM bundles (MuPDF ~10 MB, Ghostscript ~15 MB, OCR language data) | Load lazily per tool, cache with the service worker, show a one-time "preparing tool…" state. Landing pages ship zero engine code. |
+| Big WASM bundles (MuPDF ~10 MB, Ghostscript ~15 MB) | Load lazily per tool, cache with the service worker, show a one-time "preparing tool…" state. Landing pages ship zero engine code. |
 | Memory on large files / phones | Engines in Web Workers, transfer ArrayBuffers instead of copying them, virtualised thumbnails, render at device-appropriate DPI, clear "file too large for this device" errors instead of crashes. |
 | Editing existing text in PDFs | Inherently best-effort (font subsetting). Use MuPDF's text/font APIs; fall back to whiteout + overlay text with the closest font. Be honest in the UI. |
 | Safari quirks (memory, OPFS, workers) | Safari is in the CI Playwright matrix from M1. |
@@ -98,7 +98,7 @@ People search for tasks: "merge pdf", "compress pdf to 100kb", "jpg to pdf", "si
 | Lightweight authoring | **pdf-lib** (maintained fork `@cantoo/pdf-lib`, MIT) | Simple, fast structural ops and drawing; small bundle for simple tools. |
 | Alternative renderer | **pdf.js** (Apache-2.0) or **@embedpdf/pdfium** (MIT + Apache) | Fallback if the M1 spike shows MuPDF is too heavy for simple tools. |
 | Heavy compression / PDF/A | **Ghostscript WASM** (AGPL) | Best-in-class downsampling; lazy-loaded only on Compress "extreme" and PDF/A. |
-| OCR | **Tesseract.js** (Apache-2.0) | Mature, client-side, per-language lazy data. |
+| OCR | None: removed (D-042) | Tesseract.js worked, but its WASM and language data are a large download. |
 | Office conversions | None: dropped from scope (D-041) | See [the spike report](research/office-spike.md). |
 | Workers | Web Workers + **Comlink** | Keeps the UI at 60 fps, typed engine API. |
 | Local storage | IndexedDB (`idb-keyval`), OPFS for large temp files | Signatures and settings on the device. |

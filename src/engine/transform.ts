@@ -4,7 +4,6 @@ import * as mupdf from "mupdf";
 import { message, pageImages, toDisplayColours, unlockedWith } from "./ops";
 import { drawOnTop, ownResources, subDictionary } from "./content";
 import { applyEdits } from "./edit";
-import { addTextLayers } from "./ocr";
 import { EngineError } from "./errors";
 import type { CompressLevel, Metadata, MetadataField, Permission, Security, TransformOptions } from "./types";
 
@@ -25,7 +24,6 @@ export function transform(
 ): Uint8Array<ArrayBuffer> {
   const copy = copyOf(pdf, password);
   try {
-    if (options.textLayers) addTextLayers(copy, options.textLayers);
     // Edits first, so what was added is flattened, greyed and compressed with the rest of the page.
     if (options.edits) applyEdits(copy, options.edits);
     if (options.flatten) {

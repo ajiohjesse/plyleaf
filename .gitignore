@@ -13,9 +13,6 @@ playwright/.cache/
 Thumbs.db
 .wrangler/
 
-# OCR reading data, copied from node_modules by scripts/ocr-data.ts
-public/ocr/
-
 # Engine spike: generated fixtures (~80 MB), build output, thumbnails
 bench/engine/public/fixtures/
 bench/engine/dist/

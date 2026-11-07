@@ -211,14 +211,6 @@ export const tools: Tool[] = [
     available: true,
   },
   {
-    slug: "ocr-pdf",
-    name: "OCR PDF",
-    description: "Make scanned PDFs searchable.",
-    category: "optimize-secure",
-    keywords: ["scan", "recognize", "searchable", "text recognition", "copy text"],
-    available: true,
-  },
-  {
     slug: "protect-pdf",
     name: "Protect PDF",
     description: "Add a password (AES-256).",

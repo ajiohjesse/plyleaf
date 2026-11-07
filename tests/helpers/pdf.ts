@@ -270,33 +270,3 @@ export function textPdf(lines: string[]): Uint8Array<ArrayBuffer> {
   doc.destroy();
   return bytes;
 }
-
-/**
- * A scan of `textPdf(lines)`: one A4 page that's only a greyscale picture of those lines (at 200 dpi), with no text
- * MuPDF can read. `turned` stores the page sideways with /Rotate 90, so it still shows upright.
- */
-export function scannedPdf(lines: string[], { turned = false }: { turned?: boolean } = {}): Uint8Array<ArrayBuffer> {
-  const source = new mupdf.PDFDocument(textPdf(lines));
-  const pixmap = source
-    .loadPage(0)
-    .toPixmap(mupdf.Matrix.scale(200 / 72, 200 / 72), mupdf.ColorSpace.DeviceGray, false, true);
-  source.destroy();
-  const doc = new mupdf.PDFDocument();
-  const image = doc.addImage(new mupdf.Image(pixmap));
-  pixmap.destroy();
-  const { width, height } = A4;
-  // Turned: the page is landscape in its own space and shown a quarter turn clockwise, so the picture is drawn a
-  // quarter turn the other way.
-  const [box, matrix] = turned
-    ? [[0, 0, height, width], `0 ${width} ${-height} 0 ${height} 0`]
-    : [[0, 0, width, height], `${width} 0 0 ${height} 0 0`];
-  doc.insertPage(
-    -1,
-    doc.addPage(box as mupdf.Rect, turned ? 90 : 0, { XObject: { I: image } }, `q ${matrix} cm /I Do Q`),
-  );
-  const buffer = doc.saveToBuffer("compress");
-  const bytes = new Uint8Array(buffer.asUint8Array());
-  buffer.destroy();
-  doc.destroy();
-  return bytes;
-}

@@ -368,15 +368,6 @@ export interface Edits {
   images?: Uint8Array[];
 }
 
-/**
- * Words read from a page by OCR, as Tesseract writes them: a one-page PDF of invisible text, the size of the picture
- * that was read. It's stretched over the page.
- */
-export interface TextLayer {
-  page: number;
-  pdf: Uint8Array;
-}
-
 /** A redaction search's matches on a page: each match's words and a box per line it's on. */
 export interface PageMatches {
   page: number;
@@ -385,8 +376,6 @@ export interface PageMatches {
 
 /** What to change in a copy of an open document before saving it (Optimize & secure tools). */
 export interface TransformOptions {
-  /** OCR's invisible text, put onto the pages first. */
-  textLayers?: TextLayer[];
   /** Drawn onto the pages first, so the other options apply to them too. */
   edits?: Edits;
   /** Defaults to keeping the document's own encryption. */

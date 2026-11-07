@@ -60,8 +60,9 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ### [x] M6: Sign and forms
 - [x] AcroForm fill · [x] Type on flat forms · [x] Signatures (draw/type/upload, saved locally) · [x] Initials/date · [x] Flatten
 
-### [x] M7: Redact and OCR
-- [x] True redaction (verified non-extractable) · [x] Search-and-redact · [x] OCR → searchable PDF (language picker)
+### [x] M7: Redact
+- [x] True redaction (verified non-extractable) · [x] Search-and-redact
+- OCR → searchable PDF was built (2026-11-04), then removed by the owner (D-042, 2026-11-07)
 
 ### [ ] M8: Text conversions
 - [x] Office spike; owner dropped Office conversions (D-041, 2026-11-07)
@@ -78,8 +79,14 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
 
-### 2026-11-07: Office conversions dropped (M8)
-- The owner decided against tools that need a large WASM download: Word/Excel/PowerPoint/ODF → PDF and PDF →
+### 2026-11-07: OCR removed
+- The owner removed OCR for the same reason as the Office tools (D-042, supersedes D-040): `/ocr-pdf`, `src/ocr/`,
+  `src/components/ocr/`, `src/engine/ocr.ts` (and `transform`'s `textLayers`), `scripts/ocr-data.ts`, `public/ocr/`,
+  Tesseract.js and its 23 language packages, `scannedPdf()` and the OCR tests are gone. Copy that pointed to OCR (Redact,
+  Annotate, Scan to PDF, the home comparison) now says scans aren't searchable.
+- Verified: `pnpm check`, `pnpm build`, E2E.
+
+- The owner decided against tools that need a large WASM download: Word/Excel/PowerPoint/ODF → PDF and PDF →
   Word/Excel/PowerPoint are out of scope, with no server fallback (D-041, closes D-007). M8 is now Text conversions.
 - Removed the four Office tools from the catalogue (`src/data/tools.ts`) and the spike harness (`bench/office/`, still in
   the history at 5657f09). The spike report stays in `docs/research/` as the record of why.

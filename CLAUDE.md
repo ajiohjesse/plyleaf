@@ -82,10 +82,6 @@ Cloudflare Pages. Package manager: pnpm.
   (`src/sign/store.ts`). Pages: `/sign-pdf`, `/fill-pdf-form`. Test form: `interactiveFormPdf()` in `tests/helpers/pdf.ts`.
 - Redact (M7, D-039) is an editor tool: `RedactItem`s become `Edits.pages[].redact`, applied last by `src/engine/redact.ts`;
   search-and-redact is pure in `src/redact/search.ts` over `engine.findText`. Page: `/redact-pdf`.
-- OCR (M7, D-040): `src/ocr/` (Tesseract.js in its own worker, lazy; `ocr.ts` reads pages into text layers for
-  `transform`'s `textLayers`, drawn by `src/engine/ocr.ts`), `src/components/ocr/OcrWorkspace.tsx`. Reading data is
-  copied to `public/ocr/` (gitignored) by `scripts/ocr-data.ts`, run by `pnpm dev` / `pnpm build`; a new language needs its
-  `@tesseract.js-data/<code>` dependency and an entry in `src/ocr/catalogue.ts`. Test scans: `scannedPdf()`.
 - Page tools (page numbers, watermark, header/footer, Bates): pure placement and tokens in `src/pagetools/`, shared form
   pieces and the live `PagePreview` in `src/components/pagetools/fields.tsx`; each is a `SingleFileTool` saving edits.
 - `src/download/`: output names, `downloadFile` and `saveAs`; `src/components/download/DownloadPanel` is the "done"
@@ -98,5 +94,6 @@ Cloudflare Pages. Package manager: pnpm.
 ## Conventions
 - Each tool = a static landing page under `src/pages/<tool-slug>.astro` + a React workspace island + an engine
   operation in the worker. Keep engine operations pure (bytes in → bytes out) and unit-tested.
-- Large WASM and OCR data are loaded lazily and never imported on landing pages.
+- Large WASM is loaded lazily and never imported on landing pages. Don't add tools that need a large new download
+  (no Office conversion or OCR: D-041, D-042).
 - Test fixtures live in `tests/fixtures/` (small, licence-clean PDFs that we generate ourselves where possible).
