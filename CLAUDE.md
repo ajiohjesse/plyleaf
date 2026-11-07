@@ -20,8 +20,8 @@ Plyleaf is a completely free, no-sign-up, browser-only PDF toolkit. The goal, sc
 ## Rules that are never broken (GOAL.md §3)
 - No paywalls, quotas, "Pro" features, watermarks or upgrade prompts.
 - No sign-in, accounts or user database. Anything personal (signatures, settings) is stored on the device only.
-- User file bytes never go over the network. Process in the browser (WASM in Web Workers). The one possible exception
-  (M8 Office conversion) needs an explicit owner decision first (D-007).
+- User file bytes never go over the network. Process in the browser (WASM in Web Workers), with no server
+  fallback for any feature (D-041).
 - No dark patterns: no nag modals, fake waits or countdowns. Donations are a quiet link, never a gate.
 - No third-party requests at runtime beyond our own origin/CDN (self-host fonts, no trackers, cookieless analytics only).
 

@@ -1,6 +1,9 @@
 # Office conversion spike (D-007)
 
-Date: 2026-11-07 · Milestone: M8 · Decision: [D-007](../DECISIONS.md) (**owner gate**, open)
+Date: 2026-11-07 · Milestone: M8 · Decision: [D-007](../DECISIONS.md), closed by **D-041: Office conversions dropped** (owner, 2026-11-07)
+
+> **Outcome.** The owner chose not to ship any tool that needs a large WASM download, so none of the conversions below
+> are built. The harness this report cites (`bench/office/`) was removed; it is in the git history at commit 5657f09.
 
 **Question.** Can Plyleaf convert Word, Excel, PowerPoint, ODF and HTML to PDF (and PDF back to Office formats) in the
 browser at a quality worth shipping? Or should the owner approve an opt-in conversion server (self-hosted Gotenberg),

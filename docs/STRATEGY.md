@@ -47,7 +47,7 @@ even with heavy traffic. Nothing needs to be monetised.
 ### Hard parts, and how we handle them
 | Hard part | Approach |
 |-----------|----------|
-| Office ↔ PDF conversion is heavy client-side | Milestone M8 is a **decision gate**: spike LibreOffice/ZetaOffice WASM and office2pdf WASM first. Only if quality is unacceptable, propose an *opt-in*, clearly disclosed, self-hosted conversion server (Gotenberg) to the owner. |
+| Office ↔ PDF conversion is heavy client-side | **Not offered** (D-041): the only good client-side engine is a ~50 MB LibreOffice WASM download, and a server would break P3. |
 | Big WASM bundles (MuPDF ~10 MB, Ghostscript ~15 MB, OCR language data) | Load lazily per tool, cache with the service worker, show a one-time "preparing tool…" state. Landing pages ship zero engine code. |
 | Memory on large files / phones | Engines in Web Workers, transfer ArrayBuffers instead of copying them, virtualised thumbnails, render at device-appropriate DPI, clear "file too large for this device" errors instead of crashes. |
 | Editing existing text in PDFs | Inherently best-effort (font subsetting). Use MuPDF's text/font APIs; fall back to whiteout + overlay text with the closest font. Be honest in the UI. |
@@ -99,7 +99,7 @@ People search for tasks: "merge pdf", "compress pdf to 100kb", "jpg to pdf", "si
 | Alternative renderer | **pdf.js** (Apache-2.0) or **@embedpdf/pdfium** (MIT + Apache) | Fallback if the M1 spike shows MuPDF is too heavy for simple tools. |
 | Heavy compression / PDF/A | **Ghostscript WASM** (AGPL) | Best-in-class downsampling; lazy-loaded only on Compress "extreme" and PDF/A. |
 | OCR | **Tesseract.js** (Apache-2.0) | Mature, client-side, per-language lazy data. |
-| Office conversions | Spike in M8: LibreOffice/ZetaOffice WASM, office2pdf WASM; DOCX/XLSX/PPTX writers (`docx`, `exceljs`, `pptxgenjs`) for PDF → Office | See M8 gate. |
+| Office conversions | None: dropped from scope (D-041) | See [the spike report](research/office-spike.md). |
 | Workers | Web Workers + **Comlink** | Keeps the UI at 60 fps, typed engine API. |
 | Local storage | IndexedDB (`idb-keyval`), OPFS for large temp files | Signatures and settings on the device. |
 | Testing | **Vitest** (unit), **Playwright** (E2E: Chromium, Firefox, WebKit) | Real-file fixtures; network-egress assertions. |

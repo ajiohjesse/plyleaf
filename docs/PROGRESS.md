@@ -2,11 +2,10 @@
 
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
-- **Current milestone:** M8: Office conversions (M0–M2 done 2026-10-31, M3 and M4 done 2026-11-01, M5 done 2026-11-02,
+- **Current milestone:** M8: Text conversions (M0–M2 done 2026-10-31, M3 and M4 done 2026-11-01, M5 done 2026-11-02,
   M6 and M7 done 2026-11-04)
-- **Next action:** wait for the owner's D-007 decision on the [Office spike](research/office-spike.md) (recommendation:
-  client-side only, LibreOffice WASM lazily loaded). Once decided: build Word/Excel/PowerPoint/ODF → PDF first (with the
-  watchdog, COOP/COEP headers and chunked hosting the report lists), then HTML → PDF, then PDF → Word/Excel/PowerPoint.
+- **Next action:** M8: HTML / plain text / Markdown → PDF, then PDF → plain text. Office conversions are dropped
+  (D-041, owner, 2026-11-07).
 - **Owner asked (2026-11-04):** build all of M7 in one go, as one PR, auto-merged when CI passes. Same for M6 earlier
   that day.
 - **Owner asked (2026-11-01):** build all of M5 in one go, one PR per item, each auto-merged when CI passes.
@@ -14,8 +13,6 @@ Single source of truth for where Plyleaf is. **Every session updates this file b
   Unlock removes owner-password restrictions only after the user confirms they have the right to; libheif-js approved.
 - **Live:** https://plyleaf.ajiohjesse.workers.dev (Workers Builds deploys `main`; other branches get Preview URLs).
 - **Blocked on owner:**
-  - **D-007** (M8 gate): approve option A (client-side only), B (plus an opt-in server) or C, and the quality bar, per
-    [the spike report](research/office-spike.md#open-questions-for-the-owner).
   - Later, at the owner's pace: register `plyleaf.com` (and optionally the `plyleaf` GitHub org). Not blocking (D-013).
 - **Repo:** https://github.com/ajiohjesse/plyleaf (public). `gh`'s active account on this machine is `angosam`, so run
   `gh` as ajiohjesse with `GH_TOKEN=$(gh auth token --user ajiohjesse) gh …`. For `git push`, GH_TOKEN alone isn't
@@ -66,9 +63,9 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ### [x] M7: Redact and OCR
 - [x] True redaction (verified non-extractable) · [x] Search-and-redact · [x] OCR → searchable PDF (language picker)
 
-### [ ] M8: Office conversions
-- [ ] Spike + D-007 decided by owner (spike done 2026-11-07; decision pending)
-- [ ] Word/Excel/PPT/ODF/HTML → PDF · [ ] PDF → Word/Excel/PPT/text
+### [ ] M8: Text conversions
+- [x] Office spike; owner dropped Office conversions (D-041, 2026-11-07)
+- [ ] HTML / plain text / Markdown → PDF · [ ] PDF → plain text
 
 ### [ ] M9: Launch readiness
 - [ ] PWA offline · [ ] Lighthouse targets · [ ] WCAG 2.2 AA audit · [ ] Privacy/About/Donate pages · [ ] SEO metadata + sitemap
@@ -81,8 +78,16 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
 
+### 2026-11-07: Office conversions dropped (M8)
+- The owner decided against tools that need a large WASM download: Word/Excel/PowerPoint/ODF → PDF and PDF →
+  Word/Excel/PowerPoint are out of scope, with no server fallback (D-041, closes D-007). M8 is now Text conversions.
+- Removed the four Office tools from the catalogue (`src/data/tools.ts`) and the spike harness (`bench/office/`, still in
+  the history at 5657f09). The spike report stays in `docs/research/` as the record of why.
+- Verified: `pnpm check`.
+- Next: HTML / plain text / Markdown → PDF.
+
 ### 2026-11-07: Office conversion spike (M8)
-- Spike for D-007, report in [docs/research/office-spike.md](research/office-spike.md); harness in `bench/office/`
+- Spike for D-007, report in [docs/research/office-spike.md](research/office-spike.md); harness in `bench/office/` (removed later the same day)
   (standalone package, so the candidates stay out of the app's dependencies).
 - Test documents generated in code (DOCX/XLSX/PPTX/HTML, plus ODF twins); converted with LibreOffice WASM
   (`@matbee/libreoffice-converter` 2.7.2), docx-to-pdf-wasm and docx-preview + print; timed in Node and in Chromium,
