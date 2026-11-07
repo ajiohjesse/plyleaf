@@ -159,6 +159,8 @@ export function operationFailureMessage(error: unknown): string {
       return ENGINE_UNAVAILABLE;
     case "unknown-document":
       return "Your files were closed before the PDF was made. Add them again and try once more.";
+    case "too-large":
+      return "That would make more pages than Plyleaf can put in one PDF. Split it into smaller parts and try again.";
     default:
       return "Something went wrong making your PDF. Try again.";
   }

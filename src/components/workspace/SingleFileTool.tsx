@@ -66,6 +66,7 @@ export function SingleFileTool({ intake: options, Options }: Props) {
           file={outcome.file}
           name={outcome.name}
           {...(outcome.detail && { detail: outcome.detail })}
+          {...(outcome.copy !== undefined && { copy: outcome.copy })}
           onStartOver={() => {
             setOutcome(null);
             setReturning(true);

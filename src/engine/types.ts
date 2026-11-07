@@ -395,6 +395,22 @@ export interface TransformOptions {
   metadata?: { set: Metadata } | "remove";
 }
 
+/** How to lay out HTML on pages (htmlToPdf). Margins come from the HTML's own `@page` rule. */
+export interface HtmlPdfOptions {
+  /** Page size in PDF points. */
+  width: number;
+  height: number;
+  /** The text size that 1em is, in points. */
+  fontSize: number;
+  /** The PDF's title, in its document information. */
+  title?: string;
+}
+
+export interface HtmlPdfResult {
+  bytes: Uint8Array<ArrayBuffer>;
+  pageCount: number;
+}
+
 /** An RGBA bitmap, 4 bytes per pixel, not premultiplied. */
 export interface Bitmap {
   width: number;
@@ -421,5 +437,7 @@ export type EngineErrorCode =
   | "engine-crashed"
   /** The engine couldn't be loaded (offline before it was cached, say). The next call tries again. */
   | "engine-unavailable"
+  /** The output would be bigger than the engine makes (a conversion over MAX_HTML_PAGES pages). */
+  | "too-large"
   /** Anything else MuPDF threw. */
   | "engine-failure";

@@ -1,0 +1,44 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { PdfToTextWorkspace } from "~/components/convert/PdfToTextWorkspace";
+---
+
+<ToolPage
+  slug="pdf-to-text"
+  title="PDF to text: extract text from a PDF free, no sign-up"
+  description="Get all the text out of a PDF as a plain .txt file, or copy it, in your browser. Free with no limits and no account, and your file is never uploaded."
+  heading="PDF to text"
+  intro="Get every word out of a PDF as a plain text file, or copy it straight away. Free, no sign-up, and your PDF never leaves this device."
+  steps={[
+    { title: "Add your PDF", text: "Choose it, drop it anywhere on the page, or paste it." },
+    { title: "Choose page markers", text: "Mark where each page starts, or run the text on." },
+    { title: "Download or copy", text: "A .txt file in UTF-8 that opens anywhere, or the text on your clipboard." },
+  ]}
+  faqs={[
+    {
+      question: "Is it really free?",
+      answer:
+        "Yes. There is no paid plan, no daily limit and no sign-up. Plyleaf can be free because your own browser does the work.",
+    },
+    {
+      question: "Is my PDF uploaded?",
+      answer: "No. The text is read right here in your browser. Your file never goes over the internet.",
+    },
+    {
+      question: "Why is some text missing?",
+      answer:
+        "Pages that are pictures, like scans and photos of paper, have no text in them to read, and Plyleaf doesn't read text from pictures. The tool tells you which pages had none.",
+    },
+    {
+      question: "Does it keep the layout?",
+      answer:
+        "It keeps the reading order, lines and paragraphs. Columns are read one after the other, and tables come out as rows of text. Fonts, colours and pictures aren't part of plain text.",
+    },
+    {
+      question: "Can I open a password-protected PDF?",
+      answer: "Yes, if you know the password: you'll be asked for it, and it stays on this device.",
+    },
+  ]}
+>
+  <PdfToTextWorkspace client:load />
+</ToolPage>

@@ -1,0 +1,48 @@
+---
+import ToolPage from "~/layouts/ToolPage.astro";
+import { TextToPdfWorkspace } from "~/components/convert/TextToPdfWorkspace";
+---
+
+<ToolPage
+  slug="html-to-pdf"
+  title="HTML to PDF: convert HTML files to PDF free, no sign-up"
+  description="Turn an HTML file into a PDF in your browser, with its styles, pictures and links. Free with no limits, no watermark and no account, and your file is never uploaded."
+  heading="HTML to PDF"
+  intro="Turn a saved web page or any .html file into a PDF, with its styles, pictures and working links. Free, no sign-up, no watermark, and your file never leaves this device."
+  steps={[
+    {
+      title: "Add your HTML",
+      text: "Drop an .html file anywhere on the page, choose one, or paste the code in. Add its pictures and stylesheets too.",
+    },
+    { title: "Pick the pages", text: "A4 or US Letter, portrait or landscape, and the margins." },
+    { title: "Convert and download", text: "Text stays text, so it's sharp and searchable, and links still work." },
+  ]}
+  faqs={[
+    {
+      question: "Is it really free?",
+      answer:
+        "Yes. There is no paid plan, no daily limit and no watermark. Plyleaf can be free because your own browser does the work.",
+    },
+    {
+      question: "Is my file uploaded?",
+      answer: "No. The PDF is made right here in your browser. Your file never goes over the internet.",
+    },
+    {
+      question: "Can I convert a website by its address?",
+      answer:
+        "No. Plyleaf never loads anything from other sites, so it can't fetch a page for you. Save the page from your browser (File, Save page as) and drop the file here.",
+    },
+    {
+      question: "Why are some pictures missing?",
+      answer:
+        "Pictures the page loads from another site are left out, because Plyleaf never fetches anything. Pictures on your device can be added: the tool lists the files the page uses, and you add them with one button.",
+    },
+    {
+      question: "Will it look exactly like it does in my browser?",
+      answer:
+        "Close, for documents: text styles, colours, tables, lists, pictures and page breaks all work. Layouts built for screens (side-by-side columns made with flexbox or grid, animations, scripts) are simplified, and scripts don't run.",
+    },
+  ]}
+>
+  <TextToPdfWorkspace format="html" client:load />
+</ToolPage>

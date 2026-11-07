@@ -15,6 +15,8 @@ import type {
   ImageOptions,
   PageSpec,
   FormField,
+  HtmlPdfOptions,
+  HtmlPdfResult,
   PageMatches,
   TextLine,
   TextSelection,
@@ -170,6 +172,17 @@ const api = {
   async textAmounts(id: DocId): Promise<number[]> {
     const ops = await loading;
     return ops.textAmounts(get(id));
+  },
+
+  async htmlToPdf(html: string, options: HtmlPdfOptions): Promise<HtmlPdfResult> {
+    const ops = await loading;
+    const result = ops.htmlToPdf(html, options);
+    return transfer(result, [result.bytes.buffer]);
+  },
+
+  async pdfText(id: DocId): Promise<string[]> {
+    const ops = await loading;
+    return ops.pdfText(get(id));
   },
 
   async assemble(pages: PageSpec[]): Promise<Uint8Array<ArrayBuffer>> {
