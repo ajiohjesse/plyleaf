@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { engine } from "~/engine/client";
-import { fitFor, type Layout, type Margin, type Orientation, type PageSize } from "~/convert/images";
+import { fitFor, type Layout, type PageSize } from "~/convert/images";
 import { outputName } from "~/download/download";
 import { operationFailureMessage } from "~/intake/files";
 import { DownloadPanel } from "~/components/download/DownloadPanel";
@@ -9,6 +9,7 @@ import { IntakeNotices } from "~/components/intake/IntakePanel";
 import { useIntake } from "~/components/intake/useIntake";
 import { FileOrder } from "~/components/workspace/FileOrder";
 import { ActionBar, Choice, FailureAlert, plural, primaryButton, type Result } from "~/components/workspace/parts";
+import { Select } from "~/components/workspace/controls";
 
 const ACCEPT = ["image"] as const;
 
@@ -106,10 +107,7 @@ export function ImagesWorkspace() {
 
 export function LayoutOptions({ layout, onChange }: { layout: Layout; onChange: (layout: Layout) => void }) {
   const name = useId();
-  const ids = { orientation: useId(), margin: useId() };
   const set = (change: Partial<Layout>) => onChange({ ...layout, ...change });
-  const selectClass =
-    "mt-1 block w-full rounded-lg border-2 border-line bg-surface px-3 py-2 text-base focus:border-primary focus:outline-none";
   const sizes: { value: PageSize; title: string; text: string }[] = [
     { value: "image", title: "Same as image", text: "Each page is its image's size." },
     { value: "a4", title: "A4", text: "210 × 297 mm, images fitted in." },
@@ -135,34 +133,28 @@ export function LayoutOptions({ layout, onChange }: { layout: Layout; onChange: 
       {layout.size !== "image" && (
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
-            <label htmlFor={ids.orientation} className="font-semibold">
-              Orientation
-            </label>
-            <select
-              id={ids.orientation}
+            <Select
+              label="Orientation"
               value={layout.orientation}
-              onChange={(event) => set({ orientation: event.target.value as Orientation })}
-              className={selectClass}
-            >
-              <option value="auto">Match each image</option>
-              <option value="portrait">Portrait</option>
-              <option value="landscape">Landscape</option>
-            </select>
+              onChange={(orientation) => set({ orientation })}
+              options={[
+                { value: "auto", label: "Match each image" },
+                { value: "portrait", label: "Portrait" },
+                { value: "landscape", label: "Landscape" },
+              ]}
+            />
           </div>
           <div>
-            <label htmlFor={ids.margin} className="font-semibold">
-              Margin
-            </label>
-            <select
-              id={ids.margin}
+            <Select
+              label="Margin"
               value={layout.margin}
-              onChange={(event) => set({ margin: event.target.value as Margin })}
-              className={selectClass}
-            >
-              <option value="none">None</option>
-              <option value="small">Small (¼ in, 6 mm)</option>
-              <option value="large">Large (½ in, 13 mm)</option>
-            </select>
+              onChange={(margin) => set({ margin })}
+              options={[
+                { value: "none", label: "None" },
+                { value: "small", label: "Small (¼ in, 6 mm)" },
+                { value: "large", label: "Large (½ in, 13 mm)" },
+              ]}
+            />
           </div>
         </div>
       )}

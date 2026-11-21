@@ -1,6 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { categories, filterTools, tools } from "~/data/tools";
-import { CategoryIcon } from "./CategoryIcon";
+import { SearchIcon } from "./icons";
+import { ToolIcon } from "./icons/tools";
 import { stickyBg } from "./sticky";
 
 /** Searchable tool grid, grouped by category. Rendered to HTML at build time, then hydrated for the search box. */
@@ -25,18 +26,9 @@ export function ToolGrid() {
           Search tools
         </label>
         <div className="relative">
-          <svg
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-            className="pointer-events-none absolute top-1/2 left-5 size-5 -translate-y-1/2 text-ink-muted"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            strokeLinecap="round"
-          >
-            <circle cx="11" cy="11" r="7" />
-            <path d="m20 20-3.5-3.5" />
-          </svg>
+          <span className="pointer-events-none absolute top-1/2 left-5 -translate-y-1/2 text-ink-muted">
+            <SearchIcon />
+          </span>
           <input
             id={searchId}
             type="search"
@@ -73,7 +65,7 @@ export function ToolGrid() {
                     <span
                       className={`grid size-11 shrink-0 -rotate-3 place-items-center rounded-lg text-ink shadow-sticky transition-transform group-hover:rotate-0 ${stickyBg[category.sticky]}`}
                     >
-                      <CategoryIcon category={tool.category} className="size-6" />
+                      <ToolIcon slug={tool.slug} className="size-6" />
                     </span>
                     <span className="min-w-0">
                       <span className="flex flex-wrap items-center gap-x-2 font-display text-lg leading-tight font-bold">

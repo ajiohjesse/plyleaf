@@ -7,6 +7,7 @@ import { watchEgress } from "../helpers/egress";
 import { asPayload, dropFiles, pdfFile, type FileSpec } from "../helpers/files";
 import { fixture, makeJpeg, makePng } from "../helpers/images";
 import { A4 } from "../helpers/pdf";
+import { choose } from "../helpers/controls";
 
 const SECRET = "images-canary-p8w";
 
@@ -106,7 +107,7 @@ test("turns images of every kind into one PDF, without sending them anywhere", a
   await page.getByRole("button", { name: "Back to your images" }).click();
   await expect(page.getByRole("button", { name: "Convert to PDF" })).toBeFocused();
   await page.getByText("A4", { exact: true }).click();
-  await page.getByLabel("Margin").selectOption("large");
+  await choose(page, page.getByLabel("Margin"), "Large (½ in, 13 mm)");
   await page.getByRole("button", { name: "Convert to PDF" }).click();
   const fitted = await download(page);
   expect(sizes(fitted.doc)).toEqual([
@@ -122,7 +123,7 @@ test("turns images of every kind into one PDF, without sending them anywhere", a
 
   // All portrait.
   await page.getByRole("button", { name: "Back to your images" }).click();
-  await page.getByLabel("Orientation").selectOption("portrait");
+  await choose(page, page.getByLabel("Orientation"), "Portrait");
   await page.getByRole("button", { name: "Convert to PDF" }).click();
   expect(sizes((await download(page)).doc).every(([w, h]) => w === 595 && h === 842)).toBe(true);
 

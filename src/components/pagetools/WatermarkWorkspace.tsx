@@ -9,6 +9,7 @@ import { prepareImage, type PreparedImage } from "~/components/editor/prepareIma
 import { ActionBar, Choice, FailureAlert, plural, primaryButton } from "~/components/workspace/parts";
 import { SingleFileTool, type Outcome, type ToolProps } from "~/components/workspace/SingleFileTool";
 import { fieldClass, PagePreview, panelClass, PositionGrid, StyleFields, WholeNumberField } from "./fields";
+import { Select } from "~/components/workspace/controls";
 
 /** The Watermark workspace: words or a picture over every page, see-through and turned, with a preview. */
 export function WatermarkWorkspace() {
@@ -43,7 +44,7 @@ function WatermarkOptionsPanel({ doc, run, working, buttonRef }: ToolProps) {
   const [pictureError, setPictureError] = useState<string | null>(null);
   const [rest, setRest] = useState(DEFAULT_WATERMARK);
   const set = (patch: Partial<typeof rest>) => setRest((current) => ({ ...current, ...patch }));
-  const ids = { kind: useId(), text: useId(), opacity: useId(), angle: useId(), picture: useId(), width: useId() };
+  const ids = { kind: useId(), text: useId(), picture: useId(), width: useId() };
   useEffect(
     () => () => {
       if (picture) URL.revokeObjectURL(picture.url);
@@ -138,38 +139,26 @@ function WatermarkOptionsPanel({ doc, run, working, buttonRef }: ToolProps) {
         <section className={panelClass} aria-label="Look and pages">
           <div className="grid gap-3 sm:grid-cols-3">
             <div>
-              <label htmlFor={ids.opacity} className="font-semibold">
-                See-through
-              </label>
-              <select
-                id={ids.opacity}
-                value={rest.opacity}
-                onChange={(event) => set({ opacity: Number(event.target.value) })}
-                className={fieldClass}
-              >
-                {[0.15, 0.3, 0.5, 0.75, 1].map((opacity) => (
-                  <option key={opacity} value={opacity}>
-                    {opacity === 1 ? "Solid" : `${Math.round(opacity * 100)}% strong`}
-                  </option>
-                ))}
-              </select>
+              <Select
+                label="See-through"
+                value={String(rest.opacity)}
+                onChange={(value) => set({ opacity: Number(value) })}
+                options={[0.15, 0.3, 0.5, 0.75, 1].map((opacity) => ({
+                  value: String(opacity),
+                  label: opacity === 1 ? "Solid" : `${Math.round(opacity * 100)}% strong`,
+                }))}
+              />
             </div>
             <div>
-              <label htmlFor={ids.angle} className="font-semibold">
-                Angle
-              </label>
-              <select
-                id={ids.angle}
-                value={rest.rotate}
-                onChange={(event) => set({ rotate: Number(event.target.value) })}
-                className={fieldClass}
-              >
-                {ANGLES.map((angle) => (
-                  <option key={angle} value={angle}>
-                    {angle === 0 ? "Level" : angle === 90 ? "Upright (90°)" : `${angle}°`}
-                  </option>
-                ))}
-              </select>
+              <Select
+                label="Angle"
+                value={String(rest.rotate)}
+                onChange={(value) => set({ rotate: Number(value) })}
+                options={ANGLES.map((angle) => ({
+                  value: String(angle),
+                  label: angle === 0 ? "Level" : angle === 90 ? "Upright (90°)" : `${angle}°`,
+                }))}
+              />
             </div>
             <WholeNumberField
               label="From page"

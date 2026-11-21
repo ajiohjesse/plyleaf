@@ -26,7 +26,7 @@ import {
   useViewportObserver,
   type Observe,
 } from "~/components/thumbnails/ThumbnailGrid";
-import { GripIcon } from "~/components/workspace/parts";
+import { CheckIcon, CloseIcon, GripIcon } from "~/components/icons";
 
 interface Props {
   board: Board;
@@ -292,13 +292,7 @@ const BoardCard = memo(function BoardCard({
               removing ? "bg-sticky-coral text-ink" : "bg-primary text-on-primary",
             ].join(" ")}
           >
-            <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth={3}>
-              <path
-                d={removing ? "M7 7l10 10M17 7 7 17" : "M5 12.5l4.5 4.5L19 7.5"}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            {removing ? <CloseIcon className="size-3.5" /> : <CheckIcon className="size-3.5" />}
           </span>
         )}
       </button>

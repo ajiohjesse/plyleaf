@@ -8,6 +8,7 @@ import { asPayload, dropFiles, type FileSpec } from "../helpers/files";
 import { makePng } from "../helpers/images";
 import { A4, LETTER } from "../helpers/pdf";
 import { qpdfCheck } from "../helpers/qpdf";
+import { choose, expectChosen } from "../helpers/controls";
 
 const SECRET = "text-canary-k7w";
 // A4 unless a test says otherwise.
@@ -41,7 +42,7 @@ test("turns a text file into a PDF of real text, without sending it anywhere", a
   await page.getByLabel("Choose files").setInputFiles(asPayload(textFile(`${SECRET}-notes.txt`, `Café € Ω\n${lines}`)));
   await expect(page.getByLabel(`text from ${SECRET}-notes.txt`)).toHaveValue(/^Café € Ω\nLine 1:/);
   await expect(page.getByRole("radio", { name: /Plain text/ })).toBeChecked();
-  await expect(page.getByLabel("Page size")).toHaveValue("a4");
+  await expectChosen(page, page.getByLabel("Page size"), "A4 (210 × 297 mm)");
 
   const { name, bytes, doc } = await convertAndDownload(page);
   expect(name).toBe(`${SECRET}-notes.pdf`);
@@ -61,9 +62,9 @@ test("converts typed text, on the page size and orientation chosen", async ({ pa
   // Typed before the island hydrates, the text would be lost.
   await expect(page.locator("label[data-listening]")).toHaveCount(1);
   await page.getByLabel("Or type or paste text here").fill("Typed by hand.\n\n\tIndented with a tab.");
-  await page.getByLabel("Page size").selectOption("letter");
-  await page.getByLabel("Orientation").selectOption("landscape");
-  await page.getByLabel("Font", { exact: true }).selectOption("serif");
+  await choose(page, page.getByLabel("Page size"), "US Letter (8.5 × 11 in)");
+  await choose(page, page.getByLabel("Orientation"), "Landscape");
+  await choose(page, page.getByLabel("Font", { exact: true }), "Serif");
   const { name, doc } = await convertAndDownload(page);
   expect(name).toBe("document.pdf");
   expect(doc.loadPage(0).getBounds()).toEqual([0, 0, LETTER.height, LETTER.width]);
@@ -80,7 +81,7 @@ test.describe("in the US", () => {
   test("starts on US Letter", async ({ page }) => {
     await page.goto("/text-to-pdf");
     await expect(page.locator("label[data-listening]")).toHaveCount(1);
-    await expect(page.getByLabel("Page size")).toHaveValue("letter");
+    await expectChosen(page, page.getByLabel("Page size"), "US Letter (8.5 × 11 in)");
   });
 });
 

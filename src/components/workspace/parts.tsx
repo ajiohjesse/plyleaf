@@ -5,8 +5,9 @@ import type { PageInfo } from "~/engine/types";
 import { formatSize } from "~/intake/files";
 import type { IntakeDocument } from "~/intake/intake";
 import { thumbnails } from "~/thumbnails/thumbnails";
-import { CloseIcon } from "~/components/intake/IntakePanel";
+import { CloseIcon } from "~/components/icons";
 import { PageCanvas } from "~/components/thumbnails/PageCanvas";
+import { Tip } from "~/components/workspace/controls";
 
 export const plural = (count: number, one: string, many = `${one}s`) => `${count} ${count === 1 ? one : many}`;
 
@@ -36,7 +37,7 @@ export const primaryButton =
 
 export function FailureAlert({ message }: { message: string }) {
   return (
-    <p role="alert" className="rounded-card border-2 border-sticky-coral bg-sticky-pink/40 px-4 py-3">
+    <p role="alert" className="enter rounded-card border-2 border-sticky-coral bg-sticky-pink/40 px-4 py-3">
       {message}
     </p>
   );
@@ -58,15 +59,16 @@ export function IconButton({
   children: React.ReactNode;
 }) {
   return (
-    <button
-      type="button"
-      aria-label={label}
-      aria-disabled={disabled || undefined}
-      onClick={disabled ? undefined : onClick}
-      className="grid size-9 shrink-0 place-items-center rounded-full text-ink-muted hover:bg-ink/10 hover:text-ink aria-disabled:cursor-default aria-disabled:opacity-35 aria-disabled:hover:bg-transparent sm:size-10"
-    >
-      {children}
-    </button>
+    <Tip label={label}>
+      <button
+        type="button"
+        aria-disabled={disabled || undefined}
+        onClick={disabled ? undefined : onClick}
+        className="press grid size-9 shrink-0 place-items-center rounded-full text-ink-muted hover:bg-ink/10 hover:text-ink aria-disabled:cursor-default aria-disabled:opacity-35 aria-disabled:hover:bg-transparent sm:size-10"
+      >
+        {children}
+      </button>
+    </Tip>
   );
 }
 
@@ -86,13 +88,7 @@ export function Choice({
 }) {
   return (
     <label className="grid cursor-pointer grid-cols-[auto_1fr] gap-x-3 rounded-lg border-2 border-line p-3 has-checked:border-primary has-checked:bg-sticky-lavender/20">
-      <input
-        type="radio"
-        name={name}
-        checked={checked}
-        onChange={onChange}
-        className="row-span-2 mt-1 size-4 accent-primary"
-      />
+      <input type="radio" name={name} checked={checked} onChange={onChange} className="radio row-span-2" />
       <span className="font-semibold">{title}</span>
       <span className="text-sm text-ink-muted">{children}</span>
     </label>
@@ -147,7 +143,7 @@ export function FileCard({ doc, onRemove }: { doc: IntakeDocument; onRemove: () 
   return (
     <div
       data-status={doc.status}
-      className="flex items-center gap-3 rounded-card border border-line bg-surface py-2 pr-2 pl-3 sm:pr-3"
+      className="enter flex items-center gap-3 rounded-card border border-line bg-surface py-2 pr-2 pl-3 sm:pr-3"
     >
       <FirstPage doc={doc} />
       <span className="min-w-0 flex-1">
@@ -158,14 +154,5 @@ export function FileCard({ doc, onRemove }: { doc: IntakeDocument; onRemove: () 
         <CloseIcon />
       </IconButton>
     </div>
-  );
-}
-
-/** Six dots: the handle that drags something into place. */
-export function GripIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5" fill="currentColor">
-      {[6, 12, 18].flatMap((y) => [9, 15].map((x) => <circle key={`${x}-${y}`} cx={x} cy={y} r={1.6} />))}
-    </svg>
   );
 }

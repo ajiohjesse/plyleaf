@@ -7,6 +7,7 @@ import { PERMISSION_LABELS, restrictions } from "~/secure/permissions";
 import { ActionBar, plural, primaryButton } from "~/components/workspace/parts";
 import { SingleFileTool, type Outcome, type ToolProps } from "~/components/workspace/SingleFileTool";
 import { PasswordField, ShowPasswords } from "./PasswordField";
+import { Checkbox } from "~/components/workspace/controls";
 
 /**
  * The PDF permissions workspace: choose what a PDF allows (printing, copying, editing…), with an optional password to
@@ -40,7 +41,7 @@ function PermissionsOptions({ doc, run, working, buttonRef }: ToolProps) {
   const [again, setAgain] = useState("");
   const [visible, setVisible] = useState(false);
   const [rights, setRights] = useState(false);
-  const ids = { rights: useId(), form: useId() };
+  const ids = { form: useId() };
   const toggle = (permission: Permission, on: boolean) =>
     setAllowed((list) => {
       const next = on ? [...list, permission] : list.filter((p) => p !== permission);
@@ -70,16 +71,14 @@ function PermissionsOptions({ doc, run, working, buttonRef }: ToolProps) {
         <fieldset className="space-y-2 rounded-card border border-line bg-surface p-4">
           <legend className="px-1 font-semibold">Allow</legend>
           {PERMISSIONS.map((permission) => (
-            <label key={permission} className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                checked={allowed.includes(permission)}
-                disabled={permission === "print-hq" && !allowed.includes("print")}
-                onChange={(event) => toggle(permission, event.target.checked)}
-                className="size-4 accent-primary"
-              />
+            <Checkbox
+              key={permission}
+              checked={allowed.includes(permission)}
+              disabled={permission === "print-hq" && !allowed.includes("print")}
+              onChange={(checked) => toggle(permission, checked)}
+            >
               {PERMISSION_LABELS[permission]}
-            </label>
+            </Checkbox>
           ))}
           <p className="pt-2 text-sm text-ink-muted">
             Permissions are a request that most PDF apps follow, not a lock: a few apps ignore them. To keep people out,
@@ -117,21 +116,14 @@ function PermissionsOptions({ doc, run, working, buttonRef }: ToolProps) {
           )}
         </fieldset>
         {lifting && (
-          <div className="flex items-start gap-3 rounded-card border-2 border-sticky-yellow bg-surface p-4">
-            <input
-              id={ids.rights}
-              type="checkbox"
-              checked={rights}
-              onChange={(event) => setRights(event.target.checked)}
-              className="mt-1 size-4 accent-primary"
-            />
-            <label htmlFor={ids.rights}>
-              I own this PDF, or have the right to remove its restrictions.
-              <span className="block text-sm text-ink-muted">
-                You're allowing things the file didn't. Only do that if you made it, or its maker agreed.
-              </span>
-            </label>
-          </div>
+          <Checkbox
+            className="rounded-card border-2 border-sticky-yellow bg-surface p-4"
+            checked={rights}
+            onChange={setRights}
+            description={<>You're allowing things the file didn't. Only do that if you made it, or its maker agreed.</>}
+          >
+            I own this PDF, or have the right to remove its restrictions.
+          </Checkbox>
         )}
       </form>
       <ActionBar

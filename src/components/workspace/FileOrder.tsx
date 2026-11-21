@@ -18,8 +18,8 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { Intake, IntakeDocument } from "~/intake/intake";
-import { CloseIcon } from "~/components/intake/IntakePanel";
-import { docSummary, FirstPage, GripIcon, IconButton } from "~/components/workspace/parts";
+import { CaretDownIcon, CaretUpIcon, CloseIcon, GripIcon } from "~/components/icons";
+import { docSummary, FirstPage, IconButton } from "~/components/workspace/parts";
 
 // The files of a multi-file workspace (Merge, Images to PDF) in the order they'll be used, to reorder by dragging or
 // with move buttons.
@@ -122,7 +122,7 @@ function FileRow({ doc, index, count, onMove, onRemove }: FileRowProps) {
       data-status={doc.status}
       style={{ transform: CSS.Translate.toString(transform), transition }}
       className={[
-        "relative flex items-center gap-2 rounded-card border bg-surface py-2 pr-2 pl-1 sm:gap-3 sm:pr-3",
+        "enter relative flex items-center gap-2 rounded-card border bg-surface py-2 pr-2 pl-1 sm:gap-3 sm:pr-3",
         isDragging ? "z-20 border-primary shadow-sticky" : "border-line",
       ].join(" ")}
     >
@@ -151,23 +151,15 @@ function FileRow({ doc, index, count, onMove, onRemove }: FileRowProps) {
       </span>
       <span className="flex shrink-0">
         <IconButton label={`Move ${doc.name} up`} disabled={index === 0} onClick={() => onMove(index - 1)}>
-          <ChevronIcon up />
+          <CaretUpIcon />
         </IconButton>
         <IconButton label={`Move ${doc.name} down`} disabled={index === count - 1} onClick={() => onMove(index + 1)}>
-          <ChevronIcon />
+          <CaretDownIcon />
         </IconButton>
         <IconButton label={`Remove ${doc.name}`} onClick={onRemove}>
           <CloseIcon />
         </IconButton>
       </span>
     </li>
-  );
-}
-
-function ChevronIcon({ up = false }: { up?: boolean }) {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeWidth={2.5}>
-      <path d={up ? "M6 15l6-6 6 6" : "M6 9l6 6 6-6"} strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
   );
 }

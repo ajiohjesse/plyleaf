@@ -1,10 +1,11 @@
-import { useId, useState } from "react";
+import { useState } from "react";
 import { engine } from "~/engine/client";
 import { joinPages, pagesWithoutText } from "~/convert/pdf-text";
 import { outputName } from "~/download/download";
 import type { ReadyDocument } from "~/intake/intake";
 import { ActionBar, plural, primaryButton } from "~/components/workspace/parts";
 import { SingleFileTool, type Outcome, type ToolProps } from "~/components/workspace/SingleFileTool";
+import { Checkbox } from "~/components/workspace/controls";
 
 /** The PDF to text workspace: one PDF in, its text out as a .txt file (UTF-8), or copied. */
 export function PdfToTextWorkspace() {
@@ -40,22 +41,16 @@ async function extract(doc: ReadyDocument, markPages: boolean): Promise<Outcome>
 
 function PdfToTextOptions({ doc, run, working, buttonRef }: ToolProps) {
   const [markPages, setMarkPages] = useState(true);
-  const markId = useId();
   return (
     <>
-      <div className="flex items-start gap-3 rounded-card border border-line bg-surface p-4">
-        <input
-          id={markId}
-          type="checkbox"
-          checked={markPages}
-          onChange={(event) => setMarkPages(event.target.checked)}
-          className="mt-1 size-4 accent-primary"
-        />
-        <label htmlFor={markId}>
-          <span className="font-semibold">Show where each page starts</span>
-          <span className="block text-sm text-ink-muted">A line like “--- Page 2 ---” before each page’s text.</span>
-        </label>
-      </div>
+      <Checkbox
+        className="rounded-card border border-line bg-surface p-4"
+        checked={markPages}
+        onChange={setMarkPages}
+        description={<>A line like “--- Page 2 ---” before each page’s text.</>}
+      >
+        <span className="font-semibold">Show where each page starts</span>
+      </Checkbox>
       <ActionBar
         status={
           working

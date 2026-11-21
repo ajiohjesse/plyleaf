@@ -6,6 +6,7 @@ import * as mupdf from "mupdf";
 import { watchEgress } from "../helpers/egress";
 import { asPayload, pdfFile } from "../helpers/files";
 import { A4, LETTER } from "../helpers/pdf";
+import { choose } from "../helpers/controls";
 
 const SECRET = "toimages-canary-r2c";
 
@@ -61,7 +62,7 @@ test("saves every page as a JPG in a zip, without sending the file anywhere", as
 test("one page as a PNG at 300 dpi downloads as the image itself", async ({ page }) => {
   await openTool(page);
   await page.getByText("PNG", { exact: true }).click();
-  await page.getByLabel("Resolution").selectOption("300");
+  await choose(page, page.getByLabel("Resolution"), "300 dpi: for printing");
   await page.getByText("Some pages", { exact: true }).click();
   await page.getByLabel("Pages to convert").fill("2");
   await expect(page.getByText("The image will be 2550 × 3300 pixels.")).toBeVisible();
@@ -75,7 +76,7 @@ test("one page as a PNG at 300 dpi downloads as the image itself", async ({ page
 test("makes WebP images where the browser can, and says so where it can't", async ({ page }) => {
   await openTool(page, [A4, A4]);
   await page.getByText("WebP", { exact: true }).click();
-  await page.getByLabel("Resolution").selectOption("72");
+  await choose(page, page.getByLabel("Resolution"), "72 dpi: small, for screens");
   const canEncode = await page.evaluate(() =>
     document.createElement("canvas").toDataURL("image/webp").startsWith("data:image/webp"),
   );

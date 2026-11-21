@@ -7,6 +7,7 @@ import { asPayload, pdfFile } from "../helpers/files";
 import { makePng } from "../helpers/images";
 import { download } from "../helpers/organize";
 import { qpdfCheck } from "../helpers/qpdf";
+import { choose } from "../helpers/controls";
 
 const SECRET = "watermark-canary-u4p";
 // White pages (apart from makePdf's red top-left quarter).
@@ -31,8 +32,8 @@ test("puts see-through words across every page, without sending the file anywher
   await expect(page.locator("label[data-listening]")).toHaveCount(1);
   await page.getByLabel("Choose a file").setInputFiles(asPayload(pdfFile(`${SECRET}.pdf`, [PAGE, PAGE])));
   await page.getByLabel("Words", { exact: true }).fill("SAMPLE");
-  await page.getByLabel("Angle").selectOption({ label: "Level" });
-  await page.getByLabel("See-through").selectOption({ label: "50% strong" });
+  await choose(page, page.getByLabel("Angle"), "Level");
+  await choose(page, page.getByLabel("See-through"), "50% strong");
   await expect(page.locator("[data-preview]")).toContainText("SAMPLE");
 
   await page.getByRole("button", { name: "Add watermark" }).click();
@@ -67,7 +68,7 @@ test("a picture watermark, turned, from the second page", async ({ page }) => {
   await page
     .getByLabel("Picture", { exact: true })
     .setInputFiles({ name: "logo.png", mimeType: "image/png", buffer: Buffer.from(makePng(100, 100)) });
-  await page.getByLabel("See-through").selectOption({ label: "Solid" });
+  await choose(page, page.getByLabel("See-through"), "Solid");
   await page.getByLabel("From page").fill("2");
   await expect(page.locator("[data-preview] img")).toHaveCount(1);
   await page.getByRole("button", { name: "Add watermark" }).click();
