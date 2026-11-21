@@ -2,9 +2,11 @@
 
 Single source of truth for where Plyleaf is. **Every session updates this file before it ends.**
 
-- **Current milestone:** M9: Launch readiness (M0–M2 done 2026-10-31, M3 and M4 done 2026-11-01, M5 done 2026-11-02,
-  M6 and M7 done 2026-11-04, M8 done 2026-11-07)
-- **Next action:** M9: PWA offline.
+- **Current milestone:** M8.5: Polish and flow (added by the owner 2026-11-21, D-044; M0–M2 done 2026-10-31, M3 and M4
+  done 2026-11-01, M5 done 2026-11-02, M6 and M7 done 2026-11-04, M8 done 2026-11-07)
+- **Next action:** M8.5: the owner reviews the prototype (branch `m8.5/prototype`, never merged); then icons, ui-sdk
+  controls and motion.
+- **Owner asked (2026-11-21):** build M8.5 in the order in D-044, one PR per item, each auto-merged when CI passes.
 - **Owner asked (2026-11-07):** build all of M8 in one PR, merge it when CI passes, then trim stale branches and worktrees.
 - **Owner asked (2026-11-04):** build all of M7 in one go, as one PR, auto-merged when CI passes. Same for M6 earlier
   that day.
@@ -68,6 +70,12 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] Office spike; owner dropped Office conversions (D-041, 2026-11-07)
 - [x] HTML / plain text / Markdown → PDF · [x] PDF → plain text
 
+### [ ] M8.5: Polish and flow
+- [ ] Prototype approved · [ ] Icons, ui-sdk controls, motion · [ ] Signature drag-and-drop fix, Shift rules
+- [ ] Hand tool, gesture zoom, Expand mode · [ ] Undo/redo in page board, signature pad, scan corners
+- [ ] Signature redesign, delete with undo, handwriting fonts · [ ] Editor text fonts (embedded)
+- [ ] Phone layout and tool tidy-up · [ ] ⌘K · [ ] Working document and Workbench · [ ] Animation moments
+
 ### [ ] M9: Launch readiness
 - [ ] PWA offline · [ ] Lighthouse targets · [ ] WCAG 2.2 AA audit · [ ] Privacy/About/Donate pages · [ ] SEO metadata + sitemap
 - [ ] Cookieless analytics · [ ] Production deploy on plyleaf.com
@@ -78,6 +86,13 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-11-21: M8.5 planned
+- The owner listed UI fixes and asked for tools to chain without downloading in between. Settled in a design interview:
+  new milestone M8.5 before M9 (D-044), the working document and Workbench (D-045), the UI kit and motion (D-046) and
+  more fonts (D-047). New [GLOSSARY.md](../GLOSSARY.md) for tool, working document, step, Workbench, saved workflow.
+- ui-sdk (`@ui-sdk/react`, `@ui-sdk/core`, Apache-2.0) installed, with a note in AGENTS.md on reading its docs first.
+- Next: the prototype for the owner to approve.
 
 ### 2026-11-07: Text conversions, M8 done
 - Text to PDF (D-043): `/text-to-pdf`, `/markdown-to-pdf` and `/html-to-pdf`, one workspace

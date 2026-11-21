@@ -85,6 +85,7 @@ Grouped as they appear in the app. **(E)** = in the unified Editor workspace.
 - Compare two PDFs (visual and text diff) · Batch mode (same tool on many files) · Saved "workflows" (tool chains)
 
 **Platform**
+- Workbench: carry one working document through several tools and download it at the end (M8.5)
 - Installable PWA that **works offline** after first visit
 - Responsive from 360 px phones to desktop
 - i18n-ready (English first; string catalogue from day one)
@@ -153,6 +154,17 @@ The unified editing workspace, the heart of the app.
 ### M8: Text conversions
 - Office conversions were dropped (D-041): no Word/Excel/PowerPoint/ODF in either direction.
 - Done when: HTML / plain text / Markdown → PDF and PDF → plain text work, with no new large WASM download.
+
+### M8.5: Polish and flow
+Added by the owner on 2026-11-21 (D-044), before launch readiness so its audits run on the finished UI.
+- Done when: a prototype of the new workspace layout is approved; the app uses Phosphor icons and ui-sdk controls
+  (select, checkbox, tooltip, toast) through shared wrappers, with subtle motion and page transitions; dragging a
+  picture inside the page no longer reaches the drop zone; Shift keeps proportions and snaps lines in the editor; the
+  editor has a hand tool, gesture zoom and an Expand mode (also Organize, Crop, Scan); undo/redo works in the page
+  board, signature pad and scan corners; the signature UI is redone with 8 handwriting fonts and deleting with undo;
+  the editor offers 8 more text fonts, embedded in the PDF; every tool works well at 360 px; ⌘K finds any tool and
+  action; a **working document** can go from tool to tool through the **Workbench** without downloading in between
+  (D-045); the home page and every non-tool page take a dropped PDF.
 
 ### M9: Launch readiness
 - Done when: PWA offline mode works; Lighthouse targets from §6 are met; WCAG 2.2 AA audit passes; privacy, about,
