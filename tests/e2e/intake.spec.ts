@@ -124,3 +124,18 @@ test("the picker is keyboard reachable and starts loading the engine on focus", 
   await expect(page.getByLabel("Choose files")).toBeFocused();
   await expect.poll(() => wasm.length).toBeGreaterThan(0);
 });
+
+test("a drag that starts on the page (a picture) isn't taken as files arriving", async ({ page }) => {
+  await openIntake(page);
+  // Chrome marks a picture dragged within the page as carrying Files; the drop zone must not take it.
+  await page.evaluate(() => document.querySelector("main")!.dispatchEvent(new Event("dragstart", { bubbles: true })));
+  await dropFiles(page, "main", [pdfFile("from-the-page.pdf")]);
+  await expect(page.getByText("from-the-page.pdf")).toHaveCount(0);
+  await expect(page.getByRole("alert")).toHaveCount(0);
+
+  // Once that drag is over, files dropped from outside come in again.
+  await page.mouse.move(10, 10);
+  await page.mouse.move(20, 20);
+  await dropFiles(page, "main", [pdfFile("from-outside.pdf")]);
+  await expect(fileList(page)).toHaveText([/from-outside\.pdf/]);
+});

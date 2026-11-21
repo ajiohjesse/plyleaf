@@ -69,7 +69,7 @@ export function SignPanel({ kind, signatures, chosen, storage, onChoose, onForge
                 onClick={() => onChoose(signature)}
                 className="grid h-12 w-32 place-items-center rounded-lg border-2 border-line bg-surface p-1 hover:border-primary aria-pressed:border-primary aria-pressed:bg-sticky-lavender/40"
               >
-                <img src={signature.url} alt="" className="max-h-full max-w-full object-contain" />
+                <img src={signature.url} alt="" draggable={false} className="max-h-full max-w-full object-contain" />
               </button>
               <Tip label={`Forget ${kind === "signature" ? "signature" : "initials"} ${i + 1}`}>
                 <button

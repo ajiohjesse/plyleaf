@@ -47,7 +47,8 @@ export interface PageHandlers {
   /** The user pressed the page at (x, y) points with a tool that places something. */
   onPlace: (page: number, x: number, y: number) => void;
   /** The user is dragging across the page from `from` to `to` (points) with a drawing tool; `done` when released. */
-  onDraw: (page: number, from: Point, to: Point, done: boolean, path: readonly Point[]) => void;
+  /** A drag in progress (`done` false) or finished; `shift` while Shift is held (D-044's Shift rules). */
+  onDraw: (page: number, from: Point, to: Point, done: boolean, path: readonly Point[], shift: boolean) => void;
   /** The user chose one of the page's own lines to change (the Edit text tool). */
   onPickLine: (page: number, line: TextLine) => void;
   /** The user pressed the page itself (not an item) with the select tool. */
@@ -152,14 +153,15 @@ export const EditorPage = memo(function EditorPage(props: Props) {
       for (const each of events.length > 0 ? events : [event]) active.path.push(point(each));
       if (!active.moved && !far) return;
       active.moved = true;
-      props.onDraw(index, active.from, point(event), false, active.path);
+      props.onDraw(index, active.from, point(event), false, active.path, event.shiftKey);
     },
     onPointerUp(event: React.PointerEvent<HTMLElement>) {
       const active = stroke.current;
       if (active?.pointer !== event.pointerId) return;
       stroke.current = null;
-      if (active.moved) props.onDraw(index, active.from, point(event), true, [...active.path, point(event)]);
-      else props.onPlace(index, active.from.x, active.from.y);
+      if (active.moved) {
+        props.onDraw(index, active.from, point(event), true, [...active.path, point(event)], event.shiftKey);
+      } else props.onPlace(index, active.from.x, active.from.y);
     },
     onPointerCancel() {
       stroke.current = null;

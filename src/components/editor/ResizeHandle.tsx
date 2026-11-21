@@ -4,8 +4,8 @@ interface Props {
   /** Where the handle sits, in CSS pixels from the item's top-left. */
   left: number;
   top: number;
-  /** How far the pointer has moved since the press, in CSS pixels. */
-  onDrag: (dx: number, dy: number) => void;
+  /** How far the pointer has moved since the press, in CSS pixels, and whether Shift is held. */
+  onDrag: (dx: number, dy: number, shift: boolean) => void;
   onEnd: () => void;
 }
 
@@ -29,7 +29,9 @@ export function ResizeHandle({ left, top, onDrag, onEnd }: Props) {
       }}
       onPointerMove={(event) => {
         const active = start.current;
-        if (active?.pointer === event.pointerId) onDrag(event.clientX - active.x, event.clientY - active.y);
+        if (active?.pointer === event.pointerId) {
+          onDrag(event.clientX - active.x, event.clientY - active.y, event.shiftKey);
+        }
       }}
       onPointerUp={finish}
       onPointerCancel={finish}

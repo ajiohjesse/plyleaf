@@ -4,7 +4,7 @@ Single source of truth for where Plyleaf is. **Every session updates this file b
 
 - **Current milestone:** M8.5: Polish and flow (added by the owner 2026-11-21, D-044; M0–M2 done 2026-10-31, M3 and M4
   done 2026-11-01, M5 done 2026-11-02, M6 and M7 done 2026-11-04, M8 done 2026-11-07)
-- **Next action:** M8.5: the signature drag-and-drop fix and the Shift rules. The prototype (branch `m8.5/prototype`,
+- **Next action:** M8.5: hand tool, gesture zoom and Expand mode. The prototype (branch `m8.5/prototype`,
   never merged) is the reference; delete the branch once M8.5 is done.
 - **Owner asked (2026-11-21):** build M8.5 in the order in D-044, one PR per item, each auto-merged when CI passes.
 - **Owner asked (2026-11-07):** build all of M8 in one PR, merge it when CI passes, then trim stale branches and worktrees.
@@ -71,7 +71,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] HTML / plain text / Markdown → PDF · [x] PDF → plain text
 
 ### [ ] M8.5: Polish and flow
-- [x] Prototype approved · [x] Icons, ui-sdk controls, motion · [ ] Signature drag-and-drop fix, Shift rules
+- [x] Prototype approved · [x] Icons, ui-sdk controls, motion · [x] Signature drag-and-drop fix, Shift rules
 - [ ] Hand tool, gesture zoom, Expand mode · [ ] Undo/redo in page board, signature pad, scan corners
 - [ ] Signature redesign, delete with undo, handwriting fonts · [ ] Editor text fonts (embedded)
 - [ ] Phone layout and tool tidy-up · [ ] ⌘K · [ ] Working document and Workbench · [ ] Animation moments
@@ -86,6 +86,17 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-11-21: Shift rules and the in-page drag fix (M8.5)
+- Dragging a signature (or any picture) inside the page no longer reaches the drop zone ("…is an image, not a PDF"):
+  page pictures aren't draggable, and `FileDrop` ignores a drag that started on the page (D-050).
+- Shift rules (D-050) in `src/editor/constrain.ts`: Shift draws squares and circles, snaps lines and arrows to 15°, and
+  keeps a box's proportions while resizing; pictures and signatures keep theirs unless Shift is held, now following the
+  handle both ways. Stamps always keep their shape. Editor hints mention Shift.
+- Tests: `tests/unit/constrain.test.ts`; E2E `editor-shift.spec.ts` (draw and resize with and without Shift) and a new
+  intake test for a drag that starts on the page.
+- Verified: `pnpm check`; full E2E in all four projects.
+- Next: hand tool, gesture zoom and Expand mode.
 
 ### 2026-11-21: Icons, controls and motion (M8.5)
 - Phosphor icons everywhere (D-049): `pnpm icons` generates only the glyphs and weights we use from

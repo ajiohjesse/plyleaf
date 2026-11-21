@@ -46,27 +46,40 @@ export function FileDrop({ onFiles, accept = ["pdf"], other, multiple = true, co
   useEffect(() => {
     // dragenter and dragleave fire for every element the pointer crosses; count them to know when it left the page.
     let depth = 0;
+    // A drag that starts on the page (a picture, say) isn't files arriving, even though Chrome says it carries Files.
+    // dragend can be lost if what was dragged leaves the page mid-drag, so moving the pointer afterwards clears it too
+    // (pointer events stop during any drag, including files dragged in from outside).
+    let fromPage = false;
+    const start = () => {
+      fromPage = true;
+    };
+    const end = () => {
+      fromPage = false;
+    };
+    const incoming = (event: DragEvent) => !fromPage && hasFiles(event);
     const enter = (event: DragEvent) => {
-      if (!hasFiles(event)) return;
+      if (!incoming(event)) return;
       if (depth++ === 0) {
         setDragging(true);
         preloadEngine();
       }
     };
     const leave = (event: DragEvent) => {
-      if (hasFiles(event) && --depth <= 0) {
+      if (incoming(event) && --depth <= 0) {
         depth = 0;
         setDragging(false);
       }
     };
     // Without this the browser would open a file dropped outside the zone in place of the page.
     const over = (event: DragEvent) => {
-      if (!hasFiles(event)) return;
+      if (!incoming(event)) return;
       event.preventDefault();
       if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
     };
     const drop = (event: DragEvent) => {
-      if (!hasFiles(event)) return;
+      const arriving = incoming(event);
+      fromPage = false;
+      if (!arriving) return;
       event.preventDefault();
       depth = 0;
       setDragging(false);
@@ -81,6 +94,9 @@ export function FileDrop({ onFiles, accept = ["pdf"], other, multiple = true, co
       take(files);
     };
     const listeners = [
+      ["dragstart", start],
+      ["dragend", end],
+      ["pointermove", end],
       ["dragenter", enter],
       ["dragleave", leave],
       ["dragover", over],

@@ -19,13 +19,13 @@ export function growKey(key: string): number {
 }
 
 /**
- * An image on the page. Selected, it's dragged to move and resized from its corner handle (keeping its shape), or with
- * + and − from the keyboard.
+ * An image on the page (a signature too). Selected, it's dragged to move and resized from its corner handle, keeping its
+ * shape unless Shift is held, or with + and − from the keyboard.
  */
 export function ImageBox({ item, asset, scale, selected, onResize, ...handlers }: Props) {
   const gestures = useItemGestures(item, scale, selected, handlers);
-  // The width when a resize began.
-  const from = useRef<number | null>(null);
+  // The size when a resize began.
+  const from = useRef<{ width: number; height: number } | null>(null);
 
   function keyDown(event: React.KeyboardEvent<HTMLElement>) {
     const grow = growKey(event.key);
@@ -67,9 +67,10 @@ export function ImageBox({ item, asset, scale, selected, onResize, ...handlers }
           <ResizeHandle
             left={item.width * scale}
             top={item.height * scale}
-            onDrag={(dx) => {
-              from.current ??= item.width;
-              const size = resizeImage(item, from.current + dx / scale);
+            onDrag={(dx, dy, shift) => {
+              from.current ??= { width: item.width, height: item.height };
+              const start = from.current;
+              const size = resizeImage(start, start.width + dx / scale, start.height + dy / scale, shift);
               onResize(size.width, size.height);
             }}
             onEnd={() => {

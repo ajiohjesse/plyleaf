@@ -64,12 +64,14 @@ export function WhiteoutBox({ item, scale, selected, onResize, ...handlers }: Pr
           <ResizeHandle
             left={item.width * scale}
             top={item.height * scale}
-            onDrag={(dx, dy) => {
+            onDrag={(dx, dy, shift) => {
               from.current ??= { width: item.width, height: item.height };
+              const start = from.current;
               const size = resizeShape(
                 { shape: "rectangle" },
-                from.current.width + dx / scale,
-                from.current.height + dy / scale,
+                start.width + dx / scale,
+                start.height + dy / scale,
+                shift ? start : undefined,
               );
               onResize(size.width, size.height);
             }}
