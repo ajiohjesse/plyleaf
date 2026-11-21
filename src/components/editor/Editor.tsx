@@ -439,7 +439,7 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
       setEditing(item.id);
       setTool("select");
     },
-    onDraw: (page, from, to, done, path) => {
+    onDraw: (page, from, to, done, path, shift) => {
       if (tool === "markup") return void markUp(page, from, to, done, false);
       if (tool === "draw") {
         const points = thinStroke(path);
@@ -458,12 +458,13 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
       }
       const id = sketch?.id ?? newId();
       let item: Item;
-      if (tool === "shape") item = { id, kind: "shape", page, ...shapeStyle, ...drawnShape(shapeStyle, from, to) };
+      if (tool === "shape")
+        item = { id, kind: "shape", page, ...shapeStyle, ...drawnShape(shapeStyle, from, to, shift) };
       else if (tool === "whiteout") {
-        const box = drawnShape({ ...shapeStyle, shape: "rectangle" }, from, to);
+        const box = drawnShape({ shape: "rectangle" }, from, to, shift);
         item = { id, kind: "whiteout", page, ...box, color: coverColour };
       } else if (tool === "redact") {
-        item = { id, kind: "redact", page, ...drawnShape({ ...shapeStyle, shape: "rectangle" }, from, to) };
+        item = { id, kind: "redact", page, ...drawnShape({ shape: "rectangle" }, from, to, shift) };
       } else return;
       if (!done) return setSketch(item);
       setSketch(null);
@@ -1089,7 +1090,7 @@ function hint(tool: Tool, selected: Item | null, editing: ItemId | null) {
   if (tool === "note") return "Click the page where the comment should go.";
   if (tool === "stamp") return "Choose a stamp, then click the page to put it there.";
   if (tool === "draw") return "Draw on the page. Each stroke can be moved or deleted afterwards.";
-  if (tool === "shape") return "Drag across the page to draw, or click to place one.";
+  if (tool === "shape") return "Drag across the page to draw (Shift for a square, circle or straight line), or click.";
   if (tool === "whiteout")
     return "Drag over what to cover. It's hidden, not removed from the file: to remove it, use Redact.";
   if (tool === "redact")
@@ -1097,6 +1098,10 @@ function hint(tool: Tool, selected: Item | null, editing: ItemId | null) {
   if (editing) return "Type, then press Esc or click outside when you're done.";
   if (selected?.kind === "markup") return "Change its kind or colour, or delete it.";
   if (selected?.kind === "redact") return "Drag to move, or the corner to resize. Delete it to keep what's under it.";
+  if (selected?.kind === "image")
+    return "Drag to move, or use the arrow keys. Drag the corner to resize (Shift stretches it), or + and -.";
+  if (selected?.kind === "shape" || selected?.kind === "whiteout")
+    return "Drag to move, or use the arrow keys. Drag the corner to resize (Shift keeps its shape), or + and -.";
   if (selected?.kind === "note") return "Drag to move it. Click again, or press Enter, to change the comment.";
   if (selected && selected.kind !== "text")
     return "Drag to move, or use the arrow keys. Drag the corner, or + and -, to resize.";

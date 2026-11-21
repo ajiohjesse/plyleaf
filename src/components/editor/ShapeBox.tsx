@@ -74,7 +74,7 @@ export function shapeBounds(item: Pick<ShapeItem, "x" | "y" | "width" | "height"
 
 /**
  * A shape on the page. Selected, it's dragged to move and resized from the handle on its far corner (a line's end),
- * or with + and − from the keyboard.
+ * or with + and − from the keyboard. Shift keeps a box's proportions and snaps a line to 15° steps.
  */
 export function ShapeBox({ item, scale, selected, onResize, ...handlers }: Props) {
   const gestures = useItemGestures(item, scale, selected, handlers);
@@ -121,9 +121,15 @@ export function ShapeBox({ item, scale, selected, onResize, ...handlers }: Props
           <ResizeHandle
             left={(item.x + item.width - bounds.left) * scale}
             top={(item.y + item.height - bounds.top) * scale}
-            onDrag={(dx, dy) => {
+            onDrag={(dx, dy, shift) => {
               from.current ??= { width: item.width, height: item.height };
-              const size = resizeShape(item, from.current.width + dx / scale, from.current.height + dy / scale);
+              const start = from.current;
+              const size = resizeShape(
+                item,
+                start.width + dx / scale,
+                start.height + dy / scale,
+                shift ? start : undefined,
+              );
               onResize(size.width, size.height);
             }}
             onEnd={() => {

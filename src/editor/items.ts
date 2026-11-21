@@ -1,6 +1,7 @@
 // What the user has added in the editor, and how it becomes the engine's edits. Items are measured like marks: PDF
 // points from the top-left of the page as it's shown. The list is in drawing order, so later items are on top.
 import type { Annotation, Box, Edits, Mark, Quad, Rgb, ShapeKind, StandardFont, TextLine } from "~/engine/types";
+import { keepRatio, snapAngle, square } from "./constrain";
 import { tickLines, tickWidth, type TickSymbol } from "./shapes";
 
 export { NOTE_SIZE, STAMP_RATIO } from "~/engine/types";
@@ -302,16 +303,26 @@ export const CLICKED_SHAPE = { width: 120, height: 80 };
 /** Rectangles and ellipses are never smaller than this many points on a side. */
 export const MIN_SHAPE_SIDE = 4;
 
-/** A shape drawn from one point to another: a box with its corners there, or a line between them. */
-export function drawnShape(style: ShapeStyle, from: { x: number; y: number }, to: { x: number; y: number }) {
+/**
+ * A shape drawn from one point to another: a box with its corners there, or a line between them. With Shift (`shift`),
+ * a box is square (a circle for an ellipse) and a line snaps to 15° steps.
+ */
+export function drawnShape(
+  style: Pick<ShapeStyle, "shape">,
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+  shift = false,
+) {
   if (style.shape === "line" || style.shape === "arrow") {
-    return { x: from.x, y: from.y, width: to.x - from.x, height: to.y - from.y };
+    const { dx, dy } = shift ? snapAngle(to.x - from.x, to.y - from.y) : { dx: to.x - from.x, dy: to.y - from.y };
+    return { x: from.x, y: from.y, width: dx, height: dy };
   }
+  const { dx, dy } = shift ? square(to.x - from.x, to.y - from.y) : { dx: to.x - from.x, dy: to.y - from.y };
   return {
-    x: Math.min(from.x, to.x),
-    y: Math.min(from.y, to.y),
-    width: Math.max(MIN_SHAPE_SIDE, Math.abs(to.x - from.x)),
-    height: Math.max(MIN_SHAPE_SIDE, Math.abs(to.y - from.y)),
+    x: Math.min(from.x, from.x + dx),
+    y: Math.min(from.y, from.y + dy),
+    width: Math.max(MIN_SHAPE_SIDE, Math.abs(dx)),
+    height: Math.max(MIN_SHAPE_SIDE, Math.abs(dy)),
   };
 }
 
@@ -322,14 +333,23 @@ export function clickedShape(style: ShapeStyle, x: number, y: number) {
   return { x: x - width / 2, y: y - height / 2, width, height };
 }
 
-/** A shape's new size: boxes keep a minimum, lines can point anywhere. */
+/**
+ * A shape's new size: boxes keep a minimum, lines can point anywhere. With Shift (`keep`, the size the resize started
+ * from), a box keeps that size's proportions and a line snaps to 15° steps.
+ */
 export function resizeShape(
   item: Pick<ShapeItem, "shape">,
   width: number,
   height: number,
+  keep?: { width: number; height: number },
 ): { width: number; height: number } {
-  if (item.shape === "line" || item.shape === "arrow") return { width, height };
-  return { width: Math.max(MIN_SHAPE_SIDE, width), height: Math.max(MIN_SHAPE_SIDE, height) };
+  if (item.shape === "line" || item.shape === "arrow") {
+    if (!keep) return { width, height };
+    const { dx, dy } = snapAngle(width, height);
+    return { width: dx, height: dy };
+  }
+  const size = keep ? keepRatio(width, height, keep.width / keep.height) : { width, height };
+  return { width: Math.max(MIN_SHAPE_SIDE, size.width), height: Math.max(MIN_SHAPE_SIDE, size.height) };
 }
 
 export type AssetId = string;
@@ -387,11 +407,23 @@ export function moveItem(item: Item, dx: number, dy: number, page: { width: numb
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
-/** An image resized to `width` points wide, keeping its shape, and never smaller than MIN_IMAGE_SIDE. */
-export function resizeImage(item: ImageItem, width: number): { width: number; height: number } {
-  const ratio = item.height / item.width;
-  const next = Math.max(MIN_IMAGE_SIDE / Math.min(1, ratio), width);
-  return { width: next, height: next * ratio };
+/**
+ * An image's new size from the one asked for (`height` follows `width` when left out): it keeps its shape unless
+ * `stretch` (Shift), and is never smaller than MIN_IMAGE_SIDE on a side.
+ */
+export function resizeImage(
+  item: Pick<ImageItem, "width" | "height">,
+  width: number,
+  height?: number,
+  stretch = false,
+): { width: number; height: number } {
+  const ratio = item.width / item.height;
+  if (stretch) {
+    return { width: Math.max(MIN_IMAGE_SIDE, width), height: Math.max(MIN_IMAGE_SIDE, height ?? width / ratio) };
+  }
+  const size = keepRatio(width, height ?? width / ratio, ratio);
+  const grow = Math.max(1, MIN_IMAGE_SIDE / Math.min(size.width, size.height));
+  return { width: size.width * grow, height: size.height * grow };
 }
 
 /** An item has nothing to draw (text with no characters). */
