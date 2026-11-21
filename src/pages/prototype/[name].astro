@@ -1,0 +1,28 @@
+---
+// Throwaway prototype of M8.5's layout (D-044), for the owner to approve. Built only with PLYLEAF_TEST_HARNESS=1, so it
+// never ships; deleted once approved.
+import "~/styles/global.css";
+import "~/prototype/prototype.css";
+import { PrototypeApp } from "~/prototype/App";
+
+export function getStaticPaths() {
+  const names = ["workbench", "compress", "editor"];
+  return process.env["PLYLEAF_TEST_HARNESS"] === "1" ? names.map((name) => ({ params: { name } })) : [];
+}
+
+const { name } = Astro.params;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <meta name="view-transition" content="same-origin" />
+    <title>Prototype: {name}</title>
+  </head>
+  <body class="min-h-dvh bg-surface text-ink">
+    <PrototypeApp client:load page={name as "workbench" | "compress" | "editor"} />
+  </body>
+</html>
