@@ -10,7 +10,7 @@ import { WHOLE, type Quad } from "~/scan/quad";
 import { thumbnails } from "~/thumbnails/thumbnails";
 import { DownloadPanel } from "~/components/download/DownloadPanel";
 import { LayoutOptions } from "~/components/images/ImagesWorkspace";
-import { CloseIcon } from "~/components/intake/IntakePanel";
+import { CaretLeftIcon, CaretRightIcon, CloseIcon, CornersIcon } from "~/components/icons";
 import { FileDrop } from "~/components/intake/FileDrop";
 import { PageCanvas } from "~/components/thumbnails/PageCanvas";
 import {
@@ -256,14 +256,14 @@ export function ScanWorkspace() {
                   disabled={index === 0}
                   onClick={() => move(page.key, -1)}
                 >
-                  <ArrowIcon left />
+                  <CaretLeftIcon />
                 </IconButton>
                 <IconButton
                   label={`Move page ${index + 1} later`}
                   disabled={index === pages.length - 1}
                   onClick={() => move(page.key, 1)}
                 >
-                  <ArrowIcon />
+                  <CaretRightIcon />
                 </IconButton>
                 <IconButton label={`Remove page ${index + 1}`} onClick={() => remove(page.key)}>
                   <CloseIcon />
@@ -330,29 +330,5 @@ export function ScanWorkspace() {
         </>
       )}
     </div>
-  );
-}
-
-function CornersIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-      className="size-5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2.2}
-      strokeLinecap="round"
-    >
-      <path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" />
-    </svg>
-  );
-}
-
-function ArrowIcon({ left = false }: { left?: boolean }) {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeWidth={2.5}>
-      <path d={left ? "M15 6l-6 6 6 6" : "M9 6l6 6-6 6"} strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
   );
 }

@@ -2,14 +2,7 @@ import { formatSize, type IntakeOptions } from "~/intake/files";
 import type { Intake, IntakeState } from "~/intake/intake";
 import { FileDrop } from "./FileDrop";
 import { useIntake } from "./useIntake";
-
-export function CloseIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth={2.5}>
-      <path d="M6 6l12 12M18 6 6 18" strokeLinecap="round" />
-    </svg>
-  );
-}
+import { CloseIcon } from "~/components/icons";
 
 /**
  * Messages about the latest files: ones that couldn't be added (or were lost), and warnings about ones that were. The

@@ -5,7 +5,7 @@ import type { PageInfo } from "~/engine/types";
 import { formatSize } from "~/intake/files";
 import type { IntakeDocument } from "~/intake/intake";
 import { thumbnails } from "~/thumbnails/thumbnails";
-import { CloseIcon } from "~/components/intake/IntakePanel";
+import { CloseIcon } from "~/components/icons";
 import { PageCanvas } from "~/components/thumbnails/PageCanvas";
 
 export const plural = (count: number, one: string, many = `${one}s`) => `${count} ${count === 1 ? one : many}`;
@@ -158,14 +158,5 @@ export function FileCard({ doc, onRemove }: { doc: IntakeDocument; onRemove: () 
         <CloseIcon />
       </IconButton>
     </div>
-  );
-}
-
-/** Six dots: the handle that drags something into place. */
-export function GripIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5" fill="currentColor">
-      {[6, 12, 18].flatMap((y) => [9, 15].map((x) => <circle key={`${x}-${y}`} cx={x} cy={y} r={1.6} />))}
-    </svg>
   );
 }

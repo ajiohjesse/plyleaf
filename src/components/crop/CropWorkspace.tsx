@@ -23,6 +23,7 @@ import {
   primaryButton,
   type Result,
 } from "~/components/workspace/parts";
+import { CaretLeftIcon, CaretRightIcon } from "~/components/icons";
 
 /** The preview is at most this wide (CSS pixels) and this tall, so the frame is easy to handle. */
 const PREVIEW = { width: 480, height: 560 };
@@ -144,13 +145,13 @@ function CropOptions({ doc, crop, onCrop, making, buttonRef, onMake }: OptionsPr
       <section aria-label="Crop area" className="space-y-3 rounded-card border border-line bg-surface p-3 sm:p-4">
         <div className="flex items-center justify-between gap-2">
           <IconButton label="Previous page" disabled={shown === 0} onClick={() => setShown(shown - 1)}>
-            <Chevron left />
+            <CaretLeftIcon />
           </IconButton>
           <p className="text-sm font-semibold" aria-live="polite">
             Page {shown + 1} of {pageCount}
           </p>
           <IconButton label="Next page" disabled={shown === pageCount - 1} onClick={() => setShown(shown + 1)}>
-            <Chevron />
+            <CaretRightIcon />
           </IconButton>
         </div>
         <CropFrame doc={doc} page={shown} crop={crop} onCrop={onCrop} />
@@ -414,13 +415,5 @@ function MarginFields({ crop, onCrop }: { crop: Crop; onCrop: (crop: Crop) => vo
         </button>
       </div>
     </fieldset>
-  );
-}
-
-function Chevron({ left = false }: { left?: boolean }) {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeWidth={2.5}>
-      <path d={left ? "M15 6l-6 6 6 6" : "M9 6l6 6-6 6"} strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
   );
 }

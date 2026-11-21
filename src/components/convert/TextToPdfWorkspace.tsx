@@ -23,7 +23,7 @@ import { outputName } from "~/download/download";
 import { formatSize, operationFailureMessage } from "~/intake/files";
 import { DownloadPanel } from "~/components/download/DownloadPanel";
 import { FileDrop } from "~/components/intake/FileDrop";
-import { CloseIcon } from "~/components/intake/IntakePanel";
+import { CloseIcon } from "~/components/icons";
 import {
   ActionBar,
   Choice,

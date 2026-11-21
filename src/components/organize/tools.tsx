@@ -12,7 +12,7 @@ import {
   type Board,
   type BoardPage,
 } from "~/organize/board";
-import { CloseIcon } from "~/components/intake/IntakePanel";
+import { CloseIcon, CopyIcon, PlusIcon, RotateLeftIcon, RotateRightIcon } from "~/components/icons";
 import { IconButton, plural } from "~/components/workspace/parts";
 
 export type OrganizeTool = "extract" | "delete" | "rotate" | "reorder" | "insert" | "duplicate";
@@ -313,10 +313,10 @@ export const TOOLS: Record<OrganizeTool, ToolSpec> = {
         <fieldset className="flex flex-wrap items-center gap-2">
           <legend className="float-left mr-1 text-sm font-semibold">Turn {which}</legend>
           <button type="button" className={smallButton} onClick={() => turn(-90)}>
-            <RotateIcon /> Left
+            <RotateLeftIcon /> Left
           </button>
           <button type="button" className={smallButton} onClick={() => turn(90)}>
-            <RotateIcon clockwise /> Right
+            <RotateRightIcon /> Right
           </button>
           <button
             type="button"
@@ -343,10 +343,10 @@ export const TOOLS: Record<OrganizeTool, ToolSpec> = {
       return (
         <>
           <IconButton label={`Turn page ${index + 1} left`} onClick={() => turn(-90)}>
-            <RotateIcon />
+            <RotateLeftIcon />
           </IconButton>
           <IconButton label={`Turn page ${index + 1} right`} onClick={() => turn(90)}>
-            <RotateIcon clockwise />
+            <RotateRightIcon />
           </IconButton>
         </>
       );
@@ -356,46 +356,3 @@ export const TOOLS: Record<OrganizeTool, ToolSpec> = {
   insert,
   duplicate,
 };
-
-function RotateIcon({ clockwise = false }: { clockwise?: boolean }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-      className={clockwise ? "size-5 -scale-x-100" : "size-5"}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2.25}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M4 5v5h5" />
-      <path d="M4.6 10A8 8 0 1 1 6 16.5" />
-    </svg>
-  );
-}
-
-function PlusIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeWidth={2.5}>
-      <path d="M12 5v14M5 12h14" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function CopyIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-      className="size-5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2.25}
-      strokeLinejoin="round"
-    >
-      <rect x="8" y="8" width="12" height="12" rx="2" />
-      <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
-    </svg>
-  );
-}

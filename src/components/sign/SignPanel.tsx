@@ -6,7 +6,7 @@ import "@fontsource/sacramento/400.css";
 import { useEffect, useId, useRef, useState } from "react";
 import type { SignatureKind } from "~/sign/ink";
 import { fieldClass, ToggleButton } from "~/components/editor/options";
-import { TrashIcon } from "~/components/editor/icons";
+import { TrashIcon } from "~/components/icons";
 import { primaryButton } from "~/components/workspace/parts";
 import { drawStrokes, fromPicture, fromStrokes, fromText, type Point, type SignatureImage } from "./render";
 import type { Signature, Storage } from "./useSignatures";

@@ -23,7 +23,7 @@ import {
 import { DATE_FORMATS, formatDate, type DateFormat } from "~/editor/dates";
 import type { TickSymbol } from "~/editor/shapes";
 import { PATTERNS, type SearchQuery } from "~/redact/search";
-import { ArrowIcon, EllipseIcon, LineIcon, RectangleIcon, TrashIcon } from "./icons";
+import { ArrowIcon, EllipseIcon, LineIcon, RectangleIcon, TrashIcon } from "~/components/icons";
 import { MARKUP_NAMES } from "./MarkupBox";
 import { SHAPE_NAMES } from "./ShapeBox";
 import { TICK_NAMES, TickFace } from "./TickBox";

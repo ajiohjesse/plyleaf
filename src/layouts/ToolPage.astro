@@ -3,7 +3,7 @@
 // default slot, a React island) right under the heading, then how it works, questions and related tools. Once the
 // workspace has files (it marks itself `data-files`), the intro gives way so the work sits near the top.
 import Base from "./Base.astro";
-import { CategoryIcon } from "~/components/CategoryIcon";
+import { ToolIcon } from "~/components/icons/tools";
 import { stickyBg, stickyWash } from "~/components/sticky";
 import { categories, tools } from "~/data/tools";
 
@@ -39,7 +39,7 @@ const related = tools.filter((t) => t.category === tool.category && t.slug !== s
           ]}
           aria-hidden="true"
         >
-          <CategoryIcon category={tool.category} className="size-7" />
+          <ToolIcon slug={tool.slug} className="size-7" />
         </span>
         <h1 class="text-4xl sm:text-5xl">{heading}</h1>
       </div>

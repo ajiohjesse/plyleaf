@@ -80,7 +80,7 @@ import {
   WhiteoutIcon,
   ZoomInIcon,
   ZoomOutIcon,
-} from "./icons";
+} from "~/components/icons";
 import { baselineRatio } from "./measure";
 import {
   DateOptions,
