@@ -27,6 +27,7 @@ import { ArrowIcon, EllipseIcon, LineIcon, RectangleIcon, TrashIcon } from "~/co
 import { MARKUP_NAMES } from "./MarkupBox";
 import { SHAPE_NAMES } from "./ShapeBox";
 import { TICK_NAMES, TickFace } from "./TickBox";
+import { Checkbox, Select, Tip } from "~/components/workspace/controls";
 
 export const fieldClass =
   "rounded-lg border-2 border-line bg-surface px-2 py-1.5 text-base focus:border-primary focus:outline-none";
@@ -76,15 +77,16 @@ export function ToggleButton({
   children: React.ReactNode;
 }) {
   return (
-    <button
-      type="button"
-      aria-label={label}
-      aria-pressed={pressed}
-      onClick={onClick}
-      className="grid min-w-9 shrink-0 place-items-center rounded-lg border-2 border-line px-1.5 py-1 text-lg hover:border-primary aria-pressed:border-primary aria-pressed:bg-sticky-lavender/40"
-    >
-      {children}
-    </button>
+    <Tip label={label}>
+      <button
+        type="button"
+        aria-pressed={pressed}
+        onClick={onClick}
+        className="press grid min-w-9 shrink-0 place-items-center rounded-lg border-2 border-line px-1.5 py-1 text-lg hover:border-primary aria-pressed:border-primary aria-pressed:bg-sticky-lavender/40"
+      >
+        {children}
+      </button>
+    </Tip>
   );
 }
 
@@ -159,24 +161,16 @@ export function TextOptions({
   onChange: (patch: Partial<TextStyle>) => void;
   onRemove: (() => void) | undefined;
 }) {
-  const fontId = useId();
   return (
     <OptionsPanel legend="Text options" onRemove={onRemove}>
-      <label htmlFor={fontId} className="sr-only">
-        Font
-      </label>
-      <select
-        id={fontId}
+      <Select
+        label="Font"
+        hideLabel
+        className="w-44 shrink-0"
         value={style.font}
-        onChange={(event) => onChange({ font: event.target.value as TextStyle["font"] })}
-        className={fieldClass}
-      >
-        {FONTS.map((font) => (
-          <option key={font.id} value={font.id}>
-            {font.label}
-          </option>
-        ))}
-      </select>
+        onChange={(font) => onChange({ font })}
+        options={FONTS.map((font) => ({ value: font.id, label: font.label }))}
+      />
       <NumberField
         label="Size"
         value={style.size}
@@ -226,17 +220,16 @@ export function ShapeOptions({
       {!fixedKind && (
         <span className="flex items-center gap-1">
           {SHAPES.map((shape) => (
-            <button
-              key={shape}
-              type="button"
-              aria-pressed={style.shape === shape}
-              aria-label={SHAPE_NAMES[shape]}
-              title={SHAPE_NAMES[shape]}
-              onClick={() => onChange({ shape })}
-              className="grid size-10 shrink-0 place-items-center rounded-lg border-2 border-line hover:border-primary aria-pressed:border-primary aria-pressed:bg-sticky-lavender/40"
-            >
-              {SHAPE_ICONS[shape]}
-            </button>
+            <Tip key={shape} label={SHAPE_NAMES[shape]}>
+              <button
+                type="button"
+                aria-pressed={style.shape === shape}
+                onClick={() => onChange({ shape })}
+                className="press grid size-10 shrink-0 place-items-center rounded-lg border-2 border-line hover:border-primary aria-pressed:border-primary aria-pressed:bg-sticky-lavender/40"
+              >
+                {SHAPE_ICONS[shape]}
+              </button>
+            </Tip>
           ))}
         </span>
       )}
@@ -329,10 +322,9 @@ export function RedactOptions({
             placeholder="Find words to redact"
             className={`${fieldClass} w-40`}
           />
-          <label className="flex items-center gap-1.5 text-sm">
-            <input type="checkbox" checked={wholeWords} onChange={(event) => setWholeWords(event.target.checked)} />
+          <Checkbox className="shrink-0 text-sm" checked={wholeWords} onChange={setWholeWords}>
             Whole words
-          </label>
+          </Checkbox>
           <button
             type="submit"
             disabled={searching || !text.trim()}
@@ -525,19 +517,18 @@ export function TickOptions({
     <OptionsPanel legend="Tick options" onRemove={onRemove}>
       <span className="flex items-center gap-1">
         {TICKS.map((symbol) => (
-          <button
-            key={symbol}
-            type="button"
-            aria-pressed={style.symbol === symbol}
-            aria-label={TICK_NAMES[symbol]}
-            title={TICK_NAMES[symbol]}
-            onClick={() => onChange({ symbol })}
-            className="grid size-10 shrink-0 place-items-center rounded-lg border-2 border-line hover:border-primary aria-pressed:border-primary aria-pressed:bg-sticky-lavender/40"
-          >
-            <span className="block size-5">
-              <TickFace symbol={symbol} size={20} color={[0.06, 0.05, 0.18]} />
-            </span>
-          </button>
+          <Tip key={symbol} label={TICK_NAMES[symbol]}>
+            <button
+              type="button"
+              aria-pressed={style.symbol === symbol}
+              onClick={() => onChange({ symbol })}
+              className="press grid size-10 shrink-0 place-items-center rounded-lg border-2 border-line hover:border-primary aria-pressed:border-primary aria-pressed:bg-sticky-lavender/40"
+            >
+              <span className="block size-5">
+                <TickFace symbol={symbol} size={20} color={[0.06, 0.05, 0.18]} />
+              </span>
+            </button>
+          </Tip>
         ))}
       </span>
       <NumberField

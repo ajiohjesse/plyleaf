@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { engine } from "~/engine/client";
 import { extractedImageName, MIME_TYPES, TINY_IMAGE } from "~/convert/pdf-images";
 import { outputName } from "~/download/download";
@@ -10,6 +10,7 @@ import { FileDrop } from "~/components/intake/FileDrop";
 import { IntakeNotices } from "~/components/intake/IntakePanel";
 import { useIntake } from "~/components/intake/useIntake";
 import { ActionBar, FailureAlert, FileCard, plural, primaryButton, type Result } from "~/components/workspace/parts";
+import { Checkbox } from "~/components/workspace/controls";
 
 /**
  * The Extract images workspace: one PDF in, every image it draws out, at its original quality (a zip when there are
@@ -23,7 +24,6 @@ export function ExtractImagesWorkspace() {
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [returning, setReturning] = useState(false);
-  const tinyId = useId();
   useEffect(() => {
     if (returning) buttonRef.current?.focus();
   }, [returning]);
@@ -102,21 +102,18 @@ export function ExtractImagesWorkspace() {
       )}
       {doc?.status === "ready" && (
         <>
-          <div className="flex items-start gap-3 rounded-card border border-line bg-surface p-4">
-            <input
-              id={tinyId}
-              type="checkbox"
-              checked={skipTiny}
-              onChange={(event) => setSkipTiny(event.target.checked)}
-              className="mt-1 size-4 accent-primary"
-            />
-            <label htmlFor={tinyId}>
-              <span className="font-semibold">Leave out tiny images</span>
-              <span className="block text-sm text-ink-muted">
+          <Checkbox
+            className="rounded-card border border-line bg-surface p-4"
+            checked={skipTiny}
+            onChange={setSkipTiny}
+            description={
+              <>
                 Icons, bullets and lines smaller than {TINY_IMAGE} × {TINY_IMAGE} pixels.
-              </span>
-            </label>
-          </div>
+              </>
+            }
+          >
+            <span className="font-semibold">Leave out tiny images</span>
+          </Checkbox>
           <ActionBar
             status={
               progress

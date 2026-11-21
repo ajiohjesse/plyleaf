@@ -15,7 +15,6 @@ import {
   textToHtml,
   type FontId,
   type Layout,
-  type MarginId,
   type PageSizeId,
   type TextFormat,
 } from "~/convert/text";
@@ -33,6 +32,7 @@ import {
   primaryButton,
   type Result,
 } from "~/components/workspace/parts";
+import { Select } from "~/components/workspace/controls";
 
 /** Biggest text file we take. Far more than a 5,000-page PDF holds. */
 const MAX_TEXT_BYTES = 20 * 1024 * 1024;
@@ -62,9 +62,6 @@ function looksLikeText(head: Uint8Array) {
 
 const noChanges = () => () => {};
 const browserPageSize = () => localPageSize(navigator.language);
-
-const selectClass =
-  "mt-1 block w-full rounded-lg border-2 border-line bg-surface px-3 py-2 text-base focus:border-primary focus:outline-none";
 
 interface Source {
   name: string;
@@ -422,92 +419,49 @@ interface PageOptionsProps {
 }
 
 function PageOptions({ layout, onLayout, font, onFont, fontSize, onFontSize }: PageOptionsProps) {
-  const ids = { size: useId(), orientation: useId(), margin: useId(), font: useId(), fontSize: useId() };
   const set = (change: Partial<Layout>) => onLayout({ ...layout, ...change });
   return (
     <fieldset className="space-y-3 rounded-card border border-line bg-surface p-4">
       <legend className="px-1 font-semibold">Pages</legend>
       <div className="grid gap-3 sm:grid-cols-3">
-        <div>
-          <label htmlFor={ids.size} className="font-semibold">
-            Page size
-          </label>
-          <select
-            id={ids.size}
-            value={layout.size}
-            onChange={(event) => set({ size: event.target.value as PageSizeId })}
-            className={selectClass}
-          >
-            <option value="a4">A4 (210 × 297 mm)</option>
-            <option value="letter">US Letter (8.5 × 11 in)</option>
-          </select>
-        </div>
-        <div>
-          <label htmlFor={ids.orientation} className="font-semibold">
-            Orientation
-          </label>
-          <select
-            id={ids.orientation}
-            value={layout.landscape ? "landscape" : "portrait"}
-            onChange={(event) => set({ landscape: event.target.value === "landscape" })}
-            className={selectClass}
-          >
-            <option value="portrait">Portrait</option>
-            <option value="landscape">Landscape</option>
-          </select>
-        </div>
-        <div>
-          <label htmlFor={ids.margin} className="font-semibold">
-            Margins
-          </label>
-          <select
-            id={ids.margin}
-            value={layout.margin}
-            onChange={(event) => set({ margin: event.target.value as MarginId })}
-            className={selectClass}
-          >
-            <option value="narrow">Narrow (½ in, 13 mm)</option>
-            <option value="normal">Normal (¾ in, 19 mm)</option>
-            <option value="wide">Wide (1 in, 25 mm)</option>
-          </select>
-        </div>
+        <Select
+          label="Page size"
+          value={layout.size}
+          onChange={(size) => set({ size })}
+          options={[
+            { value: "a4", label: "A4 (210 × 297 mm)" },
+            { value: "letter", label: "US Letter (8.5 × 11 in)" },
+          ]}
+        />
+        <Select
+          label="Orientation"
+          value={layout.landscape ? "landscape" : "portrait"}
+          onChange={(orientation) => set({ landscape: orientation === "landscape" })}
+          options={[
+            { value: "portrait", label: "Portrait" },
+            { value: "landscape", label: "Landscape" },
+          ]}
+        />
+        <Select
+          label="Margins"
+          value={layout.margin}
+          onChange={(margin) => set({ margin })}
+          options={[
+            { value: "narrow", label: "Narrow (½ in, 13 mm)" },
+            { value: "normal", label: "Normal (¾ in, 19 mm)" },
+            { value: "wide", label: "Wide (1 in, 25 mm)" },
+          ]}
+        />
       </div>
       {font && onFont && fontSize !== undefined && onFontSize && (
         <div className="grid gap-3 sm:grid-cols-3">
-          <div>
-            <label htmlFor={ids.font} className="font-semibold">
-              Font
-            </label>
-            <select
-              id={ids.font}
-              value={font}
-              onChange={(event) => onFont(event.target.value as FontId)}
-              className={selectClass}
-            >
-              {FONTS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor={ids.fontSize} className="font-semibold">
-              Text size
-            </label>
-            <select
-              id={ids.fontSize}
-              value={fontSize}
-              onChange={(event) => onFontSize(Number(event.target.value))}
-              className={selectClass}
-            >
-              {FONT_SIZES.map((size) => (
-                <option key={size} value={size}>
-                  {size} pt
-                </option>
-              ))}
-            </select>
-          </div>
+          <Select label="Font" value={font} onChange={onFont} options={FONTS} />
+          <Select
+            label="Text size"
+            value={String(fontSize)}
+            onChange={(size) => onFontSize(Number(size))}
+            options={FONT_SIZES.map((size) => ({ value: String(size), label: `${size} pt` }))}
+          />
         </div>
       )}
     </fieldset>

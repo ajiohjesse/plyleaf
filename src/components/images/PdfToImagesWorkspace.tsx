@@ -26,6 +26,7 @@ import {
   primaryButton,
   type Result,
 } from "~/components/workspace/parts";
+import { Select } from "~/components/workspace/controls";
 
 interface Settings {
   format: ImageFormat;
@@ -151,7 +152,7 @@ function ImageOptions({ doc, progress, buttonRef, onConvert }: OptionsProps) {
   const [rangesText, setRangesText] = useState("");
   // Only known in the browser; the server render offers it.
   const webp = useSyncExternalStore(noChanges, canEncodeWebp, () => true);
-  const ids = { format: useId(), dpi: useId(), which: useId(), ranges: useId(), rangesHint: useId() };
+  const ids = { format: useId(), which: useId(), ranges: useId(), rangesHint: useId() };
 
   let pages: number[] | null = Array.from({ length: pageCount }, (_, i) => i);
   let rangesError = "";
@@ -195,21 +196,13 @@ function ImageOptions({ doc, progress, buttonRef, onConvert }: OptionsProps) {
           ))}
         </div>
         <div>
-          <label htmlFor={ids.dpi} className="font-semibold">
-            Resolution
-          </label>
-          <select
-            id={ids.dpi}
-            value={dpi}
-            onChange={(event) => setDpi(Number(event.target.value))}
-            className={`${inputClass} sm:max-w-sm`}
-          >
-            {RESOLUTIONS.map((option) => (
-              <option key={option.dpi} value={option.dpi}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          <Select
+            label="Resolution"
+            className="sm:max-w-sm"
+            value={String(dpi)}
+            onChange={(value) => setDpi(Number(value))}
+            options={RESOLUTIONS.map((option) => ({ value: String(option.dpi), label: option.label }))}
+          />
           <p className="mt-1 text-sm text-ink-muted">
             {pages && pages.length > 1 ? "The first page will be" : "The image will be"} {first.width} × {first.height}{" "}
             pixels{first.capped ? ", as big as Plyleaf makes them" : ""}.

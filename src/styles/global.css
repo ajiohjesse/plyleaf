@@ -1,6 +1,9 @@
+@layer ui-sdk;
+
 @import "tailwindcss";
 @import "@fontsource-variable/outfit/wght.css";
 @import "@fontsource-variable/figtree/wght.css";
+@import "./controls.css";
 
 /*
  * Design tokens (docs/DESIGN.md). Components use the Tailwind names from @theme below

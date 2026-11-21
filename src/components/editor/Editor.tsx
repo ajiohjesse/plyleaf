@@ -95,6 +95,7 @@ import {
   WhiteoutOptions,
 } from "./options";
 import { prepareImage } from "./prepareImage";
+import { Checkbox, Tip } from "~/components/workspace/controls";
 
 /** Zoom steps, as multiples of the size that fits the pages to the screen's width. */
 const ZOOMS = [0.5, 0.75, 1, 1.25, 1.5, 2, 3];
@@ -825,15 +826,10 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
             }}
           />
           <span className="mx-1 h-6 w-px bg-line" aria-hidden="true" />
-          <ToolButton label="Undo" shortcut="Control+Z" disabled={!canUndo(history)} onClick={() => travel("undo")}>
+          <ToolButton label="Undo" shortcut="mod+z" disabled={!canUndo(history)} onClick={() => travel("undo")}>
             <UndoIcon />
           </ToolButton>
-          <ToolButton
-            label="Redo"
-            shortcut="Control+Shift+Z Control+Y"
-            disabled={!canRedo(history)}
-            onClick={() => travel("redo")}
-          >
+          <ToolButton label="Redo" shortcut="mod+shift+z" disabled={!canRedo(history)} onClick={() => travel("redo")}>
             <RedoIcon />
           </ToolButton>
           <span className="sr-only" aria-live="polite">
@@ -1058,24 +1054,14 @@ export function Editor({ doc, onSaved, initialTool = "select", suffix = "edited"
         }
       >
         {redactions > 0 && (
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={removeProperties}
-              onChange={(event) => setRemoveProperties(event.target.checked)}
-            />
-            <span>
-              Also remove the document&apos;s properties <span className="text-ink-muted">(title, author…)</span>
-            </span>
-          </label>
+          <Checkbox className="text-sm" checked={removeProperties} onChange={setRemoveProperties}>
+            Also remove the document&apos;s properties <span className="text-ink-muted">(title, author…)</span>
+          </Checkbox>
         )}
         {flattenable && (
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={flatten} onChange={(event) => setFlatten(event.target.checked)} />
-            <span>
-              Flatten <span className="text-ink-muted">(fields and annotations can&apos;t be changed afterwards)</span>
-            </span>
-          </label>
+          <Checkbox className="text-sm" checked={flatten} onChange={setFlatten}>
+            Flatten <span className="text-ink-muted">(fields and annotations can&apos;t be changed afterwards)</span>
+          </Checkbox>
         )}
         <button
           type="button"
@@ -1151,24 +1137,23 @@ function ToolButton({
   label: string;
   pressed?: boolean;
   disabled?: boolean;
-  /** For aria-keyshortcuts. */
+  /** Keys that do the same, like "mod+z": shown in its tooltip and set as aria-keyshortcuts. */
   shortcut?: string;
   onClick: () => void;
   children: React.ReactNode;
 }) {
   return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      aria-pressed={pressed}
-      aria-disabled={disabled || undefined}
-      aria-keyshortcuts={shortcut}
-      onClick={disabled ? undefined : onClick}
-      className="grid size-10 place-items-center rounded-lg text-ink hover:bg-ink/10 aria-disabled:cursor-default aria-disabled:opacity-35 aria-disabled:hover:bg-transparent aria-pressed:bg-primary aria-pressed:text-on-primary aria-pressed:hover:bg-primary-hover"
-    >
-      {children}
-    </button>
+    <Tip label={label} {...(shortcut && { shortcut })}>
+      <button
+        type="button"
+        aria-pressed={pressed}
+        aria-disabled={disabled || undefined}
+        onClick={disabled ? undefined : onClick}
+        className="press grid size-10 place-items-center rounded-lg text-ink hover:bg-ink/10 aria-disabled:cursor-default aria-disabled:opacity-35 aria-disabled:hover:bg-transparent aria-pressed:bg-primary aria-pressed:text-on-primary aria-pressed:hover:bg-primary-hover"
+      >
+        {children}
+      </button>
+    </Tip>
   );
 }
 

@@ -6,6 +6,7 @@ import { asPayload, pdfFile } from "../helpers/files";
 import { download } from "../helpers/organize";
 import { A4 } from "../helpers/pdf";
 import { qpdfCheck } from "../helpers/qpdf";
+import { choose } from "../helpers/controls";
 
 const SECRET = "numbers-canary-b8s";
 
@@ -14,7 +15,7 @@ test("numbers pages from the second on, without sending the file anywhere", asyn
   await page.goto("/add-page-numbers");
   await expect(page.locator("label[data-listening]")).toHaveCount(1);
   await page.getByLabel("Choose a file").setInputFiles(asPayload(pdfFile(`${SECRET}.pdf`, [A4, A4, A4])));
-  await page.getByLabel("Format").selectOption({ label: "Page 1 of 9" });
+  await choose(page, page.getByLabel("Format"), "Page 1 of 9");
   await page.getByLabel("From page").fill("2");
   await page.getByRole("radio", { name: "Top right" }).check();
   // The preview shows the first numbered page with its number.
@@ -44,10 +45,10 @@ test("numbers can be words of your own, and need {page}", async ({ page }) => {
   await page.goto("/add-page-numbers");
   await expect(page.locator("label[data-listening]")).toHaveCount(1);
   await page.getByLabel("Choose a file").setInputFiles(asPayload(pdfFile("own.pdf", [A4, A4])));
-  await page.getByLabel("Format").selectOption({ label: "Your own words…" });
-  await page.getByLabel("Words").fill("Sheet");
+  await choose(page, page.getByLabel("Format"), "Your own words…");
+  await page.getByRole("textbox", { name: "Words" }).fill("Sheet");
   await expect(page.getByRole("button", { name: "Add page numbers" })).toBeDisabled();
-  await page.getByLabel("Words").fill("Sheet {page}");
+  await page.getByRole("textbox", { name: "Words" }).fill("Sheet {page}");
   await page.getByLabel("First number").fill("5");
   await page.getByRole("button", { name: "Add page numbers" }).click();
   const result = await download(page);

@@ -10,6 +10,7 @@ import { TrashIcon } from "~/components/icons";
 import { primaryButton } from "~/components/workspace/parts";
 import { drawStrokes, fromPicture, fromStrokes, fromText, type Point, type SignatureImage } from "./render";
 import type { Signature, Storage } from "./useSignatures";
+import { Checkbox, Tip } from "~/components/workspace/controls";
 
 /** Handwriting fonts for typed signatures (OFL, self-hosted; loaded only when shown). */
 export const SIGNATURE_FONTS = ["Dancing Script", "Caveat", "Sacramento"] as const;
@@ -70,15 +71,15 @@ export function SignPanel({ kind, signatures, chosen, storage, onChoose, onForge
               >
                 <img src={signature.url} alt="" className="max-h-full max-w-full object-contain" />
               </button>
-              <button
-                type="button"
-                aria-label={`Forget ${kind === "signature" ? "signature" : "initials"} ${i + 1}`}
-                title={signature.kept ? "Forget it: it's deleted from this device" : "Forget it"}
-                onClick={() => onForget(signature)}
-                className="grid size-9 place-items-center rounded-lg hover:bg-ink/10"
-              >
-                <TrashIcon />
-              </button>
+              <Tip label={`Forget ${kind === "signature" ? "signature" : "initials"} ${i + 1}`}>
+                <button
+                  type="button"
+                  onClick={() => onForget(signature)}
+                  className="press grid size-9 place-items-center rounded-lg hover:bg-ink/10"
+                >
+                  <TrashIcon />
+                </button>
+              </Tip>
             </span>
           ))}
           {!showMaker && (
@@ -268,10 +269,9 @@ function Maker({
               className="max-w-full text-sm"
             />
           </span>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={clear} onChange={(event) => setClear(event.target.checked)} />
+          <Checkbox className="text-sm" checked={clear} onChange={setClear}>
             Take out the paper behind it (makes it see-through)
-          </label>
+          </Checkbox>
         </div>
       )}
 
@@ -287,15 +287,9 @@ function Maker({
         {storage === "unavailable" ? (
           <span className="text-sm text-ink-muted">This browser won&apos;t keep it, so it&apos;s only for now.</span>
         ) : (
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={remember}
-              disabled={storage !== "ready"}
-              onChange={(event) => setRemember(event.target.checked)}
-            />
+          <Checkbox className="text-sm" checked={remember} disabled={storage !== "ready"} onChange={setRemember}>
             Save it on this device for next time (never uploaded)
-          </label>
+          </Checkbox>
         )}
       </div>
       {problem && (

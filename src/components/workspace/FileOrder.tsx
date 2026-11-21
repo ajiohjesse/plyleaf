@@ -122,7 +122,7 @@ function FileRow({ doc, index, count, onMove, onRemove }: FileRowProps) {
       data-status={doc.status}
       style={{ transform: CSS.Translate.toString(transform), transition }}
       className={[
-        "relative flex items-center gap-2 rounded-card border bg-surface py-2 pr-2 pl-1 sm:gap-3 sm:pr-3",
+        "enter relative flex items-center gap-2 rounded-card border bg-surface py-2 pr-2 pl-1 sm:gap-3 sm:pr-3",
         isDragging ? "z-20 border-primary shadow-sticky" : "border-line",
       ].join(" ")}
     >

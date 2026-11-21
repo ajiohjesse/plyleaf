@@ -48,7 +48,7 @@ export function DownloadPanel({ file, name, detail, copy, onStartOver, startOver
   return (
     <section
       aria-labelledby={headingId}
-      className="space-y-4 rounded-card border-2 border-sticky-mint bg-sticky-mint/30 px-5 py-6 text-center sm:px-8"
+      className="enter space-y-4 rounded-card border-2 border-sticky-mint bg-sticky-mint/30 px-5 py-6 text-center sm:px-8"
     >
       <h2
         id={headingId}

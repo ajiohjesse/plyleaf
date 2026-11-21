@@ -7,6 +7,7 @@ import { DEFAULT_STYLE } from "~/pagetools/stamping";
 import { ActionBar, plural, primaryButton } from "~/components/workspace/parts";
 import { SingleFileTool, type Outcome, type ToolProps } from "~/components/workspace/SingleFileTool";
 import { fieldClass, PagePreview, panelClass, PositionGrid, StyleFields, WholeNumberField } from "./fields";
+import { Select } from "~/components/workspace/controls";
 
 /** The Page numbers workspace: a number on every page (or from a page on), placed and styled, with a preview. */
 export function PageNumbersWorkspace() {
@@ -27,7 +28,7 @@ function NumberOptionsPanel({ doc, run, working, buttonRef }: ToolProps) {
   const pageCount = doc.info.pageCount;
   const [options, setOptions] = useState<NumberOptions>({ ...DEFAULT_NUMBERS, style: DEFAULT_STYLE });
   const set = (patch: Partial<NumberOptions>) => setOptions((current) => ({ ...current, ...patch }));
-  const ids = { format: useId(), custom: useId() };
+  const ids = { custom: useId() };
   const preset = NUMBER_FORMATS.find((format) => format.template === options.template);
   const [custom, setCustom] = useState(false);
   const shown = Math.min(options.from, pageCount) - 1;
@@ -40,26 +41,19 @@ function NumberOptionsPanel({ doc, run, working, buttonRef }: ToolProps) {
         <div className="space-y-4">
           <section className={panelClass} aria-label="Number style">
             <div>
-              <label htmlFor={ids.format} className="font-semibold">
-                Format
-              </label>
-              <select
-                id={ids.format}
+              <Select
+                label="Format"
                 value={custom || !preset ? "custom" : preset.id}
-                onChange={(event) => {
-                  const chosen = NUMBER_FORMATS.find((format) => format.id === event.target.value);
+                onChange={(id) => {
+                  const chosen = NUMBER_FORMATS.find((format) => format.id === id);
                   setCustom(!chosen);
                   if (chosen) set({ template: chosen.template });
                 }}
-                className={fieldClass}
-              >
-                {NUMBER_FORMATS.map((format) => (
-                  <option key={format.id} value={format.id}>
-                    {format.label}
-                  </option>
-                ))}
-                <option value="custom">Your own words…</option>
-              </select>
+                options={[
+                  ...NUMBER_FORMATS.map((format) => ({ value: format.id, label: format.label })),
+                  { value: "custom", label: "Your own words…" },
+                ]}
+              />
             </div>
             {(custom || !preset) && (
               <div>

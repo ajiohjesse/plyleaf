@@ -116,7 +116,7 @@ test("says what's wrong with the pages, and won't split until it's fixed", async
   // A one-page file has nothing to split; a different file swaps in.
   await page.getByLabel("Choose a file").setInputFiles(asPayload(pdfFile("one.pdf")));
   await expect(page.getByText("This file has only one page, so there's nothing to split.")).toBeVisible();
-  await expect(page.getByText("one.pdf")).toBeVisible();
+  await expect(page.getByText("one.pdf", { exact: true })).toBeVisible();
   await expect(page.getByText("short.pdf")).toHaveCount(0);
   // Not a PDF: said so.
   await page

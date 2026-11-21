@@ -1,10 +1,11 @@
-import { useId, useState } from "react";
+import { useState } from "react";
 import { engine } from "~/engine/client";
 import { outputName } from "~/download/download";
 import type { ReadyDocument } from "~/intake/intake";
 import { PERMISSION_LABELS, restrictions } from "~/secure/permissions";
 import { ActionBar, primaryButton } from "~/components/workspace/parts";
 import { SingleFileTool, type Outcome, type ToolProps } from "~/components/workspace/SingleFileTool";
+import { Checkbox } from "~/components/workspace/controls";
 
 /**
  * The Unlock PDF workspace: a PDF opened with its password comes out without one. Restrictions (on printing,
@@ -26,7 +27,6 @@ async function unlock(doc: ReadyDocument): Promise<Outcome> {
 
 function UnlockOptions({ doc, run, working, buttonRef }: ToolProps) {
   const [rights, setRights] = useState(false);
-  const rightsId = useId();
   const { encryption, unlockedWith, permissions } = doc.info;
   const limits = restrictions(permissions);
 
@@ -57,21 +57,15 @@ function UnlockOptions({ doc, run, working, buttonRef }: ToolProps) {
                 ))}
               </ul>
             </div>
-            <div className="flex items-start gap-3">
-              <input
-                id={rightsId}
-                type="checkbox"
-                checked={rights}
-                onChange={(event) => setRights(event.target.checked)}
-                className="mt-1 size-4 accent-primary"
-              />
-              <label htmlFor={rightsId}>
-                I own this PDF, or have the right to remove its restrictions.
-                <span className="block text-sm text-ink-muted">
-                  Restrictions are set by whoever made the file. Only remove them if that's you, or they've agreed.
-                </span>
-              </label>
-            </div>
+            <Checkbox
+              checked={rights}
+              onChange={setRights}
+              description={
+                <>Restrictions are set by whoever made the file. Only remove them if that's you, or they've agreed.</>
+              }
+            >
+              I own this PDF, or have the right to remove its restrictions.
+            </Checkbox>
           </>
         )}
       </div>

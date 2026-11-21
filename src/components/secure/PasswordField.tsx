@@ -1,4 +1,5 @@
 import { useId } from "react";
+import { Checkbox } from "~/components/workspace/controls";
 
 interface Props {
   label: string;
@@ -55,17 +56,9 @@ export function newPasswordProblem(password: string): string | undefined {
 }
 
 export function ShowPasswords({ checked, onChange }: { checked: boolean; onChange: (checked: boolean) => void }) {
-  const id = useId();
   return (
-    <div className="flex items-center gap-2">
-      <input
-        id={id}
-        type="checkbox"
-        checked={checked}
-        onChange={(event) => onChange(event.target.checked)}
-        className="size-4 accent-primary"
-      />
-      <label htmlFor={id}>Show passwords</label>
-    </div>
+    <Checkbox checked={checked} onChange={onChange}>
+      Show passwords
+    </Checkbox>
   );
 }

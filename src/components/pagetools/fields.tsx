@@ -7,6 +7,7 @@ import type { Horizontal, Position, TextStyle, Vertical } from "~/pagetools/stam
 import { thumbnails } from "~/thumbnails/thumbnails";
 import { baselineRatio } from "~/components/editor/measure";
 import { PageCanvas } from "~/components/thumbnails/PageCanvas";
+import { Checkbox, Select } from "~/components/workspace/controls";
 
 const VERTICALS: Vertical[] = ["top", "middle", "bottom"];
 const HORIZONTALS: Horizontal[] = ["left", "center", "right"];
@@ -57,26 +58,17 @@ export function PositionGrid({
 
 /** Font, size, bold and colour. */
 export function StyleFields({ style, onChange }: { style: TextStyle; onChange: (style: TextStyle) => void }) {
-  const ids = { font: useId(), size: useId(), colour: useId() };
+  const ids = { size: useId(), colour: useId() };
   const [sizeText, setSizeText] = useState<string | null>(null);
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       <div className="col-span-2 sm:col-span-1">
-        <label htmlFor={ids.font} className="font-semibold">
-          Font
-        </label>
-        <select
-          id={ids.font}
+        <Select
+          label="Font"
           value={style.font}
-          onChange={(event) => onChange({ ...style, font: event.target.value as TextStyle["font"] })}
-          className={fieldClass}
-        >
-          {FONTS.map((font) => (
-            <option key={font.id} value={font.id}>
-              {font.label}
-            </option>
-          ))}
-        </select>
+          onChange={(font) => onChange({ ...style, font })}
+          options={FONTS.map((font) => ({ value: font.id, label: font.label }))}
+        />
       </div>
       <div>
         <label htmlFor={ids.size} className="font-semibold">
@@ -110,15 +102,13 @@ export function StyleFields({ style, onChange }: { style: TextStyle; onChange: (
           className="mt-1 block h-11 w-full cursor-pointer rounded-lg border-2 border-line bg-surface p-1"
         />
       </div>
-      <label className="flex items-end gap-2 pb-2.5 font-semibold">
-        <input
-          type="checkbox"
-          checked={style.bold}
-          onChange={(event) => onChange({ ...style, bold: event.target.checked })}
-          className="size-5 accent-primary"
-        />
+      <Checkbox
+        className="self-end pb-2.5 font-semibold"
+        checked={style.bold}
+        onChange={(bold) => onChange({ ...style, bold })}
+      >
         Bold
-      </label>
+      </Checkbox>
     </div>
   );
 }

@@ -4,8 +4,8 @@ Single source of truth for where Plyleaf is. **Every session updates this file b
 
 - **Current milestone:** M8.5: Polish and flow (added by the owner 2026-11-21, D-044; M0–M2 done 2026-10-31, M3 and M4
   done 2026-11-01, M5 done 2026-11-02, M6 and M7 done 2026-11-04, M8 done 2026-11-07)
-- **Next action:** M8.5: icons, ui-sdk controls and motion. The prototype (branch `m8.5/prototype`, never merged) is
-  the reference; delete the branch once M8.5 is done.
+- **Next action:** M8.5: the signature drag-and-drop fix and the Shift rules. The prototype (branch `m8.5/prototype`,
+  never merged) is the reference; delete the branch once M8.5 is done.
 - **Owner asked (2026-11-21):** build M8.5 in the order in D-044, one PR per item, each auto-merged when CI passes.
 - **Owner asked (2026-11-07):** build all of M8 in one PR, merge it when CI passes, then trim stale branches and worktrees.
 - **Owner asked (2026-11-04):** build all of M7 in one go, as one PR, auto-merged when CI passes. Same for M6 earlier
@@ -71,7 +71,7 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 - [x] HTML / plain text / Markdown → PDF · [x] PDF → plain text
 
 ### [ ] M8.5: Polish and flow
-- [x] Prototype approved · [ ] Icons, ui-sdk controls, motion · [ ] Signature drag-and-drop fix, Shift rules
+- [x] Prototype approved · [x] Icons, ui-sdk controls, motion · [ ] Signature drag-and-drop fix, Shift rules
 - [ ] Hand tool, gesture zoom, Expand mode · [ ] Undo/redo in page board, signature pad, scan corners
 - [ ] Signature redesign, delete with undo, handwriting fonts · [ ] Editor text fonts (embedded)
 - [ ] Phone layout and tool tidy-up · [ ] ⌘K · [ ] Working document and Workbench · [ ] Animation moments
@@ -86,6 +86,22 @@ Done-when criteria are in [GOAL.md §7](GOAL.md#7-milestones).
 ## Session log
 
 Newest first. One entry per session: date, milestone, what changed, what was verified, what's next, anything left open.
+
+### 2026-11-21: Icons, controls and motion (M8.5)
+- Phosphor icons everywhere (D-049): `pnpm icons` generates only the glyphs and weights we use from
+  `@phosphor-icons/core` into `src/components/icons/`; the hand-drawn editor, category and inline icons are gone. Tool
+  tiles and tool page heroes show each tool's own Duotone icon. `@phosphor-icons/react` is no longer a dependency.
+- Shared controls in `src/components/workspace/controls.tsx` on ui-sdk: `Select` (our list with a mouse, the device's
+  picker on touch screens), `Checkbox` (20 px, 24 px tap area, optional description) and `Tip` (tooltips that name icon
+  buttons, with their keys). Every native select (except a PDF's own form fields) and checkbox in the tools now uses
+  them; icon and toggle buttons in the editor and workspaces have tooltips instead of `title`. Radio cards keep native
+  radios, restyled to match.
+- Motion (`src/styles/controls.css`): pages crossfade (cross-document view transitions), popups fade and grow, buttons
+  give a little when pressed, and cards, notices and the done screen rise into place; all off with reduced motion.
+- Tests: `tests/helpers/controls.ts` (`choose`, `expectChosen`) picks from either kind of Select; specs that used
+  `selectOption` use it.
+- Verified: `pnpm check`; full E2E in Chromium, mobile Chromium, Firefox and WebKit; tools checked at 375 and 1280 px.
+- Next: the signature drag-and-drop fix and the Shift rules.
 
 ### 2026-11-21: Prototype approved, renamed to Plyleaf PDF
 - The owner approved the prototype (`m8.5/prototype`), with two changes now part of the plan: tool strips must show
