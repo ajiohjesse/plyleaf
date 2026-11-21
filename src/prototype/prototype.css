@@ -280,6 +280,12 @@
   font-weight: 700;
 }
 
+@keyframes nudge {
+  50% {
+    translate: var(--nudge);
+  }
+}
+
 /* The bigger moments (D-046). */
 @keyframes settle {
   from {

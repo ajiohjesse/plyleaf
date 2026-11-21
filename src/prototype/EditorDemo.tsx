@@ -36,7 +36,7 @@ import { MockPage } from "./MockPage";
 import { SavedSignature, SignatureDialog, type SignatureImage } from "./SignatureDialog";
 import { TEXT_FONTS, loadFont } from "./fonts";
 import { useWorkingDoc } from "./store";
-import { Check, IconButton, Select, Sheet, cx, deletedToast, toast, useMediaQuery } from "./ui";
+import { Check, IconButton, ScrollCue, Select, Sheet, cx, deletedToast, toast, useMediaQuery, useOverflow } from "./ui";
 
 type ToolId =
   | "select"
@@ -583,41 +583,65 @@ function TopBar({
 
 function Rail({ tool, onTool }: { tool: ToolId; onTool: (tool: ToolId) => void }) {
   const groups = [...new Set(TOOLS.map((t) => t.group))];
+  const strip = useRef<HTMLDivElement>(null);
+  const more = useOverflow(strip, "y");
+  const scroll = (by: number) => strip.current?.scrollBy({ top: by, behavior: "smooth" });
   return (
-    <Toolbar
-      aria-label="Tools"
-      orientation="vertical"
-      className="flex w-16 shrink-0 flex-col items-center gap-1 overflow-y-auto border-r border-line bg-surface py-3 [scrollbar-width:none]"
-    >
-      <ToggleGroup
-        aria-label="Tool"
+    <div className="relative flex w-[4.75rem] shrink-0 flex-col border-r border-line bg-surface">
+      <ScrollCue side="start" axis="y" show={more.start} onPress={() => scroll(-200)} label="Show earlier tools" />
+      <Toolbar
+        ref={strip}
+        aria-label="Tools"
         orientation="vertical"
-        value={[tool]}
-        deselectable={false}
-        onValueChange={(value) => value[0] && onTool(value[0] as ToolId)}
-        className="flex flex-col items-center gap-1"
+        className="flex min-h-0 flex-1 flex-col items-center gap-1 overflow-y-auto py-3 [scrollbar-width:none]"
       >
-        {groups.map((group, gi) => (
-          <div key={group} className="contents">
-            {gi > 0 && <ToolbarSeparator className="my-1.5 h-px w-8 bg-line" />}
-            {TOOLS.filter((t) => t.group === group).map((t) => (
-              <Tooltip key={t.id} type="label" delay={300} {...(t.key && { shortcut: t.key })}>
-                <TooltipTrigger
-                  render={<Toggle value={t.id} />}
-                  className="press grid size-11 place-items-center rounded-xl text-ink-muted hover:bg-ink/8 hover:text-ink data-pressed:bg-primary data-pressed:text-on-primary data-pressed:shadow-sm"
-                >
-                  <t.icon weight={tool === t.id ? "fill" : "bold"} className="size-5.5" aria-hidden="true" />
-                </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={8} className="pop z-50">
-                  {t.label}
-                  {t.key && <TooltipShortcut />}
-                </TooltipContent>
-              </Tooltip>
-            ))}
-          </div>
-        ))}
-      </ToggleGroup>
-    </Toolbar>
+        <ToggleGroup
+          aria-label="Tool"
+          orientation="vertical"
+          value={[tool]}
+          deselectable={false}
+          onValueChange={(value) => value[0] && onTool(value[0] as ToolId)}
+          className="flex flex-col items-center gap-1"
+        >
+          {groups.map((group, gi) => (
+            <div key={group} className="contents">
+              {gi > 0 && <ToolbarSeparator className="my-1.5 h-px w-8 shrink-0 bg-line" />}
+              {TOOLS.filter((t) => t.group === group).map((t) => {
+                const look =
+                  "press grid w-16 shrink-0 justify-items-center gap-0.5 rounded-xl px-1 py-1.5 text-[11px] leading-tight font-semibold text-ink-muted hover:bg-ink/8 hover:text-ink data-pressed:bg-primary data-pressed:text-on-primary data-pressed:shadow-sm";
+                const face = (
+                  <>
+                    <t.icon weight={tool === t.id ? "fill" : "bold"} className="size-5.5" aria-hidden="true" />
+                    {t.label}
+                  </>
+                );
+                const reveal = (event: React.FocusEvent<HTMLElement>) =>
+                  event.currentTarget.scrollIntoView({ block: "nearest" });
+                if (!t.key) {
+                  return (
+                    <Toggle key={t.id} value={t.id} onFocus={reveal} className={look}>
+                      {face}
+                    </Toggle>
+                  );
+                }
+                return (
+                  <Tooltip key={t.id} delay={500} shortcut={t.key}>
+                    <TooltipTrigger render={<Toggle value={t.id} />} onFocus={reveal} className={look}>
+                      {face}
+                    </TooltipTrigger>
+                    <TooltipContent side="right" sideOffset={8} className="pop z-50">
+                      Shortcut
+                      <TooltipShortcut />
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              })}
+            </div>
+          ))}
+        </ToggleGroup>
+      </Toolbar>
+      <ScrollCue side="end" axis="y" show={more.end} onPress={() => scroll(200)} label="Show more tools" />
+    </div>
   );
 }
 
@@ -630,25 +654,33 @@ function BottomBar({
   onTool: (tool: ToolId) => void;
   onOptions: () => void;
 }) {
+  const strip = useRef<HTMLDivElement>(null);
+  const more = useOverflow(strip, "x");
+  const scroll = (by: number) => strip.current?.scrollBy({ left: by, behavior: "smooth" });
   return (
     <div className="flex shrink-0 items-stretch border-t border-line bg-surface pb-[env(safe-area-inset-bottom)]">
-      <div
-        role="group"
-        aria-label="Tools"
-        className="flex min-w-0 flex-1 gap-1 overflow-x-auto px-2 py-1.5 [scrollbar-width:none]"
-      >
-        {TOOLS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            aria-pressed={tool === t.id}
-            onClick={() => onTool(t.id)}
-            className="press grid min-w-14 shrink-0 justify-items-center gap-0.5 rounded-xl px-1.5 py-1 text-[11px] font-semibold text-ink-muted aria-pressed:bg-primary aria-pressed:text-on-primary"
-          >
-            <t.icon weight={tool === t.id ? "fill" : "bold"} className="size-5.5" aria-hidden="true" />
-            {t.label}
-          </button>
-        ))}
+      <div className="relative min-w-0 flex-1">
+        <ScrollCue side="start" axis="x" show={more.start} onPress={() => scroll(-180)} label="Show earlier tools" />
+        <div
+          ref={strip}
+          role="group"
+          aria-label="Tools"
+          className="flex gap-1 overflow-x-auto px-2 py-1.5 [scrollbar-width:none]"
+        >
+          {TOOLS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              aria-pressed={tool === t.id}
+              onClick={() => onTool(t.id)}
+              className="press grid min-w-14 shrink-0 justify-items-center gap-0.5 rounded-xl px-1.5 py-1 text-[11px] font-semibold text-ink-muted aria-pressed:bg-primary aria-pressed:text-on-primary"
+            >
+              <t.icon weight={tool === t.id ? "fill" : "bold"} className="size-5.5" aria-hidden="true" />
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <ScrollCue side="end" axis="x" show={more.end} onPress={() => scroll(180)} label="Show more tools" />
       </div>
       <button
         type="button"

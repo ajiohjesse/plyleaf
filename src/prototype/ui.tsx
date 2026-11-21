@@ -1,7 +1,7 @@
 /* oxlint-disable jsx-a11y/label-has-associated-control -- the label wraps a ui-sdk Radio button */
 // Preview of the shared wrappers D-046 puts in src/components/workspace/: tools use these, never ui-sdk directly.
-import { useSyncExternalStore, type ReactNode } from "react";
-import { CaretDownIcon, CheckIcon } from "@phosphor-icons/react/ssr";
+import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
+import { CaretDownIcon, CaretLeftIcon, CaretRightIcon, CaretUpIcon, CheckIcon } from "@phosphor-icons/react/ssr";
 import { Checkbox, CheckboxIndicator } from "@ui-sdk/react/checkbox";
 import { Dialog, DialogBackdrop, DialogContent, DialogTitle } from "@ui-sdk/react/dialog";
 import { Drawer, DrawerBackdrop, DrawerContent, DrawerHandle, DrawerTitle } from "@ui-sdk/react/drawer";
@@ -286,3 +286,77 @@ export function useMounted() {
 }
 
 export const isMac = () => typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
+
+/** Which ends of a scrolling strip have more in them, kept current as it scrolls or resizes. */
+export function useOverflow(ref: React.RefObject<HTMLElement | null>, axis: "x" | "y") {
+  const [more, setMore] = useState({ start: false, end: false });
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const update = () => {
+      const pos = axis === "x" ? el.scrollLeft : el.scrollTop;
+      const max = axis === "x" ? el.scrollWidth - el.clientWidth : el.scrollHeight - el.clientHeight;
+      setMore((prev) => {
+        const next = { start: pos > 2, end: pos < max - 2 };
+        return prev.start === next.start && prev.end === next.end ? prev : next;
+      });
+    };
+    update();
+    el.addEventListener("scroll", update, { passive: true });
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => {
+      el.removeEventListener("scroll", update);
+      observer.disconnect();
+    };
+  }, [ref, axis]);
+  return more;
+}
+
+/**
+ * Fades the edge of a strip that has more tools past it, with an arrow that scrolls to them. The arrow is a pointer
+ * convenience: keyboard users reach every tool with the arrow keys, which scroll it into view.
+ */
+export function ScrollCue({
+  side,
+  show,
+  axis,
+  onPress,
+  label,
+}: {
+  side: "start" | "end";
+  show: boolean;
+  axis: "x" | "y";
+  onPress: () => void;
+  label: string;
+}) {
+  const Arrow =
+    axis === "x" ? (side === "start" ? CaretLeftIcon : CaretRightIcon) : side === "start" ? CaretUpIcon : CaretDownIcon;
+  return (
+    <div
+      className={cx(
+        "pointer-events-none absolute z-10 flex items-center justify-center transition-opacity duration-200",
+        show ? "opacity-100" : "opacity-0",
+        axis === "y"
+          ? cx("inset-x-0 h-12", side === "start" ? "top-0 bg-linear-to-b" : "bottom-0 bg-linear-to-t")
+          : cx("inset-y-0 w-12", side === "start" ? "left-0 bg-linear-to-r" : "right-0 bg-linear-to-l"),
+        "from-surface from-35% to-transparent",
+      )}
+    >
+      <button
+        type="button"
+        tabIndex={-1}
+        aria-label={label}
+        onClick={onPress}
+        className={cx(
+          "press grid size-7 place-items-center rounded-full border border-line bg-surface text-ink shadow-sm hover:bg-sticky-lavender/40",
+          show && "pointer-events-auto",
+          side === "end" && "animate-[nudge_1.6s_ease-in-out_2]",
+        )}
+        style={{ ["--nudge" as string]: axis === "x" ? "3px 0" : "0 3px" }}
+      >
+        <Arrow weight="bold" className="size-4" aria-hidden="true" />
+      </button>
+    </div>
+  );
+}
