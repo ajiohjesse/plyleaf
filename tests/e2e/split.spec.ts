@@ -145,5 +145,5 @@ test("is linked from the home page", async ({ page }) => {
     .first()
     .click();
   await expect(page).toHaveURL(/\/split-pdf$/);
-  await expect(page).toHaveTitle("Split PDF files free, no sign-up · Plyleaf");
+  await expect(page).toHaveTitle("Split PDF files free, no sign-up · Plyleaf PDF");
 });
