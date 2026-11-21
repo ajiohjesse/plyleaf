@@ -1,6 +1,10 @@
 ---
+import { ArrowRightIcon, GithubLogoIcon, ShieldCheckIcon, SquaresFourIcon } from "@phosphor-icons/react/ssr";
 import Logo from "./Logo.astro";
 import { site } from "~/data/site";
+
+const link = "flex items-center gap-1.5 rounded-pill px-3 py-2 hover:bg-surface-band";
+const icon = "size-[18px] shrink-0 text-ink-muted";
 ---
 
 <header class="sticky top-0 z-40 border-b border-transparent bg-surface/90 backdrop-blur">
@@ -10,23 +14,26 @@ import { site } from "~/data/site";
     </a>
     <ul class="flex items-center gap-1 text-[15px] font-medium sm:gap-2">
       <li class="hidden sm:block">
-        <a href="/#tools" class="rounded-pill px-3 py-2 hover:bg-surface-band">
+        <a href="/#tools" class={link}>
+          <SquaresFourIcon weight="bold" className={icon} aria-hidden="true" />
           Tools
         </a>
       </li>
       <li class="hidden sm:block">
-        <a href="/#how-it-works" class="rounded-pill px-3 py-2 hover:bg-surface-band">
+        <a href="/#how-it-works" class={link}>
+          <ShieldCheckIcon weight="bold" className={icon} aria-hidden="true" />
           How it works
         </a>
       </li>
       <li class="hidden md:block">
-        <a href={site.repoUrl} class="rounded-pill px-3 py-2 hover:bg-surface-band">
+        <a href={site.repoUrl} class={link}>
+          <GithubLogoIcon weight="bold" className={icon} aria-hidden="true" />
           Source code
         </a>
       </li>
       <li>
         <a href="/#tools" class="btn-pill min-h-10 bg-primary px-5 text-on-primary hover:bg-primary-hover">
-          All tools <span aria-hidden="true">→</span>
+          All tools <ArrowRightIcon weight="bold" className="size-4" aria-hidden="true" />
         </a>
       </li>
     </ul>

@@ -95,7 +95,7 @@ export function htmlToPdf(html: string, options: HtmlPdfOptions): HtmlPdfResult 
     });
 
     if (title?.trim()) out.setMetaData("info:Title", title.trim());
-    out.setMetaData("info:Producer", "Plyleaf");
+    out.setMetaData("info:Producer", "Plyleaf PDF");
     // The writer embeds whole fonts (a CJK one is megabytes); keep only the characters used.
     out.subsetFonts();
     const saved = out.saveToBuffer("garbage,compress");

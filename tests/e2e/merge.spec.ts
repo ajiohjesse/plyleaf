@@ -147,5 +147,5 @@ test("is linked from the home page tool grid", async ({ page }) => {
     .first()
     .click();
   await expect(page).toHaveURL(/\/merge-pdf$/);
-  await expect(page).toHaveTitle("Merge PDF files free, no sign-up · Plyleaf");
+  await expect(page).toHaveTitle("Merge PDF files free, no sign-up · Plyleaf PDF");
 });

@@ -85,5 +85,5 @@ test("is linked from the home page", async ({ page }) => {
     .first()
     .click();
   await expect(page).toHaveURL(/\/extract-pages$/);
-  await expect(page).toHaveTitle("Extract pages from a PDF free, no sign-up · Plyleaf");
+  await expect(page).toHaveTitle("Extract pages from a PDF free, no sign-up · Plyleaf PDF");
 });

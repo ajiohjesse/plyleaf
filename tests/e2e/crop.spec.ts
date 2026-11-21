@@ -96,5 +96,5 @@ test("is linked from the home page", async ({ page }) => {
     .first()
     .click();
   await expect(page).toHaveURL(/\/crop-pdf$/);
-  await expect(page).toHaveTitle("Crop PDF pages free, no sign-up · Plyleaf");
+  await expect(page).toHaveTitle("Crop PDF pages free, no sign-up · Plyleaf PDF");
 });

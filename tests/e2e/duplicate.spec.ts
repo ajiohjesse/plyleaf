@@ -72,5 +72,5 @@ test("is linked from the home page", async ({ page }) => {
     .first()
     .click();
   await expect(page).toHaveURL(/\/duplicate-pages$/);
-  await expect(page).toHaveTitle("Duplicate PDF pages free, no sign-up · Plyleaf");
+  await expect(page).toHaveTitle("Duplicate PDF pages free, no sign-up · Plyleaf PDF");
 });

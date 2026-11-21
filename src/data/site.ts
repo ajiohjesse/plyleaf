@@ -1,6 +1,6 @@
 /** Site-wide constants. */
 export const site = {
-  name: "Plyleaf",
+  name: "Plyleaf PDF",
   tagline: "Every PDF tool. Actually free.",
   description:
     "Free PDF tools that run in your browser: merge, split, compress, edit, sign and convert. No sign-up, no watermark, and your files never leave your device.",
